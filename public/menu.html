@@ -739,6 +739,9 @@
     let anyVisible = false;
 
     for (const cat of menu) {
+      // hide drink categories when veg/non-veg filter is active
+      if ((vegOnly || nonVegOnly) && !FOOD_CATS.includes(cat.name)) continue;
+
       const items = cat.items.filter(item => {
         if (vegOnly && isNonVeg(item.name, item.description)) return false;
         if (nonVegOnly && !isNonVeg(item.name, item.description)) return false;
