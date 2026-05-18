@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: la-siesta
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 22.5.0
+      - key: ADMIN_PASSWORD
+        value: lasiesta2024
+      - key: FAST2SMS_API_KEY
+        sync: false
