@@ -723,10 +723,14 @@
       });
       if (items.length === 0) continue;
       anyVisible = true;
+      const catImage = cat.name === 'Desserts'
+        ? `<img src="/desserts.png" alt="Desserts" style="width:100%;max-height:320px;object-fit:cover;object-position:top;display:block;">`
+        : '';
       html += `
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
           <div class="cat-title">${cat.name}</div>
           <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
+          ${catImage}
           ${items.map(item => renderItemRow(item)).join('')}
         </div>`;
     }
