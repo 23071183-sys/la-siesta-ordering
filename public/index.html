@@ -63,14 +63,16 @@
     }
 
     .nav-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--cream);
+      display: inline-block;
       text-decoration: none;
-      letter-spacing: 0.06em;
       animation: fadeDown 0.7s 0.1s both cubic-bezier(0.22,1,0.36,1);
     }
-    .nav-logo em { font-style: italic; color: var(--orange); }
+    .nav-logo img {
+      height: 52px;
+      width: auto;
+      display: block;
+      border-radius: 8px;
+    }
 
     .nav-links {
       display: flex;
@@ -284,7 +286,7 @@
 <body>
 
 <nav id="nav">
-  <a href="/" class="nav-logo"><em>La</em> SIESTA</a>
+  <a href="/" class="nav-logo"><img src="/logo.jpg" alt="La Siesta"></a>
   <ul class="nav-links">
     <li><a href="#about">The Garden</a></li>
     <li><a href="#about">Experience</a></li>
