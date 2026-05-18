@@ -11,17 +11,22 @@
     :root {
       --green:   #3d9142;
       --red:     #e43b4f;
-      --orange:  #D4552A;
-      --dark:    #1C1C1C;
-      --gray:    #696969;
-      --light:   #F5F5F5;
-      --border:  #E8E8E8;
-      --white:   #ffffff;
+      --orange:  #C4501F;
+      --orange-l:#E8703A;
+      --brown:   #5C3D2E;
+      --dark:    #2B1810;
+      --gray:    #7A5C42;
+      --cream:   #FAF5EC;
+      --cream2:  #F2E8D9;
+      --light:   #F5EDE0;
+      --border:  #E2D5C3;
+      --white:   #FFFDF9;
+      --sidebar: #F7EFE3;
     }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--white);
+      background: var(--cream);
       color: var(--dark);
       min-height: 100vh;
       padding-bottom: 80px;
@@ -31,7 +36,7 @@
     .rest-header {
       background: var(--white);
       padding: 1rem 1rem 0;
-      border-bottom: 8px solid var(--light);
+      border-bottom: 8px solid var(--cream2);
     }
     .rest-top {
       display: flex;
@@ -265,9 +270,9 @@
     }
 
     .add-btn {
-      border: 1.5px solid var(--green);
+      border: 1.5px solid var(--orange);
       background: var(--white);
-      color: var(--green);
+      color: var(--orange);
       border-radius: 8px;
       width: 72px;
       height: 34px;
@@ -280,12 +285,12 @@
       gap: 0.2rem;
       transition: background 0.12s;
     }
-    .add-btn:active { background: #f0fff0; }
+    .add-btn:active { background: var(--light); }
 
     .qty-ctrl {
       display: flex;
       align-items: center;
-      border: 1.5px solid var(--green);
+      border: 1.5px solid var(--orange);
       border-radius: 8px;
       overflow: hidden;
       width: 72px;
@@ -295,7 +300,7 @@
       flex: 1;
       border: none;
       background: var(--white);
-      color: var(--green);
+      color: var(--orange);
       font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
@@ -303,11 +308,11 @@
       height: 100%;
       transition: background 0.1s;
     }
-    .qty-btn:active { background: #f0fff0; }
+    .qty-btn:active { background: var(--light); }
     .qty-num {
       font-size: 0.85rem;
       font-weight: 700;
-      color: var(--green);
+      color: var(--orange);
       min-width: 18px;
       text-align: center;
     }
@@ -322,7 +327,7 @@
     .cart-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      background: var(--green);
+      background: var(--dark);
       padding: 0.9rem 1.25rem;
       display: flex;
       align-items: center;
@@ -337,8 +342,8 @@
     .cart-item-count { font-size: 0.78rem; font-weight: 500; opacity: 0.88; }
     .cart-amount { font-size: 1rem; font-weight: 700; }
     .checkout-btn {
-      background: var(--white);
-      color: var(--green);
+      background: var(--orange);
+      color: var(--white);
       border: none;
       padding: 0.65rem 1.5rem;
       border-radius: 6px;
@@ -421,12 +426,12 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    .form-input:focus { border-color: var(--green); }
+    .form-input:focus { border-color: var(--orange); }
     .place-btn {
       width: 100%;
       padding: 1rem;
-      background: var(--green);
-      color: var(--white);
+      background: var(--dark);
+      color: var(--cream);
       border: none;
       border-radius: 10px;
       font-family: 'DM Sans', sans-serif;
@@ -471,7 +476,7 @@
     .otp-verify-btn {
       flex-shrink: 0;
       padding: 0.75rem 0.9rem;
-      background: var(--green);
+      background: var(--orange);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -482,19 +487,19 @@
       white-space: nowrap;
     }
     .otp-verify-btn:disabled { background: #bbb; cursor: not-allowed; }
-    .otp-timer { font-size: 0.7rem; color: var(--green); font-weight: 600; margin-left: 0.3rem; }
+    .otp-timer { font-size: 0.7rem; color: var(--orange); font-weight: 600; margin-left: 0.3rem; }
     .field-error { font-size: 0.75rem; color: #e43b4f; margin-top: 0.3rem; min-height: 1rem; }
     .resend-link {
       background: none; border: none;
-      color: var(--green); font-family: 'DM Sans', sans-serif;
+      color: var(--orange); font-family: 'DM Sans', sans-serif;
       font-size: 0.78rem; font-weight: 500;
       cursor: pointer; padding: 0; margin-top: 0.4rem;
       text-decoration: underline;
     }
     .verified-badge {
       display: flex; align-items: center; gap: 0.4rem;
-      background: #f0fff4; border: 1.5px solid var(--green);
-      color: var(--green); font-size: 0.82rem; font-weight: 600;
+      background: #fdf3ee; border: 1.5px solid var(--orange);
+      color: var(--orange); font-size: 0.82rem; font-weight: 600;
       padding: 0.5rem 0.9rem; border-radius: 8px; margin-bottom: 1rem;
     }
 
@@ -513,7 +518,7 @@
     .success-screen.show { display: flex; }
     .success-icon {
       width: 72px; height: 72px;
-      background: var(--green);
+      background: var(--orange);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 1.4rem;
@@ -535,7 +540,7 @@
     .new-order-btn {
       margin-top: 0.75rem;
       padding: 0.75rem 2rem;
-      background: var(--green);
+      background: var(--orange);
       color: var(--white);
       border: none;
       border-radius: 8px;
