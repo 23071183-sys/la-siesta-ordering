@@ -205,18 +205,14 @@ function generateOTP() {
 }
 
 async function sendOTPviaMSG91(phone) {
-  const authKey    = process.env.MSG91_AUTH_KEY;
-  const templateId = process.env.MSG91_TEMPLATE_ID;
-  if (!authKey || !templateId) {
-    console.warn('[MSG91] Missing credentials — check MSG91_AUTH_KEY and MSG91_TEMPLATE_ID env vars');
+  const authKey = process.env.MSG91_AUTH_KEY;
+  if (!authKey) {
+    console.warn('[MSG91] Missing MSG91_AUTH_KEY env var');
     return false;
   }
   const mobile = `91${phone}`;
-  const res = await fetch('https://control.msg91.com/api/v5/otp', {
-    method: 'POST',
-    headers: { authkey: authKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ template_id: templateId, mobile })
-  });
+  const url = `https://api.msg91.com/api/sendotp.php?authkey=${authKey}&mobile=${mobile}&message=Your+OTP+for+La+Siesta+is+##OTP##+.+Valid+for+10+minutes.&sender=LSIEST&otp_length=6&otp_expiry=10`;
+  const res = await fetch(url);
   const data = await res.json();
   console.log('[MSG91 send]', JSON.stringify(data));
   return data.type === 'success';
@@ -226,9 +222,8 @@ async function verifyOTPviaMSG91(phone, otp) {
   const authKey = process.env.MSG91_AUTH_KEY;
   if (!authKey) return false;
   const mobile = `91${phone}`;
-  const res = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${mobile}`, {
-    headers: { authkey: authKey }
-  });
+  const url = `https://api.msg91.com/api/verifyRequestOTP.php?authkey=${authKey}&mobile=${mobile}&otp=${otp}`;
+  const res = await fetch(url);
   const data = await res.json();
   console.log('[MSG91 verify]', JSON.stringify(data));
   return data.type === 'success';
