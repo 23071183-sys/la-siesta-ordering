@@ -735,7 +735,7 @@
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
           <div class="cat-title">${cat.name}</div>
           <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
-          ${items.map(item => renderItemRow(item)).join('')}
+          ${items.map(item => renderItemRow(item, cat.name)).join('')}
         </div>`;
     }
 
@@ -744,10 +744,14 @@
     setupScrollSpy();
   }
 
-  function renderItemRow(item) {
+  const FOOD_CATS = ['Food', 'Rice Bowls', 'Sweets', 'Desserts'];
+
+  function renderItemRow(item, catName = '') {
     const qty = cart[item.id]?.qty || 0;
     const nv = isNonVeg(item.name, item.description);
-    const vegHtml = `<div class="veg-icon${nv?' nonveg':''}"><div class="dot"></div></div>`;
+    const vegHtml = FOOD_CATS.includes(catName)
+      ? `<div class="veg-icon${nv?' nonveg':''}"><div class="dot"></div></div>`
+      : '';
     const ctrl = qty === 0
       ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
       : `<div class="qty-ctrl">
