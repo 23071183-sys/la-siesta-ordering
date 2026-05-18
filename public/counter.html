@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Siesta — Counter</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange:  #D4552A;
+      --yellow:  #F59E0B;
+      --green:   #22C55E;
+      --bg:      #0f0f0f;
+      --surface: #1a1a1a;
+      --border:  #2a2a2a;
+      --text:    #e8e8e8;
+      --muted:   #666;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 1.2rem; }
+    .brand { font-size: 1rem; font-weight: 700; color: var(--orange); letter-spacing: 0.08em; }
+    .live-dot {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; color: var(--green); font-weight: 500;
+    }
+    .live-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .clock { font-size: 0.88rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    /* ── FILTER TABS ── */
+    .filter-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .f-btn {
+      padding: 0.8rem 1.4rem;
+      background: none;
+      border: none;
+      border-bottom: 2.5px solid transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.18s;
+    }
+    .f-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+    .badge {
+      background: var(--orange);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 2rem;
+      min-width: 18px;
+      text-align: center;
+    }
+    .badge.yellow { background: var(--yellow); color: #1a1a1a; }
+    .badge.hidden { display: none; }
+
+    /* ── ORDERS GRID ── */
+    .orders-wrap { padding: 1.5rem; }
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.2rem;
+    }
+
+    /* ── ORDER CARD ── */
+    .order-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .order-card.pending   { border-color: var(--orange); }
+    .order-card.preparing { border-color: var(--yellow); }
+    .order-card.done      { opacity: 0.45; }
+    .order-card.new-flash { animation: flash 0.7s ease 2; }
+    @keyframes flash {
+      0%,100% { box-shadow: none; }
+      50%      { box-shadow: 0 0 0 3px var(--orange), 0 0 20px rgba(212,85,42,0.4); }
+    }
+
+    .card-head {
+      background: #222;
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-info { display: flex; align-items: baseline; gap: 0.5rem; }
+    .table-num  { font-size: 1.8rem; font-weight: 700; color: #fff; line-height: 1; }
+    .table-lbl  { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+    .card-meta  { text-align: right; }
+    .status-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 2rem;
+    }
+    .status-pill.pending   { background: rgba(212,85,42,0.15); color: var(--orange); }
+    .status-pill.preparing { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .status-pill.done      { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .order-id { font-size: 0.68rem; color: var(--muted); margin-top: 0.3rem; }
+
+    .card-time {
+      padding: 0.45rem 1.1rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .card-time .cust { color: #aaa; }
+    .card-time .note-tag {
+      background: rgba(212,85,42,0.12);
+      color: var(--orange);
+      padding: 0.1rem 0.5rem;
+      border-radius: 2rem;
+      font-size: 0.68rem;
+    }
+
+    .items-block { padding: 0.75rem 1.1rem; }
+    .order-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.32rem 0;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #222;
+    }
+    .order-line:last-child { border-bottom: none; }
+    .line-left { display: flex; gap: 0.4rem; }
+    .line-qty  { color: var(--orange); font-weight: 700; flex-shrink: 0; }
+    .line-name { color: #ddd; }
+    .line-note { font-size: 0.7rem; color: var(--muted); font-style: italic; display: block; margin-top: 0.1rem; }
+    .line-price { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
+
+    .card-foot {
+      background: #222;
+      padding: 0.7rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+    }
+    .total-lbl { font-weight: 700; font-size: 0.95rem; color: #fff; }
+
+    .act-btn {
+      padding: 0.45rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .act-btn:active { opacity: 0.75; }
+    .btn-preparing { background: var(--yellow); color: #1a1a1a; }
+    .btn-done      { background: var(--green);  color: #fff; }
+    .done-label    { font-size: 0.78rem; color: var(--green); font-weight: 600; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--muted);
+    }
+    .empty h3 { font-size: 1.1rem; color: #555; margin-bottom: 0.5rem; }
+    .empty p  { font-size: 0.85rem; }
+
+    /* ── TOAST NOTIFICATION ── */
+    .toast {
+      position: fixed;
+      top: 1.2rem; right: 1.2rem;
+      background: var(--orange);
+      color: #fff;
+      padding: 0.9rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      transform: translateX(calc(100% + 2rem));
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 20px rgba(212,85,42,0.4);
+      max-width: 320px;
+    }
+    .toast.show { transform: translateX(0); }
+    .toast-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .toast-body .toast-title { font-size: 0.92rem; }
+    .toast-body .toast-sub   { font-size: 0.74rem; opacity: 0.8; margin-top: 0.15rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="brand">LA SIESTA — COUNTER</div>
+    <div class="live-dot">LIVE</div>
+  </div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="filter-bar">
+  <button class="f-btn active" id="tab-pending"   onclick="setFilter('pending',this)">
+    Pending <span class="badge" id="cnt-pending"></span>
+  </button>
+  <button class="f-btn" id="tab-preparing" onclick="setFilter('preparing',this)">
+    Preparing <span class="badge yellow" id="cnt-preparing"></span>
+  </button>
+  <button class="f-btn" id="tab-all"       onclick="setFilter('all',this)">All Orders</button>
+</div>
+
+<div class="orders-wrap">
+  <div class="orders-grid" id="grid"></div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-icon">🔔</div>
+  <div class="toast-body">
+    <div class="toast-title" id="toastTitle">New order</div>
+    <div class="toast-sub"   id="toastSub"></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let orders = [];
+  let filter = 'pending';
+
+  // ── Clock ──
+  const clockEl = document.getElementById('clock');
+  const tick = () => {
+    clockEl.textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  tick(); setInterval(tick, 1000);
+
+  // ── Audio ──
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [[880,0],[1100,0.18],[1320,0.36]].forEach(([f,t]) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = f; osc.type = 'sine';
+        g.gain.setValueAtTime(0.4, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.3);
+      });
+    } catch(e) {}
+  }
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(title, sub) {
+    const el = document.getElementById('toast');
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastSub').textContent = sub;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 4500);
+  }
+
+  // ── Load orders ──
+  async function load() {
+    const r = await fetch('/api/orders?status=all');
+    orders = await r.json();
+    render();
+  }
+
+  // ── Filter ──
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  // ── Render ──
+  function render() {
+    const grid = document.getElementById('grid');
+    const pending   = orders.filter(o => o.status === 'pending');
+    const preparing = orders.filter(o => o.status === 'preparing');
+
+    // Update badges
+    const pCnt = document.getElementById('cnt-pending');
+    const rCnt = document.getElementById('cnt-preparing');
+    pCnt.textContent = pending.length || '';
+    pCnt.classList.toggle('hidden', pending.length === 0);
+    rCnt.textContent = preparing.length || '';
+    rCnt.classList.toggle('hidden', preparing.length === 0);
+
+    let list = filter === 'all' ? [...orders] : orders.filter(o => o.status === filter);
+    list.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty">
+        <h3>${filter === 'pending' ? '✅ All caught up!' : 'No orders here'}</h3>
+        <p>New orders will appear instantly.</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(o => cardHTML(o)).join('');
+  }
+
+  function cardHTML(o) {
+    const items = o.items.map(i => `
+      <div class="order-line">
+        <div class="line-left">
+          <span class="line-qty">${i.quantity}×</span>
+          <div>
+            <span class="line-name">${i.item_name}</span>
+            ${i.notes ? `<span class="line-note">📝 ${i.notes}</span>` : ''}
+          </div>
+        </div>
+        <span class="line-price">₹${i.item_price * i.quantity}</span>
+      </div>`).join('');
+
+    const actions = o.status === 'pending'
+      ? `<button class="act-btn btn-preparing" onclick="setStatus(${o.id},'preparing')">▶ Preparing</button>`
+      : o.status === 'preparing'
+      ? `<button class="act-btn btn-done" onclick="setStatus(${o.id},'done')">✓ Done</button>`
+      : `<span class="done-label">✓ Completed</span>`;
+
+    return `
+      <div class="order-card ${o.status}" id="oc-${o.id}">
+        <div class="card-head">
+          <div class="table-info">
+            <span class="table-lbl">Table</span>
+            <span class="table-num">${o.table_number}</span>
+          </div>
+          <div class="card-meta">
+            <span class="status-pill ${o.status}">${o.status}</span>
+            <div class="order-id">#${String(o.id).padStart(4,'0')}</div>
+          </div>
+        </div>
+        <div class="card-time">
+          <span>${timeAgo(o.created_at)}</span>
+          ${o.customer_name ? `<span class="cust">· ${o.customer_name}</span>` : ''}
+          ${o.notes ? `<span class="note-tag">📝 ${o.notes}</span>` : ''}
+        </div>
+        <div class="items-block">${items}</div>
+        <div class="card-foot">
+          <span class="total-lbl">₹${o.total}</span>
+          ${actions}
+        </div>
+      </div>`;
+  }
+
+  function timeAgo(ts) {
+    const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+    if (diff < 60)   return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    return new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function setStatus(id, status) {
+    const r = await fetch(`/api/orders/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const updated = await r.json();
+    const idx = orders.findIndex(o => o.id === id);
+    if (idx > -1) orders[idx] = updated;
+    render();
+  }
+
+  // ── Socket.io ──
+  const socket = io();
+
+  socket.on('new_order', order => {
+    orders.unshift(order);
+    playBeep();
+    const itemNames = order.items.slice(0,2).map(i => `${i.quantity}× ${i.item_name}`).join(', ');
+    showToast(`New order — Table ${order.table_number}`, itemNames);
+    render();
+    // flash the new card
+    setTimeout(() => {
+      const el = document.getElementById(`oc-${order.id}`);
+      if (el) el.classList.add('new-flash');
+    }, 100);
+  });
+
+  socket.on('order_updated', updated => {
+    const idx = orders.findIndex(o => o.id === updated.id);
+    if (idx > -1) orders[idx] = updated;
+    render();
+  });
+
+  // Refresh time-ago labels every 30s
+  setInterval(render, 30000);
+
+  load();
+</script>
+</body>
+</html>

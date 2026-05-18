@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>La Siesta — Menu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange:    #D4552A;
+      --orange-d:  #B8421A;
+      --cream:     #FAF5EC;
+      --cream-mid: #F0E8D5;
+      --dark:      #1A0D06;
+      --text:      #2C180A;
+      --muted:     #7A5C42;
+      --border:    rgba(0,0,0,0.07);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    /* ── HERO HEADER ── */
+    .menu-hero {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      background: var(--dark);
+    }
+    .menu-hero-photo {
+      position: absolute; inset: 0;
+      background-image: url('/hero.jpg');
+      background-size: cover;
+      background-position: center 40%;
+      filter: sepia(0.25) saturate(1.2) brightness(0.55) contrast(1.1);
+    }
+    .menu-hero-tint {
+      position: absolute; inset: 0;
+      background: rgba(180,60,10,0.2);
+      mix-blend-mode: multiply;
+    }
+    .menu-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(26,13,6,0.15) 0%, rgba(26,13,6,0.6) 100%);
+    }
+    .menu-hero-content {
+      position: relative; z-index: 5;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 1.5rem 1.5rem 1.4rem;
+    }
+    .hero-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--cream);
+      line-height: 1;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+    .hero-brand em { font-style: italic; color: var(--orange); }
+    .hero-tagline {
+      font-size: 0.75rem;
+      color: rgba(250,245,236,0.6);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+    .hero-table-badge {
+      position: absolute;
+      top: 1.2rem; right: 1.25rem;
+      z-index: 5;
+      background: var(--orange);
+      color: #fff;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      box-shadow: 0 2px 12px rgba(212,85,42,0.45);
+    }
+
+    /* ── CATEGORY TABS ── */
+    .tabs-wrap {
+      background: var(--cream);
+      border-bottom: 1.5px solid var(--cream-mid);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tabs-wrap::-webkit-scrollbar { display: none; }
+    .tabs {
+      display: flex;
+      padding: 0.6rem 1rem;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .tab-btn {
+      padding: 0.5rem 1.1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: #fff;
+      border: 1.5px solid var(--cream-mid);
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── CATEGORY SECTION ── */
+    .menu-section { padding: 0; }
+
+    .cat-header {
+      padding: 2.2rem 1.5rem 1rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+    .cat-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 10vw, 4.5rem);
+      font-weight: 900;
+      color: var(--dark);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+    }
+    .cat-count {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .cat-divider {
+      height: 1.5px;
+      background: linear-gradient(to right, var(--orange) 60px, var(--cream-mid) 60px);
+      margin: 0 1.5rem 1.4rem;
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem 1rem;
+      gap: 0.75rem;
+    }
+
+    /* ── ITEM CARD ── */
+    .item-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.2rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 1px 8px rgba(26,13,6,0.06);
+      border: 1.5px solid transparent;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .item-card:has(.qty-ctrl) {
+      border-color: rgba(212,85,42,0.2);
+      box-shadow: 0 2px 14px rgba(212,85,42,0.1);
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 0.22rem;
+      line-height: 1.3;
+    }
+    .item-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+    .item-price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.01em;
+    }
+
+    /* ── CONTROLS ── */
+    .add-btn {
+      flex-shrink: 0;
+      width: 44px; height: 44px;
+      background: var(--dark);
+      color: var(--cream);
+      border: none;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.12s;
+      font-weight: 300;
+    }
+    .add-btn:active { background: var(--orange); transform: scale(0.92); }
+
+    .qty-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+      background: var(--dark);
+      border-radius: 2rem;
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 38px; height: 38px;
+      border: none;
+      background: transparent;
+      color: var(--cream);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.1s;
+      line-height: 1;
+    }
+    .qty-btn:active { background: var(--orange); }
+    .qty-num {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--cream);
+      min-width: 22px;
+      text-align: center;
+    }
+
+    /* ── SECTION SEPARATOR ── */
+    .section-gap {
+      height: 1px;
+      background: var(--cream-mid);
+      margin: 0.5rem 1.5rem;
+    }
+
+    /* ── CART BAR ── */
+    .cart-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--dark);
+      padding: 1rem 1.25rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      transform: translateY(110%);
+      transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 -6px 28px rgba(0,0,0,0.35);
+    }
+    .cart-bar.visible { transform: translateY(0); }
+    .cart-left { display: flex; align-items: center; gap: 1rem; }
+    .cart-icon {
+      width: 42px; height: 42px;
+      background: rgba(250,245,236,0.08);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-info .cart-count {
+      font-size: 0.7rem;
+      color: rgba(250,245,236,0.5);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.1rem;
+    }
+    .cart-info .cart-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--orange);
+      line-height: 1;
+    }
+    .checkout-btn {
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, transform 0.12s;
+    }
+    .checkout-btn:active { background: var(--orange-d); transform: scale(0.97); }
+
+    /* ── ORDER MODAL ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(26,13,6,0.7);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--cream);
+      border-radius: 24px 24px 0 0;
+      padding: 0 1.4rem 2.5rem;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-handle {
+      width: 40px; height: 4px;
+      background: rgba(0,0,0,0.12);
+      border-radius: 2px;
+      margin: 1rem auto 1.4rem;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--dark);
+      margin-bottom: 1.2rem;
+      line-height: 1;
+    }
+    .order-summary {
+      background: #fff;
+      border-radius: 14px;
+      padding: 0.8rem 1.1rem;
+      margin-bottom: 1.3rem;
+    }
+    .sum-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0;
+      font-size: 0.88rem;
+      color: var(--text);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .sum-row:last-child { border-bottom: none; }
+    .sum-row.total-row {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--dark);
+      padding-top: 0.65rem;
+      border-top: 1.5px solid var(--cream-mid) !important;
+      margin-top: 0.2rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid var(--cream-mid);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.93rem;
+      background: #fff;
+      color: var(--dark);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--orange); }
+    .place-btn {
+      width: 100%;
+      padding: 1.05rem;
+      background: var(--dark);
+      color: var(--cream);
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s;
+    }
+    .place-btn:active { background: var(--orange); }
+    .place-btn:disabled { background: #bbb; cursor: not-allowed; color: rgba(255,255,255,0.7); }
+
+    /* ── PHONE / OTP ── */
+    .phone-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .phone-prefix {
+      flex-shrink: 0;
+      padding: 0.8rem 0.85rem;
+      background: var(--cream-mid);
+      border: 1.5px solid var(--cream-mid);
+      border-radius: 10px;
+      font-size: 0.93rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .phone-input { flex: 1; }
+    .otp-send-btn {
+      flex-shrink: 0;
+      padding: 0.8rem 1rem;
+      background: var(--dark);
+      color: var(--cream);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .otp-send-btn:disabled { background: #bbb; cursor: not-allowed; }
+    .otp-send-btn:not(:disabled):active { background: var(--orange); }
+
+    .otp-row { display: flex; gap: 0.5rem; }
+    .otp-input { flex: 1; letter-spacing: 0.25em; font-size: 1.1rem; font-weight: 600; }
+    .otp-verify-btn {
+      flex-shrink: 0;
+      padding: 0.8rem 1rem;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .otp-verify-btn:disabled { background: #bbb; cursor: not-allowed; }
+
+    .otp-timer { font-size: 0.7rem; color: var(--orange); font-weight: 600; letter-spacing: 0; text-transform: none; margin-left: 0.3rem; }
+
+    .field-error {
+      font-size: 0.75rem;
+      color: #c0392b;
+      margin-top: 0.35rem;
+      min-height: 1rem;
+    }
+
+    .resend-link {
+      background: none;
+      border: none;
+      color: var(--orange);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      margin-top: 0.4rem;
+      text-decoration: underline;
+    }
+
+    .verified-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #eafaf1;
+      border: 1.5px solid #2ecc71;
+      color: #27ae60;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    /* ── SUCCESS SCREEN ── */
+    .success-screen {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--cream);
+      z-index: 300;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .success-screen.show { display: flex; }
+    .success-icon {
+      width: 80px; height: 80px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1.5rem;
+      animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .success-screen h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 8vw, 3.5rem);
+      font-weight: 900;
+      color: var(--dark);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .success-screen p { color: var(--muted); font-size: 0.93rem; line-height: 1.65; }
+    .order-num {
+      background: var(--dark);
+      color: var(--orange);
+      padding: 0.5rem 2rem;
+      border-radius: 2rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin: 1rem 0 1.5rem;
+    }
+    .new-order-btn {
+      margin-top: 1rem;
+      padding: 0.8rem 2.2rem;
+      background: none;
+      border: 1.5px solid var(--orange);
+      color: var(--orange);
+      border-radius: 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .new-order-btn:active { background: var(--orange); color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- HERO HEADER -->
+<div class="menu-hero">
+  <div class="menu-hero-photo"></div>
+  <div class="menu-hero-tint"></div>
+  <div class="menu-hero-overlay"></div>
+  <div class="hero-table-badge" id="tableBadge">Table —</div>
+  <div class="menu-hero-content">
+    <div class="hero-brand"><em>La</em> SIESTA</div>
+    <div class="hero-tagline">Browse &amp; Order</div>
+  </div>
+</div>
+
+<!-- CATEGORY TABS -->
+<div class="tabs-wrap">
+  <div class="tabs" id="catTabs"></div>
+</div>
+
+<!-- MENU CONTENT -->
+<div id="menuContent"></div>
+
+<!-- Cart Bar -->
+<div class="cart-bar" id="cartBar">
+  <div class="cart-left">
+    <div class="cart-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(250,245,236,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+    </div>
+    <div class="cart-info">
+      <div class="cart-count" id="cartCountLbl">0 items</div>
+      <div class="cart-total" id="cartTotalLbl">₹0</div>
+    </div>
+  </div>
+  <button class="checkout-btn" onclick="openCheckout()">View Order →</button>
+</div>
+
+<!-- Order Modal -->
+<div class="modal-backdrop" id="orderModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Your Order</div>
+    <div class="order-summary" id="orderSummary"></div>
+
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="custName" type="text" placeholder="So we can call your name">
+    </div>
+
+    <!-- Phone + OTP block -->
+    <div class="form-group">
+      <label class="form-label">Mobile Number</label>
+      <div class="phone-row">
+        <div class="phone-prefix">+91</div>
+        <input class="form-input phone-input" id="custPhone" type="tel" maxlength="10" placeholder="10-digit number" oninput="onPhoneInput()">
+        <button class="otp-send-btn" id="otpSendBtn" onclick="sendOTP()" disabled>Send OTP</button>
+      </div>
+      <div id="phoneError" class="field-error"></div>
+    </div>
+
+    <div class="form-group" id="otpGroup" style="display:none">
+      <label class="form-label">Enter OTP <span id="otpTimer" class="otp-timer"></span></label>
+      <div class="otp-row">
+        <input class="form-input otp-input" id="otpInput" type="tel" maxlength="6" placeholder="6-digit OTP" oninput="onOtpInput()">
+        <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyOTP()" disabled>Verify</button>
+      </div>
+      <div id="otpError" class="field-error"></div>
+      <button class="resend-link" id="resendBtn" onclick="sendOTP(true)" style="display:none">Resend OTP</button>
+    </div>
+
+    <div class="verified-badge" id="verifiedBadge" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Phone verified
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Special Requests</label>
+      <input class="form-input" id="orderNotes" type="text" placeholder="No sugar, oat milk, extra ice…">
+    </div>
+    <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Verify phone to place order</button>
+  </div>
+</div>
+
+<!-- Success Screen -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <h2>Order Placed!</h2>
+  <div class="order-num" id="successNum">#0001</div>
+  <p>Your order is on its way to the counter.<br>Sit back &amp; relax — we'll bring it to you. ☕</p>
+  <button class="new-order-btn" onclick="resetOrder()">Order More</button>
+</div>
+
+<script>
+  let menu = [];
+  let cart = {};
+  let tableNumber = 1;
+
+  const params = new URLSearchParams(window.location.search);
+  tableNumber = parseInt(params.get('table')) || 1;
+  document.getElementById('tableBadge').textContent = `Table ${tableNumber}`;
+
+  fetch('/api/menu').then(r => r.json()).then(data => {
+    menu = data;
+    renderTabs();
+    renderMenu();
+    setupScrollSpy();
+  });
+
+  function renderTabs() {
+    document.getElementById('catTabs').innerHTML = menu.map((cat, i) =>
+      `<button class="tab-btn${i===0?' active':''}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
+    ).join('');
+  }
+
+  function renderMenu() {
+    document.getElementById('menuContent').innerHTML = menu.map((cat, i) => `
+      <div class="menu-section" id="cat-${cat.id}" data-cat="${cat.id}">
+        <div class="cat-header">
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-count">${cat.items.length} items</div>
+        </div>
+        <div class="cat-divider"></div>
+        <div class="items-list">
+          ${cat.items.map(item => renderItemCard(item)).join('')}
+        </div>
+        ${i < menu.length - 1 ? '<div class="section-gap"></div>' : ''}
+      </div>`).join('');
+  }
+
+  function renderItemCard(item) {
+    const qty = cart[item.id]?.qty || 0;
+    const ctrl = qty === 0
+      ? `<button class="add-btn" onclick="addItem(${item.id})">+</button>`
+      : `<div class="qty-ctrl">
+           <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+           <span class="qty-num">${qty}</span>
+           <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+         </div>`;
+    return `
+      <div class="item-card" id="card-${item.id}">
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+          <div class="item-price">₹${item.price}</div>
+        </div>
+        <div id="ctrl-${item.id}">${ctrl}</div>
+      </div>`;
+  }
+
+  function getItemById(id) {
+    for (const cat of menu) {
+      const item = cat.items.find(i => i.id === id);
+      if (item) return item;
+    }
+  }
+
+  function addItem(id) {
+    const item = getItemById(id);
+    cart[id] = { id, name: item.name, price: item.price, qty: (cart[id]?.qty || 0) + 1 };
+    refreshCtrl(id);
+    updateCartBar();
+  }
+
+  function changeQty(id, delta) {
+    const qty = (cart[id]?.qty || 0) + delta;
+    if (qty <= 0) { delete cart[id]; }
+    else {
+      const item = getItemById(id);
+      cart[id] = { id, name: item.name, price: item.price, qty };
+    }
+    refreshCtrl(id);
+    updateCartBar();
+  }
+
+  function refreshCtrl(id) {
+    const qty = cart[id]?.qty || 0;
+    const el  = document.getElementById(`ctrl-${id}`);
+    if (!el) return;
+    el.innerHTML = qty === 0
+      ? `<button class="add-btn" onclick="addItem(${id})">+</button>`
+      : `<div class="qty-ctrl">
+           <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+           <span class="qty-num">${qty}</span>
+           <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+         </div>`;
+    document.getElementById(`card-${id}`).querySelector('.item-info');
+  }
+
+  function updateCartBar() {
+    const items = Object.values(cart);
+    const count = items.reduce((s,i) => s + i.qty, 0);
+    const total = items.reduce((s,i) => s + i.price * i.qty, 0);
+    document.getElementById('cartCountLbl').textContent = `${count} item${count!==1?'s':''}`;
+    document.getElementById('cartTotalLbl').textContent = `₹${total}`;
+    document.getElementById('cartBar').classList.toggle('visible', count > 0);
+  }
+
+  function scrollToCat(id, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const el = document.getElementById(`cat-${id}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setupScrollSpy() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const id = e.target.dataset.cat;
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.cat === id);
+          });
+          const activeTab = document.querySelector(`.tab-btn[data-cat="${id}"]`);
+          activeTab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      });
+    }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+    setTimeout(() => {
+      document.querySelectorAll('.menu-section').forEach(s => obs.observe(s));
+    }, 400);
+  }
+
+  // ── OTP FLOW ──
+  let phoneVerified = false;
+  let otpTimerInterval = null;
+
+  function onPhoneInput() {
+    const phone = document.getElementById('custPhone').value;
+    document.getElementById('phoneError').textContent = '';
+    // Reset verification if phone changes
+    if (phoneVerified) {
+      phoneVerified = false;
+      document.getElementById('verifiedBadge').style.display = 'none';
+      document.getElementById('otpGroup').style.display = 'none';
+      document.getElementById('placeBtn').disabled = true;
+      document.getElementById('placeBtn').textContent = 'Verify phone to place order';
+    }
+    document.getElementById('otpSendBtn').disabled = !/^[6-9]\d{9}$/.test(phone);
+  }
+
+  async function sendOTP(isResend = false) {
+    const phone = document.getElementById('custPhone').value.trim();
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      document.getElementById('phoneError').textContent = 'Enter a valid 10-digit mobile number';
+      return;
+    }
+    const btn = document.getElementById('otpSendBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    document.getElementById('phoneError').textContent = '';
+    document.getElementById('otpError').textContent = '';
+
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('otpGroup').style.display = 'block';
+        document.getElementById('otpInput').value = '';
+        document.getElementById('resendBtn').style.display = 'none';
+        startOtpTimer();
+        if (isResend) document.getElementById('otpError').textContent = '';
+      } else {
+        document.getElementById('phoneError').textContent = data.error || 'Failed to send OTP';
+        btn.disabled = false;
+      }
+    } catch {
+      document.getElementById('phoneError').textContent = 'Network error. Try again.';
+      btn.disabled = false;
+    }
+    btn.textContent = isResend ? 'Resend OTP' : 'Send OTP';
+  }
+
+  function startOtpTimer() {
+    clearInterval(otpTimerInterval);
+    let seconds = 60;
+    const timerEl = document.getElementById('otpTimer');
+    timerEl.textContent = `(${seconds}s)`;
+    otpTimerInterval = setInterval(() => {
+      seconds--;
+      timerEl.textContent = seconds > 0 ? `(${seconds}s)` : '';
+      if (seconds <= 0) {
+        clearInterval(otpTimerInterval);
+        document.getElementById('resendBtn').style.display = 'inline';
+      }
+    }, 1000);
+  }
+
+  function onOtpInput() {
+    document.getElementById('otpError').textContent = '';
+    const otp = document.getElementById('otpInput').value;
+    document.getElementById('otpVerifyBtn').disabled = otp.length !== 6;
+  }
+
+  async function verifyOTP() {
+    const phone = document.getElementById('custPhone').value.trim();
+    const otp   = document.getElementById('otpInput').value.trim();
+    const btn   = document.getElementById('otpVerifyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+    document.getElementById('otpError').textContent = '';
+
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        phoneVerified = true;
+        clearInterval(otpTimerInterval);
+        document.getElementById('otpGroup').style.display = 'none';
+        document.getElementById('verifiedBadge').style.display = 'flex';
+        document.getElementById('placeBtn').disabled = false;
+        document.getElementById('placeBtn').textContent = 'Place Order';
+        document.getElementById('custPhone').disabled = true;
+        document.getElementById('otpSendBtn').style.display = 'none';
+      } else {
+        document.getElementById('otpError').textContent = data.error || 'Incorrect OTP';
+        btn.disabled = false;
+        btn.textContent = 'Verify';
+      }
+    } catch {
+      document.getElementById('otpError').textContent = 'Network error. Try again.';
+      btn.disabled = false;
+      btn.textContent = 'Verify';
+    }
+  }
+
+  function openCheckout() {
+    const items = Object.values(cart);
+    const total = items.reduce((s,i) => s + i.price * i.qty, 0);
+    document.getElementById('orderSummary').innerHTML =
+      items.map(i => `
+        <div class="sum-row">
+          <span>${i.qty}× ${i.name}</span>
+          <span>₹${i.price * i.qty}</span>
+        </div>`).join('') +
+      `<div class="sum-row total-row"><span>Total</span><span>₹${total}</span></div>`;
+    document.getElementById('orderModal').classList.add('open');
+  }
+
+  document.getElementById('orderModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+
+  async function placeOrder() {
+    const btn = document.getElementById('placeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Placing…';
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table_number: tableNumber,
+          customer_name: document.getElementById('custName').value.trim(),
+          customer_phone: document.getElementById('custPhone').value.trim(),
+          notes: document.getElementById('orderNotes').value.trim(),
+          items: Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.qty }))
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('orderModal').classList.remove('open');
+        document.getElementById('successNum').textContent = `#${String(data.order_id).padStart(4,'0')}`;
+        document.getElementById('successScreen').classList.add('show');
+        cart = {};
+        updateCartBar();
+      } else {
+        alert('Something went wrong. Please try again.');
+      }
+    } catch(err) {
+      alert('Connection error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Place Order';
+    }
+  }
+
+  function resetOrder() {
+    document.getElementById('successScreen').classList.remove('show');
+    document.getElementById('custName').value = '';
+    document.getElementById('orderNotes').value = '';
+    // Reset phone/OTP state
+    phoneVerified = false;
+    clearInterval(otpTimerInterval);
+    document.getElementById('custPhone').value = '';
+    document.getElementById('custPhone').disabled = false;
+    document.getElementById('otpSendBtn').style.display = '';
+    document.getElementById('otpSendBtn').disabled = true;
+    document.getElementById('otpSendBtn').textContent = 'Send OTP';
+    document.getElementById('otpGroup').style.display = 'none';
+    document.getElementById('otpInput').value = '';
+    document.getElementById('verifiedBadge').style.display = 'none';
+    document.getElementById('phoneError').textContent = '';
+    document.getElementById('otpError').textContent = '';
+    document.getElementById('placeBtn').disabled = true;
+    document.getElementById('placeBtn').textContent = 'Verify phone to place order';
+  }
+</script>
+</body>
+</html>
