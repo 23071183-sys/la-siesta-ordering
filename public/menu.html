@@ -588,6 +588,10 @@
     <div class="veg-dot"></div>
     Veg Only
   </div>
+  <div class="veg-toggle" id="nonvegToggle" onclick="toggleNonVeg()" style="--dot-color:#e43b4f">
+    <div class="veg-dot" style="background:var(--red)"></div>
+    Non Veg
+  </div>
 </div>
 
 <!-- LAYOUT -->
@@ -675,6 +679,7 @@
   let cart = {};
   let tableNumber = 1;
   let vegOnly = false;
+  let nonVegOnly = false;
 
   const NON_VEG_KEYWORDS = ['chicken', 'egg', 'mutton', 'prawn', 'fish', 'beef', 'pork', 'keema', 'bonafide'];
 
@@ -710,6 +715,16 @@
 
   function toggleVeg() {
     vegOnly = !vegOnly;
+    if (vegOnly) nonVegOnly = false;
+    document.getElementById('vegToggle').classList.toggle('active', vegOnly);
+    document.getElementById('nonvegToggle').classList.toggle('active', nonVegOnly);
+    renderMenu();
+  }
+
+  function toggleNonVeg() {
+    nonVegOnly = !nonVegOnly;
+    if (nonVegOnly) vegOnly = false;
+    document.getElementById('nonvegToggle').classList.toggle('active', nonVegOnly);
     document.getElementById('vegToggle').classList.toggle('active', vegOnly);
     renderMenu();
   }
@@ -726,6 +741,7 @@
     for (const cat of menu) {
       const items = cat.items.filter(item => {
         if (vegOnly && isNonVeg(item.name, item.description)) return false;
+        if (nonVegOnly && !isNonVeg(item.name, item.description)) return false;
         if (query && !item.name.toLowerCase().includes(query) && !(item.description||'').toLowerCase().includes(query)) return false;
         return true;
       });
