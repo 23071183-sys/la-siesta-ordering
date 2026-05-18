@@ -204,46 +204,34 @@ function generateOTP() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-async function sendSMS(phone, otp) {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
-    console.log(`[OTP] No API key — ${phone} → ${otp}`);
-    return true;
+async function sendOTPviaMSG91(phone) {
+  const authKey    = process.env.MSG91_AUTH_KEY;
+  const templateId = process.env.MSG91_TEMPLATE_ID;
+  if (!authKey || !templateId) {
+    console.warn('[MSG91] Missing credentials — check MSG91_AUTH_KEY and MSG91_TEMPLATE_ID env vars');
+    return false;
   }
+  const mobile = `91${phone}`;
+  const res = await fetch('https://control.msg91.com/api/v5/otp', {
+    method: 'POST',
+    headers: { authkey: authKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ template_id: templateId, mobile })
+  });
+  const data = await res.json();
+  console.log('[MSG91 send]', JSON.stringify(data));
+  return data.type === 'success';
+}
 
-  // Try Quick SMS route (no website verification needed)
-  try {
-    const res = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-      method: 'POST',
-      headers: { 'authorization': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        route: 'q',
-        message: `Your OTP for La Siesta is ${otp}. Valid for 10 minutes.`,
-        language: 'english',
-        flash: 0,
-        numbers: phone
-      })
-    });
-    const data = await res.json();
-    console.log('[Fast2SMS response]', JSON.stringify(data));
-    if (data.return) return true;
-    console.warn('[Fast2SMS] Quick route failed, trying OTP route. Response:', data);
-  } catch (e) {
-    console.error('[Fast2SMS] Quick route error:', e.message);
-  }
-
-  // Fallback: OTP route
-  try {
-    const res = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&flash=0&numbers=${phone}`);
-    const data = await res.json();
-    console.log('[Fast2SMS OTP route]', JSON.stringify(data));
-    if (data.return) return true;
-    console.warn('[Fast2SMS] Both routes failed. OTP for', phone, '→', otp);
-  } catch (e) {
-    console.error('[Fast2SMS] OTP route error:', e.message);
-  }
-
-  return true; // always return true so the flow continues
+async function verifyOTPviaMSG91(phone, otp) {
+  const authKey = process.env.MSG91_AUTH_KEY;
+  if (!authKey) return false;
+  const mobile = `91${phone}`;
+  const res = await fetch(`https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=${mobile}`, {
+    headers: { authkey: authKey }
+  });
+  const data = await res.json();
+  console.log('[MSG91 verify]', JSON.stringify(data));
+  return data.type === 'success';
 }
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────────────────
@@ -269,10 +257,11 @@ app.post('/api/otp/send', async (req, res) => {
   if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
     return res.status(400).json({ error: 'Enter a valid 10-digit Indian mobile number' });
   }
-  const otp = generateOTP();
-  otpStore.set(phone, { otp, expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
   try {
-    await sendSMS(phone, otp);
+    const sent = await sendOTPviaMSG91(phone);
+    if (!sent) return res.status(500).json({ error: 'Failed to send OTP. Check MSG91 credentials.' });
+    // Track that OTP was sent (MSG91 stores the OTP on their end)
+    otpStore.set(phone, { expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
     res.json({ success: true });
   } catch (e) {
     console.error('[OTP send error]', e);
@@ -280,7 +269,7 @@ app.post('/api/otp/send', async (req, res) => {
   }
 });
 
-app.post('/api/otp/verify', (req, res) => {
+app.post('/api/otp/verify', async (req, res) => {
   const { phone, otp } = req.body;
   const record = otpStore.get(phone);
   if (!record) return res.status(400).json({ error: 'No OTP sent for this number' });
@@ -288,9 +277,15 @@ app.post('/api/otp/verify', (req, res) => {
     otpStore.delete(phone);
     return res.status(400).json({ error: 'OTP expired. Request a new one.' });
   }
-  if (record.otp !== otp) return res.status(400).json({ error: 'Incorrect OTP' });
-  record.verified = true;
-  res.json({ success: true });
+  try {
+    const valid = await verifyOTPviaMSG91(phone, otp);
+    if (!valid) return res.status(400).json({ error: 'Incorrect OTP' });
+    record.verified = true;
+    res.json({ success: true });
+  } catch (e) {
+    console.error('[OTP verify error]', e);
+    res.status(500).json({ error: 'Verification failed. Try again.' });
+  }
 });
 
 // ── ORDER API ────────────────────────────────────────────────────────────────
