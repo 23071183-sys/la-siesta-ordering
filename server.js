@@ -207,19 +207,43 @@ function generateOTP() {
 async function sendSMS(phone, otp) {
   const apiKey = process.env.FAST2SMS_API_KEY;
   if (!apiKey) {
-    console.log(`[OTP] ${phone} → ${otp}`);
+    console.log(`[OTP] No API key — ${phone} → ${otp}`);
     return true;
   }
-  const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&flash=0&numbers=${phone}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  console.log('[Fast2SMS]', data);
-  if (!data.return) {
-    // Website not yet verified on Fast2SMS — fall back to console so dev still works
-    console.warn('[Fast2SMS] OTP route not verified yet. OTP for', phone, '→', otp);
-    return true;
+
+  // Try Quick SMS route (no website verification needed)
+  try {
+    const res = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+      method: 'POST',
+      headers: { 'authorization': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        route: 'q',
+        message: `Your OTP for La Siesta is ${otp}. Valid for 10 minutes.`,
+        language: 'english',
+        flash: 0,
+        numbers: phone
+      })
+    });
+    const data = await res.json();
+    console.log('[Fast2SMS response]', JSON.stringify(data));
+    if (data.return) return true;
+    console.warn('[Fast2SMS] Quick route failed, trying OTP route. Response:', data);
+  } catch (e) {
+    console.error('[Fast2SMS] Quick route error:', e.message);
   }
-  return true;
+
+  // Fallback: OTP route
+  try {
+    const res = await fetch(`https://www.fast2sms.com/dev/bulkV2?authorization=${apiKey}&route=otp&variables_values=${otp}&flash=0&numbers=${phone}`);
+    const data = await res.json();
+    console.log('[Fast2SMS OTP route]', JSON.stringify(data));
+    if (data.return) return true;
+    console.warn('[Fast2SMS] Both routes failed. OTP for', phone, '→', otp);
+  } catch (e) {
+    console.error('[Fast2SMS] OTP route error:', e.message);
+  }
+
+  return true; // always return true so the flow continues
 }
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────────────────
