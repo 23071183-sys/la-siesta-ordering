@@ -554,6 +554,23 @@
       display: none;
     }
 
+    .sidebar-top-btn {
+      display: block;
+      width: 100%;
+      padding: 0.9rem 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--orange);
+      background: var(--white);
+      border: none;
+      border-left: 3px solid transparent;
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .sidebar-top-btn:active { background: var(--light); }
+
     @media (min-width: 600px) {
       .cat-sidebar { width: 130px; }
     }
@@ -707,10 +724,20 @@
     setupScrollSpy();
   });
 
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('catSidebar').scrollTo({ top: 0, behavior: 'smooth' });
+    const firstBtn = document.querySelector('.sidebar-btn');
+    if (firstBtn) {
+      document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+      firstBtn.classList.add('active');
+    }
+  }
+
   function renderSidebar() {
     document.getElementById('catSidebar').innerHTML = menu.map((cat, i) =>
       `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
-    ).join('');
+    ).join('') + `<button class="sidebar-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>`;
   }
 
   function toggleVeg() {
