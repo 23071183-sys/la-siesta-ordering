@@ -211,7 +211,8 @@ async function sendOTPviaMSG91(phone) {
     return false;
   }
   const mobile = `91${phone}`;
-  const url = `https://api.msg91.com/api/sendotp.php?authkey=${authKey}&mobile=${mobile}&message=Your+OTP+for+La+Siesta+is+##OTP##+.+Valid+for+10+minutes.&sender=LSIEST&otp_length=6&otp_expiry=10`;
+  const message = encodeURIComponent(`Your OTP for La Siesta is ##OTP##. Valid for 10 minutes.`);
+  const url = `https://api.msg91.com/api/sendotp.php?authkey=${authKey}&mobile=${mobile}&message=${message}&sender=LSIEST&otp_length=6&otp_expiry=10`;
   const res = await fetch(url);
   const data = await res.json();
   console.log('[MSG91 send]', JSON.stringify(data));
