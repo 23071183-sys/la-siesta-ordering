@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 
 // Load .env file if present
 const envPath = path.join(__dirname, '.env');
@@ -20,7 +20,7 @@ const io = new Server(server);
 
 // ── DATABASE SETUP ──────────────────────────────────────────────────────────
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'orders.db');
-const db = new DatabaseSync(dbPath);
+const db = new Database(dbPath);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS categories (
