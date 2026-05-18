@@ -443,7 +443,7 @@
     .place-btn:active { opacity: 0.88; }
     .place-btn:disabled { background: #bbb; cursor: not-allowed; }
 
-    /* Phone / OTP */
+    /* Phone */
     .phone-row { display: flex; align-items: center; gap: 0.5rem; }
     .phone-prefix {
       flex-shrink: 0;
@@ -456,52 +456,7 @@
       color: var(--gray);
     }
     .phone-input { flex: 1; }
-    .otp-send-btn {
-      flex-shrink: 0;
-      padding: 0.75rem 0.9rem;
-      background: var(--dark);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.15s;
-    }
-    .otp-send-btn:disabled { background: #bbb; cursor: not-allowed; }
-    .otp-row { display: flex; gap: 0.5rem; }
-    .otp-input { flex: 1; letter-spacing: 0.2em; font-size: 1rem; font-weight: 600; }
-    .otp-verify-btn {
-      flex-shrink: 0;
-      padding: 0.75rem 0.9rem;
-      background: var(--orange);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .otp-verify-btn:disabled { background: #bbb; cursor: not-allowed; }
-    .otp-timer { font-size: 0.7rem; color: var(--orange); font-weight: 600; margin-left: 0.3rem; }
     .field-error { font-size: 0.75rem; color: #e43b4f; margin-top: 0.3rem; min-height: 1rem; }
-    .resend-link {
-      background: none; border: none;
-      color: var(--orange); font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem; font-weight: 500;
-      cursor: pointer; padding: 0; margin-top: 0.4rem;
-      text-decoration: underline;
-    }
-    .verified-badge {
-      display: flex; align-items: center; gap: 0.4rem;
-      background: #fdf3ee; border: 1.5px solid var(--orange);
-      color: var(--orange); font-size: 0.82rem; font-weight: 600;
-      padding: 0.5rem 0.9rem; border-radius: 8px; margin-bottom: 1rem;
-    }
 
     /* ── SUCCESS ── */
     .success-screen {
@@ -646,7 +601,7 @@
 
     <div class="form-group">
       <label class="form-label">Your Name</label>
-      <input class="form-input" id="custName" type="text" placeholder="Name to call out">
+      <input class="form-input" id="custName" type="text" placeholder="Name to call out" oninput="updatePlaceBtn()">
     </div>
 
     <div class="form-group">
@@ -654,31 +609,15 @@
       <div class="phone-row">
         <div class="phone-prefix">+91</div>
         <input class="form-input phone-input" id="custPhone" type="tel" maxlength="10" placeholder="10-digit number" oninput="onPhoneInput()">
-        <button class="otp-send-btn" id="otpSendBtn" onclick="sendOTP()" disabled>Send OTP</button>
       </div>
       <div id="phoneError" class="field-error"></div>
-    </div>
-
-    <div class="form-group" id="otpGroup" style="display:none">
-      <label class="form-label">Enter OTP <span id="otpTimer" class="otp-timer"></span></label>
-      <div class="otp-row">
-        <input class="form-input otp-input" id="otpInput" type="tel" maxlength="6" placeholder="6-digit OTP" oninput="onOtpInput()">
-        <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyOTP()" disabled>Verify</button>
-      </div>
-      <div id="otpError" class="field-error"></div>
-      <button class="resend-link" id="resendBtn" onclick="sendOTP(true)" style="display:none">Resend OTP</button>
-    </div>
-
-    <div class="verified-badge" id="verifiedBadge" style="display:none">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      Phone verified
     </div>
 
     <div class="form-group">
       <label class="form-label">Special Requests</label>
       <input class="form-input" id="orderNotes" type="text" placeholder="No sugar, extra ice, oat milk…">
     </div>
-    <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Verify phone to place order</button>
+    <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Place Order</button>
   </div>
 </div>
 
@@ -897,104 +836,16 @@
     }, 400);
   }
 
-  // ── OTP FLOW ──
-  let phoneVerified = false;
-  let otpTimerInterval = null;
-
   function onPhoneInput() {
     const phone = document.getElementById('custPhone').value;
     document.getElementById('phoneError').textContent = '';
-    if (phoneVerified) {
-      phoneVerified = false;
-      document.getElementById('verifiedBadge').style.display = 'none';
-      document.getElementById('otpGroup').style.display = 'none';
-      document.getElementById('placeBtn').disabled = true;
-      document.getElementById('placeBtn').textContent = 'Verify phone to place order';
-    }
-    document.getElementById('otpSendBtn').disabled = !/^[6-9]\d{9}$/.test(phone);
+    updatePlaceBtn();
   }
 
-  async function sendOTP(isResend = false) {
+  function updatePlaceBtn() {
+    const name  = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      document.getElementById('phoneError').textContent = 'Enter a valid 10-digit mobile number';
-      return;
-    }
-    const btn = document.getElementById('otpSendBtn');
-    btn.disabled = true; btn.textContent = 'Sending…';
-    document.getElementById('phoneError').textContent = '';
-    document.getElementById('otpError').textContent = '';
-    try {
-      const res = await fetch('/api/otp/send', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      });
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('otpGroup').style.display = 'block';
-        document.getElementById('otpInput').value = '';
-        document.getElementById('resendBtn').style.display = 'none';
-        startOtpTimer();
-      } else {
-        document.getElementById('phoneError').textContent = data.error || 'Failed to send OTP';
-        btn.disabled = false;
-      }
-    } catch {
-      document.getElementById('phoneError').textContent = 'Network error. Try again.';
-      btn.disabled = false;
-    }
-    btn.textContent = isResend ? 'Resend OTP' : 'Send OTP';
-  }
-
-  function startOtpTimer() {
-    clearInterval(otpTimerInterval);
-    let seconds = 60;
-    const timerEl = document.getElementById('otpTimer');
-    timerEl.textContent = `(${seconds}s)`;
-    otpTimerInterval = setInterval(() => {
-      seconds--;
-      timerEl.textContent = seconds > 0 ? `(${seconds}s)` : '';
-      if (seconds <= 0) {
-        clearInterval(otpTimerInterval);
-        document.getElementById('resendBtn').style.display = 'inline';
-      }
-    }, 1000);
-  }
-
-  function onOtpInput() {
-    document.getElementById('otpError').textContent = '';
-    document.getElementById('otpVerifyBtn').disabled = document.getElementById('otpInput').value.length !== 6;
-  }
-
-  async function verifyOTP() {
-    const phone = document.getElementById('custPhone').value.trim();
-    const otp   = document.getElementById('otpInput').value.trim();
-    const btn   = document.getElementById('otpVerifyBtn');
-    btn.disabled = true; btn.textContent = 'Verifying…';
-    document.getElementById('otpError').textContent = '';
-    try {
-      const res = await fetch('/api/otp/verify', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp })
-      });
-      const data = await res.json();
-      if (data.success) {
-        phoneVerified = true;
-        clearInterval(otpTimerInterval);
-        document.getElementById('otpGroup').style.display = 'none';
-        document.getElementById('verifiedBadge').style.display = 'flex';
-        document.getElementById('placeBtn').disabled = false;
-        document.getElementById('placeBtn').textContent = 'Place Order';
-        document.getElementById('custPhone').disabled = true;
-        document.getElementById('otpSendBtn').style.display = 'none';
-      } else {
-        document.getElementById('otpError').textContent = data.error || 'Incorrect OTP';
-        btn.disabled = false; btn.textContent = 'Verify';
-      }
-    } catch {
-      document.getElementById('otpError').textContent = 'Network error. Try again.';
-      btn.disabled = false; btn.textContent = 'Verify';
-    }
+    document.getElementById('placeBtn').disabled = !(name && /^[6-9]\d{9}$/.test(phone));
   }
 
   function openCheckout() {
@@ -1048,21 +899,10 @@
   function resetOrder() {
     document.getElementById('successScreen').classList.remove('show');
     document.getElementById('custName').value = '';
-    document.getElementById('orderNotes').value = '';
-    phoneVerified = false;
-    clearInterval(otpTimerInterval);
     document.getElementById('custPhone').value = '';
-    document.getElementById('custPhone').disabled = false;
-    document.getElementById('otpSendBtn').style.display = '';
-    document.getElementById('otpSendBtn').disabled = true;
-    document.getElementById('otpSendBtn').textContent = 'Send OTP';
-    document.getElementById('otpGroup').style.display = 'none';
-    document.getElementById('otpInput').value = '';
-    document.getElementById('verifiedBadge').style.display = 'none';
+    document.getElementById('orderNotes').value = '';
     document.getElementById('phoneError').textContent = '';
-    document.getElementById('otpError').textContent = '';
     document.getElementById('placeBtn').disabled = true;
-    document.getElementById('placeBtn').textContent = 'Verify phone to place order';
   }
 </script>
 </body>

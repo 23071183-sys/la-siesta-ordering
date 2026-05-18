@@ -197,38 +197,6 @@ if (catCount === 0) {
   addItem.run(desserts, 'Belgian Chocolate Cake','Decadent Belgian chocolate cake with intense cocoa taste', 290);
 }
 
-// ── OTP STORE (in-memory, expires in 10 min) ─────────────────────────────────
-const otpStore = new Map(); // phone → { otp, expiresAt, verified }
-
-function generateOTP() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-async function sendOTPviaMSG91(phone) {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  if (!authKey) {
-    console.warn('[MSG91] Missing MSG91_AUTH_KEY env var');
-    return false;
-  }
-  const mobile = `91${phone}`;
-  const message = encodeURIComponent(`Your OTP for La Siesta is ##OTP##. Valid for 10 minutes.`);
-  const url = `https://api.msg91.com/api/sendotp.php?authkey=${authKey}&mobile=${mobile}&message=${message}&otp_length=6&otp_expiry=10`;
-  const res = await fetch(url);
-  const data = await res.json();
-  console.log('[MSG91 send]', JSON.stringify(data));
-  return data.type === 'success';
-}
-
-async function verifyOTPviaMSG91(phone, otp) {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  if (!authKey) return false;
-  const mobile = `91${phone}`;
-  const url = `https://api.msg91.com/api/verifyRequestOTP.php?authkey=${authKey}&mobile=${mobile}&otp=${otp}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  console.log('[MSG91 verify]', JSON.stringify(data));
-  return data.type === 'success';
-}
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -247,43 +215,6 @@ app.get('/api/menu', (req, res) => {
   res.json(cats.map(c => ({ ...c, items: items.filter(i => i.category_id === c.id) })));
 });
 
-// ── OTP API ──────────────────────────────────────────────────────────────────
-app.post('/api/otp/send', async (req, res) => {
-  const { phone } = req.body;
-  if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
-    return res.status(400).json({ error: 'Enter a valid 10-digit Indian mobile number' });
-  }
-  try {
-    const sent = await sendOTPviaMSG91(phone);
-    if (!sent) return res.status(500).json({ error: 'Failed to send OTP. Check MSG91 credentials.' });
-    // Track that OTP was sent (MSG91 stores the OTP on their end)
-    otpStore.set(phone, { expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
-    res.json({ success: true });
-  } catch (e) {
-    console.error('[OTP send error]', e);
-    res.status(500).json({ error: 'Failed to send OTP. Try again.' });
-  }
-});
-
-app.post('/api/otp/verify', async (req, res) => {
-  const { phone, otp } = req.body;
-  const record = otpStore.get(phone);
-  if (!record) return res.status(400).json({ error: 'No OTP sent for this number' });
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(phone);
-    return res.status(400).json({ error: 'OTP expired. Request a new one.' });
-  }
-  try {
-    const valid = await verifyOTPviaMSG91(phone, otp);
-    if (!valid) return res.status(400).json({ error: 'Incorrect OTP' });
-    record.verified = true;
-    res.json({ success: true });
-  } catch (e) {
-    console.error('[OTP verify error]', e);
-    res.status(500).json({ error: 'Verification failed. Try again.' });
-  }
-});
-
 // ── ORDER API ────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
   const { table_number, customer_name, customer_phone, notes, items } = req.body;
@@ -291,11 +222,7 @@ app.post('/api/orders', (req, res) => {
     return res.status(400).json({ error: 'table_number and items are required' });
   }
   if (!customer_phone || !/^[6-9]\d{9}$/.test(customer_phone)) {
-    return res.status(400).json({ error: 'A verified phone number is required' });
-  }
-  const record = otpStore.get(customer_phone);
-  if (!record?.verified) {
-    return res.status(400).json({ error: 'Phone number not verified. Please verify via OTP.' });
+    return res.status(400).json({ error: 'Enter a valid 10-digit phone number' });
   }
 
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -321,7 +248,6 @@ app.post('/api/orders', (req, res) => {
     throw e;
   }
 
-  otpStore.delete(customer_phone); // consume verification
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
 
