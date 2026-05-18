@@ -81,6 +81,7 @@ if (catCount === 0) {
   const riceBowls    = addCat.run('Rice Bowls', 11).lastInsertRowid;
   const sweets       = addCat.run('Sweets', 12).lastInsertRowid;
   const packaged     = addCat.run('Packaged Drinks', 13).lastInsertRowid;
+  const desserts     = addCat.run('Desserts', 14).lastInsertRowid;
 
   // Hot Coffee
   addItem.run(hotCoffee, 'Espresso',       'Single shot, freshly pulled',          120);
@@ -187,6 +188,13 @@ if (catCount === 0) {
   addItem.run(packaged, 'Water Bottle', 'Still water 500ml',  40);
   addItem.run(packaged, 'Redbull',      'Energy drink 250ml', 180);
   addItem.run(packaged, 'Diet Coke',    'Diet Coke 300ml',    70);
+
+  // Desserts
+  addItem.run(desserts, 'Mango Tres Leches',     'Light sponge cake soaked in flavored milk, topped with fresh Alphonso Mangoes', 390);
+  addItem.run(desserts, 'Mango Misu',            'Fruity tiramisu with layers of soft biscuits, creamy filling and sweet mango puree', 360);
+  addItem.run(desserts, 'Tiramisu',              'Ladyfinger biscuits soaked in espresso, layered with mascarpone and Belgian cocoa', 330);
+  addItem.run(desserts, 'Chocolate Croissant',   'Golden layered croissant filled with luscious chocolate, crisp outside & soft inside', 290);
+  addItem.run(desserts, 'Belgian Chocolate Cake','Decadent Belgian chocolate cake with intense cocoa taste', 290);
 }
 
 // ── OTP STORE (in-memory, expires in 10 min) ─────────────────────────────────
