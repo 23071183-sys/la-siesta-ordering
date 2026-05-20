@@ -79,15 +79,15 @@ if (catCount === 0) {
   const icedTea      = addCat.run('Iced Tea', 9).lastInsertRowid;
   const matcha          = addCat.run('Matcha', 10).lastInsertRowid;
   const packaged        = addCat.run('Packaged Drinks', 11).lastInsertRowid;
-  const globalFusions   = addCat.run('Global Fusions', 11).lastInsertRowid;
-  const toasties        = addCat.run('Toasties', 12).lastInsertRowid;
-  const pasta           = addCat.run('Pasta', 13).lastInsertRowid;
-  const sandwiches      = addCat.run('Sandwiches', 14).lastInsertRowid;
-  const mains           = addCat.run('Mains', 15).lastInsertRowid;
-  const riceBowls       = addCat.run('Special Rice Bowls', 16).lastInsertRowid;
-  const sides           = addCat.run('Sides', 17).lastInsertRowid;
-  const sweets          = addCat.run('Sweet', 18).lastInsertRowid;
-  const desserts        = addCat.run('Desserts', 19).lastInsertRowid;
+  const globalFusions   = addCat.run('Global Fusions', 12).lastInsertRowid;
+  const toasties        = addCat.run('Toasties', 13).lastInsertRowid;
+  const pasta           = addCat.run('Pasta', 14).lastInsertRowid;
+  const sandwiches      = addCat.run('Sandwiches', 15).lastInsertRowid;
+  const mains           = addCat.run('Mains', 16).lastInsertRowid;
+  const riceBowls       = addCat.run('Special Rice Bowls', 17).lastInsertRowid;
+  const sides           = addCat.run('Sides', 18).lastInsertRowid;
+  const sweets          = addCat.run('Sweet', 19).lastInsertRowid;
+  const desserts        = addCat.run('Desserts', 20).lastInsertRowid;
 
   // Hot Coffee
   addItem.run(hotCoffee, 'Espresso',       'Single shot, freshly pulled',         120);
@@ -230,6 +230,19 @@ if (catCount === 0) {
   addItem.run(desserts, 'Belgian Chocolate Cake', 'Decadent Belgian chocolate cake with intense cocoa taste',                           290);
 }
 
+// ── MIGRATION: add Matcha category if missing ────────────────────────────────
+const matchaExists = db.prepare("SELECT id FROM categories WHERE name = 'Matcha'").get();
+if (!matchaExists) {
+  const addItem = db.prepare('INSERT INTO menu_items (category_id, name, description, price) VALUES (?, ?, ?, ?)');
+  const matchaId = db.prepare("INSERT INTO categories (name, sort_order) VALUES ('Matcha', 10)").run().lastInsertRowid;
+  // shift Packaged Drinks and food cats down by 1
+  db.prepare("UPDATE categories SET sort_order = sort_order + 1 WHERE sort_order >= 10 AND name != 'Matcha'").run();
+  addItem.run(matchaId, 'Mango Matcha Latte',      'Ceremonial matcha with fresh Alphonso mango',      250);
+  addItem.run(matchaId, 'Matcha Latte',            'Classic iced matcha with creamy milk',             230);
+  addItem.run(matchaId, 'Matcha Cloud',            'Iced matcha topped with salted cream cloud foam',  250);
+  addItem.run(matchaId, 'Strawberry Matcha Latte', 'Matcha layered with fresh strawberry purée',       250);
+  console.log('[Migration] Matcha category added');
+}
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────────────────
 app.use(express.json());
