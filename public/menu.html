@@ -379,11 +379,27 @@
       border-radius: 2px;
       margin: 0.9rem auto 1.2rem;
     }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .modal-back-btn {
+      background: none;
+      border: none;
+      padding: 0.2rem;
+      cursor: pointer;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
     .modal-title {
       font-size: 1.2rem;
       font-weight: 700;
       color: var(--dark);
-      margin-bottom: 1rem;
+      margin-bottom: 0;
     }
     .order-summary {
       background: var(--light);
@@ -596,7 +612,14 @@
 <div class="modal-backdrop" id="orderModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Your Order</div>
+    <div class="modal-header">
+      <button class="modal-back-btn" onclick="document.getElementById('orderModal').classList.remove('open')" aria-label="Go back">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div class="modal-title">Your Order</div>
+    </div>
     <div class="order-summary" id="orderSummary"></div>
 
     <div class="form-group">
