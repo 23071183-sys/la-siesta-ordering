@@ -1096,222 +1096,194 @@
   }
 </script>
 
-<!-- ── THREE.JS DESSERT STAGE ENGINE ── -->
-<script type="module">
-import * as THREE from 'https://esm.sh/three@0.165';
-
-// ── Resting fan layout in 3-D world space ──
-const REST = [
-  { x: -1.88, y: -0.10, z: -0.28, ry: -0.28, s: 0.78 },
-  { x: -0.94, y:  0.02, z: -0.10, ry: -0.10, s: 0.90 },
-  { x:  0.0,  y:  0.08, z:  0.0,  ry:  0.0,  s: 1.02 },
-  { x:  0.94, y:  0.02, z: -0.10, ry:  0.10, s: 0.90 },
-  { x:  1.88, y: -0.10, z: -0.28, ry:  0.28, s: 0.78 },
-];
-
-const lerp = (a, b, t) => a + (b - a) * t;
-
-// ── Photo sources & matching edge colours (index = dessert order) ─────────
-const SRCS = ['/ds1.png', '/ds2.png', '/ds3.png', '/ds4.png', '/ds5.png'];
-const EDGE = [0xFFF0D8,   0xEDD898,   0x6A3A22,   0xC07830,   0x180602];
-
-// ── Build a physical photo-slab: actual food photo on a 3D object ─────────
-function buildSlab(src, edgeHex) {
-  const g = new THREE.Group();
-  const W = 0.60, H = 0.80, D = 0.07;
-
-  // Cream mat border behind photo
-  g.add(Object.assign(
-    new THREE.Mesh(
-      new THREE.PlaneGeometry(W + 0.055, H + 0.055),
-      new THREE.MeshPhongMaterial({ color: 0xFFFAF5, shininess: 6 })
-    ),
-    { position: new THREE.Vector3(0, 0, D / 2 + 0.001) }
-  ));
-
-  // Photo plane — replaced with real texture once loaded
-  const photoPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(W, H),
-    new THREE.MeshPhongMaterial({ color: 0xBBAA99, shininess: 14 })
-  );
-  photoPlane.position.z = D / 2 + 0.003;
-  g.add(photoPlane);
-
-  // Slab body — gives physical depth & coloured edges visible at angle
-  g.add(new THREE.Mesh(
-    new THREE.BoxGeometry(W + 0.075, H + 0.075, D),
-    new THREE.MeshPhongMaterial({ color: edgeHex, shininess: 12 })
-  ));
-
-  // Lean top slightly toward camera so photo fully faces viewer
-  g.rotation.x = -0.10;
-
-  // Load real photo and swap in
-  new THREE.TextureLoader().load(src, tex => {
-    tex.colorSpace = THREE.SRGBColorSpace;
-    photoPlane.material = new THREE.MeshPhongMaterial({ map: tex, shininess: 22 });
-  });
-
-  return g;
-}
-
-// ── Scene state ───────────────────────────────────────────────────────────
-let _ren, _scene, _cam, _raf, _clock;
-let _objs = [];
-
-function cleanup() {
-  if (_raf) cancelAnimationFrame(_raf);
-  _objs.forEach(o => o.group.traverse(c => {
-    if (c.isMesh) { c.geometry.dispose(); c.material.dispose?.(); }
-  }));
-  if (_ren) _ren.dispose();
-  _objs = [];
-}
-window._threeCleanup = cleanup;
-
-// ── Init ──────────────────────────────────────────────────────────────────
-window._threeInit = function(canvas, items) {
-  cleanup();
-
-  const W = canvas.offsetWidth  || 320;
-  const H = canvas.offsetHeight || 240;
-
-  _ren = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  _ren.setSize(W, H, false);
-  _ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  _ren.setClearColor(0x000000, 0);   // transparent — blurred table bg shows through
-
-  _scene = new THREE.Scene();
-
-  _cam = new THREE.PerspectiveCamera(44, W / H, 0.1, 50);
-  _cam.position.set(0, 0.45, 5.2);
-  _cam.lookAt(0, 0.05, 0);
-
-  _scene.add(new THREE.AmbientLight(0xFFF8F0, 0.80));
-  const key = new THREE.DirectionalLight(0xFFEED8, 1.60);
-  key.position.set(2, 5, 5);
-  _scene.add(key);
-  const rim = new THREE.DirectionalLight(0xC09858, 0.45);
-  rim.position.set(-3, 1, 1);
-  _scene.add(rim);
-
-  _objs = items.slice(0, 5).map((item, i) => {
-    const group = buildSlab(SRCS[i] || '/ds1.png', EDGE[i] || 0xD0C0A8);
-    group.userData.id = item.id;
-    const r = REST[i] || REST[2];
-    group.position.set(-14, r.y, r.z);
-    group.rotation.y = r.ry;
-    group.scale.setScalar(r.s);
-    _scene.add(group);
-    return {
-      group, id: item.id,
-      rest: { ...r },
-      target: { x: -14, y: r.y, z: r.z, s: r.s },
-      cur:    { x: -14, y: r.y, z: r.z, s: r.s },
-      focused: false, fo: i * 1.1,
-    };
-  });
-
-  _clock = new THREE.Clock();
-
-  // Raycasting — click + touch both call window.focusDessert
-  function pick(cx, cy) {
-    const rect = canvas.getBoundingClientRect();
-    const nx =  ((cx - rect.left) / rect.width)  * 2 - 1;
-    const ny = -((cy - rect.top)  / rect.height)  * 2 + 1;
-    const rc = new THREE.Raycaster();
-    rc.setFromCamera({ x: nx, y: ny }, _cam);
-    const all = [];
-    _objs.forEach(o => o.group.traverse(c => { if (c.isMesh) all.push(c); }));
-    const hits = rc.intersectObjects(all);
-    if (!hits.length) return;
-    let obj = hits[0].object;
-    while (obj.parent && obj.userData.id === undefined) obj = obj.parent;
-    if (obj.userData.id !== undefined) window.focusDessert(obj.userData.id);
+<!-- Three.js loaded as plain script — no ESM, no race conditions -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+<script>
+(function() {
+  if (typeof THREE === 'undefined') {
+    console.error('[dessert] Three.js failed to load'); return;
   }
-  canvas.addEventListener('click',    e => pick(e.clientX, e.clientY));
-  canvas.addEventListener('touchend', e => {
-    e.preventDefault();
-    pick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-  }, { passive: false });
 
-  // Resize
-  new ResizeObserver(() => {
-    const nW = canvas.offsetWidth, nH = canvas.offsetHeight;
-    if (nW && nH) {
-      _ren.setSize(nW, nH, false);
-      _cam.aspect = nW / nH;
-      _cam.updateProjectionMatrix();
-    }
-  }).observe(canvas.parentElement);
+  const REST = [
+    { x: -1.88, y: -0.10, z: -0.28, ry: -0.28, s: 0.78 },
+    { x: -0.94, y:  0.02, z: -0.10, ry: -0.10, s: 0.90 },
+    { x:  0.0,  y:  0.08, z:  0.0,  ry:  0.0,  s: 1.02 },
+    { x:  0.94, y:  0.02, z: -0.10, ry:  0.10, s: 0.90 },
+    { x:  1.88, y: -0.10, z: -0.28, ry:  0.28, s: 0.78 },
+  ];
+  const SRCS = ['/ds1.png','/ds2.png','/ds3.png','/ds4.png','/ds5.png'];
+  const EDGE = [0xFFF0D8, 0xEDD898, 0x6A3A22, 0xC07830, 0x180602];
+  const lerp  = (a,b,t) => a + (b-a)*t;
 
-  // Render loop
-  (function tick() {
-    _raf = requestAnimationFrame(tick);
-    const t = _clock.getElapsedTime();
-    _objs.forEach(o => {
-      const spd = 0.10;
-      o.cur.x = lerp(o.cur.x, o.target.x, spd);
-      o.cur.y = lerp(o.cur.y, o.target.y, 0.08);
-      o.cur.z = lerp(o.cur.z, o.target.z, spd);
-      o.cur.s = lerp(o.cur.s, o.target.s, spd);
-      const float = Math.sin(t * 0.75 + o.fo) * 0.048;
-      o.group.position.set(o.cur.x, o.cur.y + float, o.cur.z);
-      o.group.scale.setScalar(o.cur.s);
-      o.group.rotation.y = lerp(o.group.rotation.y, o.focused ? 0 : o.rest.ry, 0.06);
+  function buildSlab(src, edgeHex) {
+    const g = new THREE.Group();
+    const W = 0.60, H = 0.80, D = 0.07;
+
+    // White mat border
+    const border = new THREE.Mesh(
+      new THREE.PlaneGeometry(W+0.055, H+0.055),
+      new THREE.MeshPhongMaterial({ color: 0xFFFAF5, shininess: 6 })
+    );
+    border.position.z = D/2 + 0.001;
+    g.add(border);
+
+    // Photo plane (placeholder colour until texture loads)
+    const photo = new THREE.Mesh(
+      new THREE.PlaneGeometry(W, H),
+      new THREE.MeshPhongMaterial({ color: 0xBBAA99, shininess: 14 })
+    );
+    photo.position.z = D/2 + 0.003;
+    g.add(photo);
+
+    // Slab body — coloured edges visible at angle
+    g.add(new THREE.Mesh(
+      new THREE.BoxGeometry(W+0.075, H+0.075, D),
+      new THREE.MeshPhongMaterial({ color: edgeHex, shininess: 12 })
+    ));
+
+    g.rotation.x = -0.10;   // lean top toward camera
+
+    new THREE.TextureLoader().load(src, function(tex) {
+      photo.material = new THREE.MeshPhongMaterial({ map: tex, shininess: 22 });
     });
-    _ren.render(_scene, _cam);
-  })();
-};
 
-// ── Entrance: staggered slide-in from left ────────────────────────────────
-window._threeEntrance = function() {
-  _objs.forEach((o, i) => setTimeout(() => {
-    o.target = { x: o.rest.x, y: o.rest.y, z: o.rest.z, s: o.rest.s };
-  }, i * 130));
-  setTimeout(() => {
-    const h = document.getElementById('stageHint');
-    if (h) h.classList.add('visible');
-  }, _objs.length * 130 + 650);
-};
+    return g;
+  }
 
-// ── Focus: pop forward, dim others ───────────────────────────────────────
-window._threeFocus = function(itemId) {
-  const o = _objs.find(m => m.id === itemId);
-  if (!o) return;
-  o.focused = !o.focused;
-  const any = _objs.some(m => m.focused);
-  _objs.forEach(m => {
-    if (m.focused)      m.target = { x: m.rest.x, y: m.rest.y + 0.55, z: m.rest.z + 1.35, s: m.rest.s * 1.34 };
-    else if (any)       m.target = { x: m.rest.x, y: m.rest.y - 0.22, z: m.rest.z - 0.38, s: m.rest.s * 0.74 };
-    else                m.target = { x: m.rest.x, y: m.rest.y,        z: m.rest.z,         s: m.rest.s };
-  });
-};
+  var _ren, _scene, _cam, _raf, _t0 = 0;
+  var _objs = [];
 
-// ── Exit: staggered fly-out to right ────────────────────────────────────
-window._threeExit = function(cb) {
-  [..._objs].reverse().forEach((o, i) => setTimeout(() => { o.target.x = 14; }, i * 90));
-  setTimeout(() => cb && cb(), _objs.length * 90 + 560);
-};
+  function cleanup() {
+    if (_raf) cancelAnimationFrame(_raf);
+    _objs.forEach(function(o) {
+      o.group.traverse(function(c) {
+        if (c.isMesh) { c.geometry.dispose(); if(c.material.dispose) c.material.dispose(); }
+      });
+    });
+    if (_ren) _ren.dispose();
+    _objs = [];
+  }
+  window._threeCleanup = cleanup;
 
-// ── Reset: snap back off-screen-left ─────────────────────────────────────
-window._threeReset = function() {
-  _objs.forEach(o => {
-    o.focused = false;
-    o.target  = { x: -14, y: o.rest.y, z: o.rest.z, s: o.rest.s };
-    o.cur.x   = -14;
-  });
-};
+  window._threeInit = function(canvas, items) {
+    cleanup();
+    var W = canvas.offsetWidth  || 340;
+    var H = canvas.offsetHeight || 240;
 
-console.log('[dessert stage] Three.js engine ready ✓');
+    _ren = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    _ren.setSize(W, H, false);
+    _ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    _ren.setClearColor(0x000000, 0);
 
-// Race-condition guard: if user scrolled to Desserts before this module
-// finished downloading, _initStageWhenReady was retrying. Now that all
-// window.* functions are defined it will succeed on next retry.
-// If canvas is already in DOM but retries haven't started, kick one off.
-if (document.getElementById('dessertCanvas')) {
-  window._initStageWhenReady?.();
-}
+    _scene = new THREE.Scene();
+    _cam   = new THREE.PerspectiveCamera(44, W/H, 0.1, 50);
+    _cam.position.set(0, 0.45, 5.2);
+    _cam.lookAt(0, 0.05, 0);
+
+    _scene.add(new THREE.AmbientLight(0xFFF8F0, 0.80));
+    var key = new THREE.DirectionalLight(0xFFEED8, 1.60);
+    key.position.set(2, 5, 5); _scene.add(key);
+    var rim = new THREE.DirectionalLight(0xC09858, 0.45);
+    rim.position.set(-3, 1, 1); _scene.add(rim);
+
+    _objs = items.slice(0,5).map(function(item, i) {
+      var group = buildSlab(SRCS[i]||'/ds1.png', EDGE[i]||0xD0C0A8);
+      group.userData.id = item.id;
+      var r = REST[i] || REST[2];
+      group.position.set(-14, r.y, r.z);
+      group.rotation.y = r.ry;
+      group.scale.setScalar(r.s);
+      _scene.add(group);
+      return { group:group, id:item.id, rest:Object.assign({},r),
+               target:{x:-14,y:r.y,z:r.z,s:r.s},
+               cur:{x:-14,y:r.y,z:r.z,s:r.s},
+               focused:false, fo:i*1.1 };
+    });
+
+    _t0 = performance.now();
+
+    function pick(cx, cy) {
+      var rect = canvas.getBoundingClientRect();
+      var nx = ((cx-rect.left)/rect.width)*2-1;
+      var ny = -((cy-rect.top)/rect.height)*2+1;
+      var rc = new THREE.Raycaster();
+      rc.setFromCamera({x:nx,y:ny}, _cam);
+      var all = [];
+      _objs.forEach(function(o){ o.group.traverse(function(c){ if(c.isMesh) all.push(c); }); });
+      var hits = rc.intersectObjects(all);
+      if (!hits.length) return;
+      var obj = hits[0].object;
+      while (obj.parent && obj.userData.id === undefined) obj = obj.parent;
+      if (obj.userData.id !== undefined) window.focusDessert(obj.userData.id);
+    }
+    canvas.addEventListener('click', function(e){ pick(e.clientX, e.clientY); });
+    canvas.addEventListener('touchend', function(e){
+      e.preventDefault(); pick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }, { passive: false });
+
+    new ResizeObserver(function(){
+      var nW=canvas.offsetWidth, nH=canvas.offsetHeight;
+      if(nW&&nH){ _ren.setSize(nW,nH,false); _cam.aspect=nW/nH; _cam.updateProjectionMatrix(); }
+    }).observe(canvas.parentElement);
+
+    (function tick() {
+      _raf = requestAnimationFrame(tick);
+      var t = (performance.now() - _t0) / 1000;
+      _objs.forEach(function(o) {
+        o.cur.x = lerp(o.cur.x, o.target.x, 0.10);
+        o.cur.y = lerp(o.cur.y, o.target.y, 0.08);
+        o.cur.z = lerp(o.cur.z, o.target.z, 0.10);
+        o.cur.s = lerp(o.cur.s, o.target.s, 0.10);
+        var fl = Math.sin(t*0.75 + o.fo)*0.048;
+        o.group.position.set(o.cur.x, o.cur.y+fl, o.cur.z);
+        o.group.scale.setScalar(o.cur.s);
+        o.group.rotation.y = lerp(o.group.rotation.y, o.focused ? 0 : o.rest.ry, 0.06);
+      });
+      _ren.render(_scene, _cam);
+    })();
+  };
+
+  window._threeEntrance = function() {
+    _objs.forEach(function(o, i) {
+      setTimeout(function(){ o.target = {x:o.rest.x,y:o.rest.y,z:o.rest.z,s:o.rest.s}; }, i*130);
+    });
+    setTimeout(function(){
+      var h = document.getElementById('stageHint');
+      if (h) h.classList.add('visible');
+    }, _objs.length*130 + 600);
+  };
+
+  window._threeFocus = function(itemId) {
+    var o = _objs.find(function(m){ return m.id===itemId; });
+    if (!o) return;
+    o.focused = !o.focused;
+    var any = _objs.some(function(m){ return m.focused; });
+    _objs.forEach(function(m) {
+      if (m.focused)    m.target = {x:m.rest.x, y:m.rest.y+0.55, z:m.rest.z+1.35, s:m.rest.s*1.34};
+      else if (any)     m.target = {x:m.rest.x, y:m.rest.y-0.22, z:m.rest.z-0.38, s:m.rest.s*0.74};
+      else              m.target = {x:m.rest.x, y:m.rest.y,      z:m.rest.z,      s:m.rest.s};
+    });
+  };
+
+  window._threeExit = function(cb) {
+    var rev = _objs.slice().reverse();
+    rev.forEach(function(o,i){ setTimeout(function(){ o.target.x=14; }, i*90); });
+    setTimeout(function(){ if(cb) cb(); }, rev.length*90+560);
+  };
+
+  window._threeReset = function() {
+    _objs.forEach(function(o){
+      o.focused = false;
+      o.target = {x:-14, y:o.rest.y, z:o.rest.z, s:o.rest.s};
+      o.cur.x  = -14;
+    });
+  };
+
+  // Self-trigger if canvas already in DOM when this script ran
+  window._initStageWhenReady && window._initStageWhenReady();
+
+  console.log('[dessert] Three.js ready, _threeInit defined ✓');
+})();
 </script>
 </body>
 </html>
