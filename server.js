@@ -77,7 +77,8 @@ if (catCount === 0) {
   const mojito       = addCat.run('Mojito', 7).lastInsertRowid;
   const milkshakes   = addCat.run('Milkshakes', 8).lastInsertRowid;
   const icedTea      = addCat.run('Iced Tea', 9).lastInsertRowid;
-  const packaged        = addCat.run('Packaged Drinks', 10).lastInsertRowid;
+  const matcha          = addCat.run('Matcha', 10).lastInsertRowid;
+  const packaged        = addCat.run('Packaged Drinks', 11).lastInsertRowid;
   const globalFusions   = addCat.run('Global Fusions', 11).lastInsertRowid;
   const toasties        = addCat.run('Toasties', 12).lastInsertRowid;
   const pasta           = addCat.run('Pasta', 13).lastInsertRowid;
@@ -158,6 +159,12 @@ if (catCount === 0) {
   addItem.run(icedTea, 'Lemon',    'Classic lemon iced tea',   180);
   addItem.run(icedTea, 'Peach',    'Sweet peach iced tea',     180);
   addItem.run(icedTea, 'Hibiscus', 'Floral hibiscus iced tea', 180);
+
+  // Matcha
+  addItem.run(matcha, 'Mango Matcha Latte',      'Ceremonial matcha with fresh Alphonso mango',      250);
+  addItem.run(matcha, 'Matcha Latte',            'Classic iced matcha with creamy milk',             230);
+  addItem.run(matcha, 'Matcha Cloud',            'Iced matcha topped with salted cream cloud foam',  250);
+  addItem.run(matcha, 'Strawberry Matcha Latte', 'Matcha layered with fresh strawberry purée',       250);
 
   // Packaged Drinks
   addItem.run(packaged, 'Water Bottle', 'Still water 500ml',  40);
