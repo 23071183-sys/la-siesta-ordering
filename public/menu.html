@@ -521,6 +521,86 @@
       cursor: pointer;
     }
 
+    /* ── DESSERT 3D STAGE ── */
+    .dessert-stage {
+      width: 100%;
+      overflow: hidden;
+      padding: 1rem 0 1.4rem;
+      perspective: 900px;
+      transform-style: preserve-3d;
+    }
+    .stage-track {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.5rem 0.8rem 0.8rem;
+      align-items: center;
+      justify-content: center;
+      min-height: 190px;
+    }
+    .stage-card {
+      flex-shrink: 0;
+      width: 100px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(26,13,6,0.22);
+      opacity: 0;
+      transform: translateX(-110vw) rotateY(-55deg) scale(0.85);
+      transition: transform 0.7s cubic-bezier(0.22,1,0.36,1),
+                  opacity 0.55s ease,
+                  box-shadow 0.35s ease,
+                  filter 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .stage-card.entered   { opacity: 1; }
+    .stage-card.entered:nth-child(1) { transform: rotateY(-18deg) translateX(-6px) translateZ(-10px); }
+    .stage-card.entered:nth-child(2) { transform: rotateY(-9deg)  translateX(-2px) translateZ(5px);  }
+    .stage-card.entered:nth-child(3) { transform: rotateY(0deg)   translateZ(20px) scale(1.07);      }
+    .stage-card.entered:nth-child(4) { transform: rotateY(9deg)   translateX(2px)  translateZ(5px);  }
+    .stage-card.entered:nth-child(5) { transform: rotateY(18deg)  translateX(6px)  translateZ(-10px);}
+    .stage-card.focused {
+      transform: rotateY(0deg) translateZ(50px) scale(1.38) !important;
+      box-shadow: 0 20px 55px rgba(212,85,42,0.38);
+      z-index: 20;
+      opacity: 1 !important;
+      filter: none !important;
+    }
+    .stage-card.dimmed {
+      transform: scale(0.75) translateZ(-30px) !important;
+      opacity: 0.38 !important;
+      filter: blur(1.5px);
+    }
+    .stage-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+    }
+    .stage-card-label {
+      font-size: 0.58rem;
+      font-weight: 600;
+      color: var(--dark);
+      text-align: center;
+      padding: 0.32rem 0.4rem;
+      background: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.02em;
+    }
+    .stage-hint {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--gray);
+      letter-spacing: 0.06em;
+      opacity: 0;
+      transition: opacity 0.5s ease 1s;
+      margin-top: -0.3rem;
+    }
+    .stage-hint.visible { opacity: 1; }
+    .dessert-row { cursor: pointer; transition: background 0.2s; }
+    .dessert-row.active-row { background: #fdf0e8; border-radius: 12px; }
+
     /* ── EMPTY SEARCH STATE ── */
     .empty-search {
       padding: 3rem 1rem;
@@ -686,6 +766,72 @@
     return NON_VEG_KEYWORDS.some(k => text.includes(k));
   }
 
+  // ── DESSERT 3D STAGE ──────────────────────────────────────────────────────
+  let dessertItemIds = [];
+  let stageEntered   = false;
+
+  function renderDessertStage(items) {
+    dessertItemIds = items.map(i => i.id);
+    const cards = items.map(item => {
+      const src = DESSERT_IMAGES[item.name] || '';
+      const shortName = item.name.split(' ').slice(0,2).join(' ');
+      return `
+        <div class="stage-card" data-id="${item.id}" onclick="focusDessert(${item.id})">
+          <img src="${src}" alt="${item.name}">
+          <div class="stage-card-label">${shortName}</div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="dessert-stage" id="dessertStage">
+        <div class="stage-track">${cards}</div>
+        <div class="stage-hint" id="stageHint">TAP AN ITEM TO FOCUS</div>
+      </div>`;
+  }
+
+  function triggerStageEntrance() {
+    if (stageEntered) return;
+    const cards = document.querySelectorAll('.stage-card');
+    if (!cards.length) return;
+    stageEntered = true;
+    cards.forEach((card, i) => {
+      setTimeout(() => {
+        card.classList.add('entered');
+        if (i === cards.length - 1) {
+          setTimeout(() => {
+            const hint = document.getElementById('stageHint');
+            if (hint) hint.classList.add('visible');
+          }, 400);
+        }
+      }, i * 130);
+    });
+  }
+
+  function focusDessert(itemId) {
+    const cards = document.querySelectorAll('.stage-card');
+    cards.forEach(card => {
+      card.classList.remove('focused', 'dimmed');
+      if (parseInt(card.dataset.id) === itemId) card.classList.add('focused');
+      else card.classList.add('dimmed');
+    });
+    // highlight the item row
+    document.querySelectorAll('.dessert-row').forEach(row => row.classList.remove('active-row'));
+    const row = document.getElementById(`card-${itemId}`);
+    if (row) row.classList.add('active-row');
+    // hide hint
+    const hint = document.getElementById('stageHint');
+    if (hint) hint.classList.remove('visible');
+  }
+
+  function watchDessertStage() {
+    const stage = document.getElementById('dessertStage');
+    if (!stage) return;
+    stageEntered = false;
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) { triggerStageEntrance(); obs.disconnect(); }
+    }, { threshold: 0.25 });
+    obs.observe(stage);
+  }
+
   const params = new URLSearchParams(window.location.search);
   tableNumber = parseInt(params.get('table')) || 1;
   document.getElementById('tableBadge').textContent = `Table ${tableNumber}`;
@@ -750,22 +896,26 @@
       });
       if (items.length === 0) continue;
       anyVisible = true;
+      const isDesserts = cat.name === 'Desserts';
+      const stageHtml  = isDesserts ? renderDessertStage(items) : '';
       html += `
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
           <div class="cat-title">${cat.name}</div>
           <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
-          ${items.map(item => renderItemRow(item, cat.name)).join('')}
+          ${stageHtml}
+          ${items.map(item => renderItemRow(item, cat.name, isDesserts)).join('')}
         </div>`;
     }
 
     document.getElementById('menuContent').innerHTML = html + `<div class="empty-search" id="emptySearch" style="display:${anyVisible?'none':'block'}">No items found</div>`;
     if (query || vegOnly) return; // don't re-setup scroll spy on filter
     setupScrollSpy();
+    watchDessertStage();
   }
 
   const FOOD_CATS = ['Global Fusions', 'Toasties', 'Pasta', 'Sandwiches', 'Mains', 'Special Rice Bowls', 'Sides', 'Sweet', 'Desserts'];
 
-  function renderItemRow(item, catName = '') {
+  function renderItemRow(item, catName = '', isDesserts = false) {
     const qty = cart[item.id]?.qty || 0;
     const nv = isNonVeg(item.name, item.description);
     const vegHtml = FOOD_CATS.includes(catName)
@@ -778,18 +928,20 @@
            <span class="qty-num">${qty}</span>
            <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
          </div>`;
-    const itemImg = DESSERT_IMAGES[item.name] || MATCHA_IMAGES[item.name];
-    const dsImg = itemImg
+    // only show inline photo for Matcha; Desserts uses the 3D stage
+    const itemImg = MATCHA_IMAGES[item.name];
+    const inlineImg = itemImg
       ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
       : '';
+    const clickAttr = isDesserts ? `onclick="focusDessert(${item.id})"` : '';
     return `
-      <div class="item-row" id="card-${item.id}">
+      <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" ${clickAttr}>
         <div class="item-left">
           ${vegHtml}
           <div class="item-name">${item.name}</div>
           <div class="item-price">₹${item.price}</div>
           ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
-          ${dsImg}
+          ${inlineImg}
         </div>
         <div class="item-right" id="ctrl-${item.id}">${ctrl}</div>
       </div>`;
@@ -847,6 +999,13 @@
     if (btn) btn.classList.add('active');
     const el = document.getElementById(`cat-${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // re-trigger dessert stage entrance if scrolling to Desserts
+    const stage = document.getElementById('dessertStage');
+    if (stage && el && el.contains(stage)) {
+      stageEntered = false;
+      document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('entered','focused','dimmed'));
+      setTimeout(triggerStageEntrance, 350);
+    }
   }
 
   function setupScrollSpy() {
