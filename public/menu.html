@@ -1090,128 +1090,68 @@ import * as THREE from 'https://esm.sh/three@0.165';
 
 // ── Resting fan layout in 3-D world space ──
 const REST = [
-  { x: -1.9, y: -0.12, z: -0.32, ry: -0.30, s: 0.78 },
-  { x: -0.95,y:  0.02, z: -0.12, ry: -0.10, s: 0.90 },
-  { x:  0.0, y:  0.10, z:  0.0,  ry:  0.0,  s: 1.02 },
-  { x:  0.95,y:  0.02, z: -0.12, ry:  0.10, s: 0.90 },
-  { x:  1.9, y: -0.12, z: -0.32, ry:  0.30, s: 0.78 },
+  { x: -1.88, y: -0.10, z: -0.28, ry: -0.28, s: 0.78 },
+  { x: -0.94, y:  0.02, z: -0.10, ry: -0.10, s: 0.90 },
+  { x:  0.0,  y:  0.08, z:  0.0,  ry:  0.0,  s: 1.02 },
+  { x:  0.94, y:  0.02, z: -0.10, ry:  0.10, s: 0.90 },
+  { x:  1.88, y: -0.10, z: -0.28, ry:  0.28, s: 0.78 },
 ];
 
 const lerp = (a, b, t) => a + (b - a) * t;
 
-// ── Geometry helpers ──────────────────────────────────────────────────────
-function phong(hex, shi = 30, spec = null) {
-  return new THREE.MeshPhongMaterial({
-    color: hex, shininess: shi,
-    specular: spec ?? 0x111111,
-  });
-}
+// ── Photo sources & matching edge colours (index = dessert order) ─────────
+const SRCS = ['/ds1.png', '/ds2.png', '/ds3.png', '/ds4.png', '/ds5.png'];
+const EDGE = [0xFFF0D8,   0xEDD898,   0x6A3A22,   0xC07830,   0x180602];
 
-function makeTresLeches() {               // cream cylinder + mango top + swirls
+// ── Build a physical photo-slab: actual food photo on a 3D object ─────────
+function buildSlab(src, edgeHex) {
   const g = new THREE.Group();
-  g.add(mesh(new THREE.CylinderGeometry(0.46, 0.48, 0.66, 32), phong(0xFFF5E8, 20)));
-  const top = mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.10, 32), phong(0xFFAA35, 55, 0xFFCC80));
-  top.position.y = 0.38;
-  g.add(top);
-  const sm = phong(0xFFF0CC, 15);
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const sw = mesh(new THREE.SphereGeometry(0.065, 8, 6), sm);
-    sw.position.set(Math.cos(a) * 0.27, 0.45, Math.sin(a) * 0.27);
-    g.add(sw);
-  }
-  return g;
-}
+  const W = 0.60, H = 0.80, D = 0.07;
 
-function makeMangoMisu() {                // rectangular tray, warm mango tones
-  const g = new THREE.Group();
-  g.add(mesh(new THREE.BoxGeometry(0.92, 0.30, 0.66), phong(0xE8D5A0, 10)));
-  const m2 = mesh(new THREE.BoxGeometry(0.88, 0.18, 0.62), phong(0xFFF2D0, 15));
-  m2.position.y = 0.24;
-  g.add(m2);
-  const top = mesh(new THREE.BoxGeometry(0.88, 0.07, 0.62), phong(0xFFAA40, 50, 0xFFCC70));
-  top.position.y = 0.375;
-  g.add(top);
-  return g;
-}
+  // Cream mat border behind photo
+  g.add(Object.assign(
+    new THREE.Mesh(
+      new THREE.PlaneGeometry(W + 0.055, H + 0.055),
+      new THREE.MeshPhongMaterial({ color: 0xFFFAF5, shininess: 6 })
+    ),
+    { position: new THREE.Vector3(0, 0, D / 2 + 0.001) }
+  ));
 
-function makeTiramisu() {                 // classic espresso-cream layers + cocoa dust
-  const g = new THREE.Group();
-  g.add(mesh(new THREE.BoxGeometry(0.92, 0.30, 0.66), phong(0x7A5038, 8)));
-  const m2 = mesh(new THREE.BoxGeometry(0.88, 0.20, 0.62), phong(0xFFF2E0, 18));
-  m2.position.y = 0.25;
-  g.add(m2);
-  const dust = mesh(new THREE.BoxGeometry(0.88, 0.06, 0.62), phong(0x2A1005, 5));
-  dust.position.y = 0.385;
-  g.add(dust);
-  return g;
-}
-
-function makeCroissant() {               // golden crescent torus
-  const g = new THREE.Group();
-  const body = mesh(
-    new THREE.TorusGeometry(0.42, 0.21, 10, 26, Math.PI * 1.38),
-    phong(0xC4843A, 75, 0xE8B870)
+  // Photo plane — replaced with real texture once loaded
+  const photoPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, H),
+    new THREE.MeshPhongMaterial({ color: 0xBBAA99, shininess: 14 })
   );
-  body.rotation.z = -0.22;
-  g.add(body);
-  // scoring lines
-  const dm = phong(0x7A4820, 20);
-  [-0.22, 0.22].forEach(zo => {
-    const line = mesh(new THREE.TorusGeometry(0.42, 0.03, 4, 18, Math.PI * 1.38), dm);
-    line.rotation.z = -0.22;
-    line.position.z = zo;
-    g.add(line);
+  photoPlane.position.z = D / 2 + 0.003;
+  g.add(photoPlane);
+
+  // Slab body — gives physical depth & coloured edges visible at angle
+  g.add(new THREE.Mesh(
+    new THREE.BoxGeometry(W + 0.075, H + 0.075, D),
+    new THREE.MeshPhongMaterial({ color: edgeHex, shininess: 12 })
+  ));
+
+  // Lean top slightly toward camera so photo fully faces viewer
+  g.rotation.x = -0.10;
+
+  // Load real photo and swap in
+  new THREE.TextureLoader().load(src, tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    photoPlane.material = new THREE.MeshPhongMaterial({ map: tex, shininess: 22 });
   });
-  g.scale.setScalar(0.9);
-  g.position.y = -0.04;
+
   return g;
 }
-
-function makeChocoCake() {               // dark cylinder + shiny ganache + drips
-  const g = new THREE.Group();
-  g.add(mesh(new THREE.CylinderGeometry(0.46, 0.48, 0.72, 32),
-    phong(0x1C0903, 110, 0x3A1808)));
-  const ganache = mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.09, 32),
-    phong(0x100401, 200, 0x251005));
-  ganache.position.y = 0.40;
-  g.add(ganache);
-  const dm = phong(0x0D0301, 220, 0x1A0A04);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2 + 0.15;
-    const h = 0.10 + (i % 3) * 0.06;
-    const drip = mesh(new THREE.CylinderGeometry(0.022, 0.013, h, 6), dm);
-    drip.position.set(Math.cos(a) * 0.43, 0.40 - h / 2, Math.sin(a) * 0.43);
-    g.add(drip);
-  }
-  return g;
-}
-
-function mesh(geo, mat) {
-  const m = new THREE.Mesh(geo, mat);
-  m.castShadow = false;
-  return m;
-}
-
-const BUILDERS = {
-  'Mango Tres Leches':      makeTresLeches,
-  'Mango Misu':             makeMangoMisu,
-  'Tiramisu':               makeTiramisu,
-  'Chocolate Croissant':    makeCroissant,
-  'Belgian Chocolate Cake': makeChocoCake,
-};
 
 // ── Scene state ───────────────────────────────────────────────────────────
 let _ren, _scene, _cam, _raf, _clock;
-let _objs = [];   // { group, id, rest, target, cur, focused, fo }
+let _objs = [];
 
 function cleanup() {
   if (_raf) cancelAnimationFrame(_raf);
-  _objs.forEach(o => {
-    o.group.traverse(c => {
-      if (c.isMesh) { c.geometry.dispose(); c.material.dispose(); }
-    });
-  });
+  _objs.forEach(o => o.group.traverse(c => {
+    if (c.isMesh) { c.geometry.dispose(); c.material.dispose?.(); }
+  }));
   if (_ren) _ren.dispose();
   _objs = [];
 }
@@ -1227,25 +1167,24 @@ window._threeInit = function(canvas, items) {
   _ren = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   _ren.setSize(W, H, false);
   _ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  _ren.setClearColor(0x000000, 0);    // transparent — table bg shows through
+  _ren.setClearColor(0x000000, 0);   // transparent — blurred table bg shows through
 
   _scene = new THREE.Scene();
 
   _cam = new THREE.PerspectiveCamera(44, W / H, 0.1, 50);
-  _cam.position.set(0, 1.05, 5.8);
-  _cam.lookAt(0, 0, 0);
+  _cam.position.set(0, 0.45, 5.2);
+  _cam.lookAt(0, 0.05, 0);
 
-  _scene.add(new THREE.AmbientLight(0xFFF5E8, 0.70));
-  const sun = new THREE.DirectionalLight(0xFFEED0, 1.55);
-  sun.position.set(3, 7, 4);
-  _scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xC09050, 0.40);
-  fill.position.set(-3, 1, 2);
-  _scene.add(fill);
+  _scene.add(new THREE.AmbientLight(0xFFF8F0, 0.80));
+  const key = new THREE.DirectionalLight(0xFFEED8, 1.60);
+  key.position.set(2, 5, 5);
+  _scene.add(key);
+  const rim = new THREE.DirectionalLight(0xC09858, 0.45);
+  rim.position.set(-3, 1, 1);
+  _scene.add(rim);
 
   _objs = items.slice(0, 5).map((item, i) => {
-    const build = BUILDERS[item.name] ?? makeTresLeches;
-    const group = build();
+    const group = buildSlab(SRCS[i] || '/ds1.png', EDGE[i] || 0xD0C0A8);
     group.userData.id = item.id;
     const r = REST[i] || REST[2];
     group.position.set(-14, r.y, r.z);
@@ -1257,8 +1196,7 @@ window._threeInit = function(canvas, items) {
       rest: { ...r },
       target: { x: -14, y: r.y, z: r.z, s: r.s },
       cur:    { x: -14, y: r.y, z: r.z, s: r.s },
-      focused: false,
-      fo: i * 1.1,
+      focused: false, fo: i * 1.1,
     };
   });
 
