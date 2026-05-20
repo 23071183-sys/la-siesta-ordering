@@ -521,11 +521,11 @@
       cursor: pointer;
     }
 
-    /* ── DESSERT CINEMATIC STAGE ── */
+    /* ── DESSERT 3D STAGE ── */
     .dessert-stage {
       position: relative;
       width: 100%;
-      height: 220px;
+      height: 240px;
       border-radius: 18px;
       overflow: hidden;
       margin-bottom: 1.2rem;
@@ -536,73 +536,36 @@
       background-image: url('/table-bg.jpg');
       background-size: cover;
       background-position: center 60%;
-      filter: blur(5px) brightness(0.52);
+      filter: blur(5px) brightness(0.50);
       transform: scale(1.04);
     }
     .stage-bg-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(26,13,6,0.1) 0%, rgba(26,13,6,0.55) 100%);
+      background: linear-gradient(to bottom, rgba(26,13,6,0.08) 0%, rgba(26,13,6,0.5) 100%);
     }
-    .stage-cards {
+    /* Three.js canvas fills stage, transparent bg so table shows through */
+    #dessertCanvas {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 10px;
-      padding: 0 14px 26px;
-      perspective: 800px;
-    }
-    /* framer-motion controls all transforms/opacity — keep card base styles only */
-    .stage-card {
-      flex-shrink: 0;
-      width: 68px;
-      border-radius: 12px;
-      overflow: visible;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-      opacity: 0;
-      cursor: pointer;
-      position: relative;
-      will-change: transform, opacity;
-    }
-    /* glow ring only applied via JS class — no transform here */
-    .stage-card.fm-focused {
-      box-shadow: 0 22px 50px rgba(212,85,42,0.6), 0 0 0 2.5px rgba(212,85,42,0.7);
-      z-index: 20;
-    }
-    .stage-card img {
-      width: 100%;
-      height: 104px;
-      object-fit: cover;
+      width: 100% !important;
+      height: 100% !important;
       display: block;
-      border-radius: 12px 12px 0 0;
-    }
-    .stage-card-label {
-      font-size: 0.52rem;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
-      padding: 0.28rem 0.3rem;
-      background: rgba(26,13,6,0.7);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      letter-spacing: 0.03em;
-      border-radius: 0 0 12px 12px;
+      cursor: pointer;
     }
     .stage-hint {
       position: absolute;
-      bottom: 7px;
+      bottom: 8px;
       left: 0; right: 0;
       text-align: center;
       font-size: 0.56rem;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.52);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       opacity: 0;
       transition: opacity 0.7s ease;
       pointer-events: none;
+      z-index: 5;
     }
     .stage-hint.visible { opacity: 1; }
     .dessert-row { cursor: pointer; transition: background 0.2s; }
@@ -773,186 +736,54 @@
     return NON_VEG_KEYWORDS.some(k => text.includes(k));
   }
 
-  // ── DESSERT 3D STAGE ──────────────────────────────────────────────────────
-  let dessertItemIds = [];
-  let stageEntered   = false;
-  let focusedIds     = [];   // tracks which cards are currently focused
-
-  // resting 3D positions (index 0-4)
-  const STAGE_RESTING = [
-    { y: 16,  rotateY: -14, scale: 0.86 },
-    { y: 6,   rotateY: -5,  scale: 0.94 },
-    { y: 0,   rotateY: 0,   scale: 1.02 },
-    { y: 6,   rotateY: 5,   scale: 0.94 },
-    { y: 16,  rotateY: 14,  scale: 0.86 },
-  ];
+  // ── DESSERT 3D STAGE (Three.js) ───────────────────────────────────────────
+  let stageEntered  = false;
+  let focusedIds    = [];
+  let _threeInited  = false;
 
   function renderDessertStage(items) {
-    dessertItemIds = items.map(i => i.id);
-    const cards = items.map(item => {
-      const src = DESSERT_IMAGES[item.name] || '';
-      const shortName = item.name.split(' ').slice(0, 2).join(' ');
-      return `
-        <div class="stage-card" data-id="${item.id}" onclick="focusDessert(${item.id})">
-          <img src="${src}" alt="${item.name}">
-          <div class="stage-card-label">${shortName}</div>
-        </div>`;
-    }).join('');
+    window._dessertItems = items;
+    _threeInited = false;
+    // cleanup old Three.js scene if menu re-renders
+    if (window._threeCleanup) window._threeCleanup();
     return `
       <div class="dessert-stage" id="dessertStage">
         <div class="stage-bg"></div>
         <div class="stage-bg-overlay"></div>
-        <div class="stage-cards" id="stageCards">${cards}</div>
-        <div class="stage-hint" id="stageHint">tap to select</div>
+        <canvas id="dessertCanvas"></canvas>
+        <div class="stage-hint" id="stageHint">tap a dessert</div>
       </div>`;
   }
 
   function triggerStageEntrance() {
     if (stageEntered) return;
-    const cards = [...document.querySelectorAll('.stage-card')];
-    if (!cards.length) return;
     stageEntered = true;
     focusedIds = [];
-
-    if (window._fmAnimate) {
-      // ── framer-motion spring entrance ──
-      const fm = window._fmAnimate;
-      cards.forEach((card, i) => {
-        card.classList.remove('fm-focused');
-        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
-        fm(card,
-          { x: [-window.innerWidth * 1.1, 0], y: rest.y, rotateY: rest.rotateY, scale: rest.scale, opacity: [0, 1] },
-          { type: 'spring', stiffness: 65, damping: 13, delay: i * 0.11,
-            onComplete: i === cards.length - 1 ? () => {
-              const hint = document.getElementById('stageHint');
-              if (hint) hint.classList.add('visible');
-            } : undefined }
-        );
-      });
-    } else {
-      // CSS fallback
-      cards.forEach((card, i) => {
-        setTimeout(() => {
-          card.style.opacity = '1';
-          card.style.transform = (() => {
-            const r = STAGE_RESTING[i] || STAGE_RESTING[2];
-            return `translateY(${r.y}px) rotateY(${r.rotateY}deg) scale(${r.scale})`;
-          })();
-          card.style.transition = 'transform 0.72s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease';
-          if (i === cards.length - 1) setTimeout(() => {
-            const hint = document.getElementById('stageHint');
-            if (hint) hint.classList.add('visible');
-          }, 500);
-        }, i * 110);
-      });
-    }
+    if (window._threeEntrance) window._threeEntrance();
   }
 
-  // toggle focus — multiple desserts can be selected
   function focusDessert(itemId) {
-    const cards = [...document.querySelectorAll('.stage-card')];
-    const clickedCard = document.querySelector(`.stage-card[data-id="${itemId}"]`);
-    if (!clickedCard) return;
-
     const wasFocused = focusedIds.includes(itemId);
-    if (wasFocused) {
-      focusedIds = focusedIds.filter(id => id !== itemId);
-    } else {
-      focusedIds.push(itemId);
-    }
+    if (wasFocused) focusedIds = focusedIds.filter(id => id !== itemId);
+    else            focusedIds.push(itemId);
 
-    const anyFocused = focusedIds.length > 0;
+    if (window._threeFocus) window._threeFocus(itemId);
+
+    const row = document.getElementById(`card-${itemId}`);
+    if (row) row.classList.toggle('active-row', !wasFocused);
 
     const hint = document.getElementById('stageHint');
     if (hint) hint.classList.remove('visible');
-
-    if (window._fmAnimate) {
-      const fm = window._fmAnimate;
-      cards.forEach((card, i) => {
-        const id = parseInt(card.dataset.id);
-        const isFocused = focusedIds.includes(id);
-        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
-        card.classList.toggle('fm-focused', isFocused);
-
-        if (isFocused) {
-          fm(card,
-            { y: -26, rotateY: 0, scale: 1.25, opacity: 1 },
-            { type: 'spring', stiffness: 220, damping: 20 }
-          );
-        } else if (anyFocused) {
-          fm(card,
-            { y: 20, rotateY: 0, scale: 0.80, opacity: 0.35 },
-            { type: 'spring', stiffness: 200, damping: 22 }
-          );
-        } else {
-          // no selection — back to resting
-          fm(card,
-            { y: rest.y, rotateY: rest.rotateY, scale: rest.scale, opacity: 1 },
-            { type: 'spring', stiffness: 200, damping: 22 }
-          );
-        }
-      });
-    } else {
-      // CSS fallback
-      cards.forEach((card, i) => {
-        const id = parseInt(card.dataset.id);
-        const isFocused = focusedIds.includes(id);
-        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
-        card.classList.toggle('fm-focused', isFocused);
-        if (isFocused) {
-          card.style.transform = 'translateY(-26px) rotateY(0deg) scale(1.25)';
-          card.style.opacity = '1';
-          card.style.filter = 'none';
-        } else if (anyFocused) {
-          card.style.transform = 'translateY(20px) scale(0.80)';
-          card.style.opacity = '0.35';
-          card.style.filter = 'blur(1.5px) brightness(0.7)';
-        } else {
-          card.style.transform = `translateY(${rest.y}px) rotateY(${rest.rotateY}deg) scale(${rest.scale})`;
-          card.style.opacity = '1';
-          card.style.filter = 'none';
-        }
-      });
-    }
-
-    // highlight item rows
-    const row = document.getElementById(`card-${itemId}`);
-    if (row) row.classList.toggle('active-row', !wasFocused);
   }
 
   function triggerStageExit(callback) {
-    const cards = [...document.querySelectorAll('.stage-card')];
-    if (!cards.length) { callback && callback(); return; }
-
-    if (window._fmAnimate) {
-      const fm = window._fmAnimate;
-      const reversed = [...cards].reverse();
-      reversed.forEach((card, i) => {
-        fm(card,
-          { x: window.innerWidth * 1.1, opacity: 0 },
-          { duration: 0.42, ease: [0.22, 1, 0.36, 1], delay: i * 0.075 }
-        );
-      });
-      setTimeout(() => { callback && callback(); }, reversed.length * 75 + 420);
-    } else {
-      [...cards].reverse().forEach((card, i) => {
-        setTimeout(() => {
-          card.style.transform = `translateX(${window.innerWidth * 1.1}px)`;
-          card.style.opacity = '0';
-          card.style.transition = 'transform 0.42s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease';
-        }, i * 75);
-      });
-      setTimeout(() => { callback && callback(); }, cards.length * 75 + 450);
-    }
+    if (window._threeExit) window._threeExit(callback);
+    else callback && callback();
   }
 
   function _resetStageCards() {
-    const cards = [...document.querySelectorAll('.stage-card')];
     focusedIds = [];
-    cards.forEach(c => {
-      c.classList.remove('fm-focused');
-      c.style.cssText = '';   // wipe inline styles set by framer-motion
-    });
+    if (window._threeReset) window._threeReset();
   }
 
   function watchDessertStage() {
@@ -960,7 +791,15 @@
     if (!stage) return;
     stageEntered = false;
     const obs = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) { triggerStageEntrance(); obs.disconnect(); }
+      if (entries[0].isIntersecting) {
+        const canvas = document.getElementById('dessertCanvas');
+        if (canvas && window._threeInit && !_threeInited) {
+          window._threeInit(canvas, window._dessertItems || []);
+          _threeInited = true;
+        }
+        triggerStageEntrance();
+        obs.disconnect();
+      }
     }, { threshold: 0.15 });
     obs.observe(stage);
   }
@@ -1245,23 +1084,276 @@
   }
 </script>
 
-<!-- ── FRAMER-MOTION CINEMATIC ENGINE ── -->
+<!-- ── THREE.JS DESSERT STAGE ENGINE ── -->
 <script type="module">
-  // Import framer-motion DOM animation API via ESM CDN
-  let fmAnimate;
-  try {
-    const mod = await import('https://esm.sh/framer-motion@12/dom');
-    fmAnimate = mod.animate;
-  } catch(e) {
-    // CDN load failed — CSS fallback will be used
-    console.warn('[stage] framer-motion not loaded, using CSS fallback', e);
-  }
+import * as THREE from 'https://esm.sh/three@0.165';
 
-  if (fmAnimate) {
-    // Expose globally so the regular script block can call it
-    window._fmAnimate = fmAnimate;
-    console.log('[stage] framer-motion loaded ✓');
+// ── Resting fan layout in 3-D world space ──
+const REST = [
+  { x: -1.9, y: -0.12, z: -0.32, ry: -0.30, s: 0.78 },
+  { x: -0.95,y:  0.02, z: -0.12, ry: -0.10, s: 0.90 },
+  { x:  0.0, y:  0.10, z:  0.0,  ry:  0.0,  s: 1.02 },
+  { x:  0.95,y:  0.02, z: -0.12, ry:  0.10, s: 0.90 },
+  { x:  1.9, y: -0.12, z: -0.32, ry:  0.30, s: 0.78 },
+];
+
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ── Geometry helpers ──────────────────────────────────────────────────────
+function phong(hex, shi = 30, spec = null) {
+  return new THREE.MeshPhongMaterial({
+    color: hex, shininess: shi,
+    specular: spec ?? 0x111111,
+  });
+}
+
+function makeTresLeches() {               // cream cylinder + mango top + swirls
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.46, 0.48, 0.66, 32), phong(0xFFF5E8, 20)));
+  const top = mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.10, 32), phong(0xFFAA35, 55, 0xFFCC80));
+  top.position.y = 0.38;
+  g.add(top);
+  const sm = phong(0xFFF0CC, 15);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const sw = mesh(new THREE.SphereGeometry(0.065, 8, 6), sm);
+    sw.position.set(Math.cos(a) * 0.27, 0.45, Math.sin(a) * 0.27);
+    g.add(sw);
   }
+  return g;
+}
+
+function makeMangoMisu() {                // rectangular tray, warm mango tones
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.BoxGeometry(0.92, 0.30, 0.66), phong(0xE8D5A0, 10)));
+  const m2 = mesh(new THREE.BoxGeometry(0.88, 0.18, 0.62), phong(0xFFF2D0, 15));
+  m2.position.y = 0.24;
+  g.add(m2);
+  const top = mesh(new THREE.BoxGeometry(0.88, 0.07, 0.62), phong(0xFFAA40, 50, 0xFFCC70));
+  top.position.y = 0.375;
+  g.add(top);
+  return g;
+}
+
+function makeTiramisu() {                 // classic espresso-cream layers + cocoa dust
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.BoxGeometry(0.92, 0.30, 0.66), phong(0x7A5038, 8)));
+  const m2 = mesh(new THREE.BoxGeometry(0.88, 0.20, 0.62), phong(0xFFF2E0, 18));
+  m2.position.y = 0.25;
+  g.add(m2);
+  const dust = mesh(new THREE.BoxGeometry(0.88, 0.06, 0.62), phong(0x2A1005, 5));
+  dust.position.y = 0.385;
+  g.add(dust);
+  return g;
+}
+
+function makeCroissant() {               // golden crescent torus
+  const g = new THREE.Group();
+  const body = mesh(
+    new THREE.TorusGeometry(0.42, 0.21, 10, 26, Math.PI * 1.38),
+    phong(0xC4843A, 75, 0xE8B870)
+  );
+  body.rotation.z = -0.22;
+  g.add(body);
+  // scoring lines
+  const dm = phong(0x7A4820, 20);
+  [-0.22, 0.22].forEach(zo => {
+    const line = mesh(new THREE.TorusGeometry(0.42, 0.03, 4, 18, Math.PI * 1.38), dm);
+    line.rotation.z = -0.22;
+    line.position.z = zo;
+    g.add(line);
+  });
+  g.scale.setScalar(0.9);
+  g.position.y = -0.04;
+  return g;
+}
+
+function makeChocoCake() {               // dark cylinder + shiny ganache + drips
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.46, 0.48, 0.72, 32),
+    phong(0x1C0903, 110, 0x3A1808)));
+  const ganache = mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.09, 32),
+    phong(0x100401, 200, 0x251005));
+  ganache.position.y = 0.40;
+  g.add(ganache);
+  const dm = phong(0x0D0301, 220, 0x1A0A04);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + 0.15;
+    const h = 0.10 + (i % 3) * 0.06;
+    const drip = mesh(new THREE.CylinderGeometry(0.022, 0.013, h, 6), dm);
+    drip.position.set(Math.cos(a) * 0.43, 0.40 - h / 2, Math.sin(a) * 0.43);
+    g.add(drip);
+  }
+  return g;
+}
+
+function mesh(geo, mat) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = false;
+  return m;
+}
+
+const BUILDERS = {
+  'Mango Tres Leches':      makeTresLeches,
+  'Mango Misu':             makeMangoMisu,
+  'Tiramisu':               makeTiramisu,
+  'Chocolate Croissant':    makeCroissant,
+  'Belgian Chocolate Cake': makeChocoCake,
+};
+
+// ── Scene state ───────────────────────────────────────────────────────────
+let _ren, _scene, _cam, _raf, _clock;
+let _objs = [];   // { group, id, rest, target, cur, focused, fo }
+
+function cleanup() {
+  if (_raf) cancelAnimationFrame(_raf);
+  _objs.forEach(o => {
+    o.group.traverse(c => {
+      if (c.isMesh) { c.geometry.dispose(); c.material.dispose(); }
+    });
+  });
+  if (_ren) _ren.dispose();
+  _objs = [];
+}
+window._threeCleanup = cleanup;
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window._threeInit = function(canvas, items) {
+  cleanup();
+
+  const W = canvas.offsetWidth  || 320;
+  const H = canvas.offsetHeight || 240;
+
+  _ren = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  _ren.setSize(W, H, false);
+  _ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  _ren.setClearColor(0x000000, 0);    // transparent — table bg shows through
+
+  _scene = new THREE.Scene();
+
+  _cam = new THREE.PerspectiveCamera(44, W / H, 0.1, 50);
+  _cam.position.set(0, 1.05, 5.8);
+  _cam.lookAt(0, 0, 0);
+
+  _scene.add(new THREE.AmbientLight(0xFFF5E8, 0.70));
+  const sun = new THREE.DirectionalLight(0xFFEED0, 1.55);
+  sun.position.set(3, 7, 4);
+  _scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xC09050, 0.40);
+  fill.position.set(-3, 1, 2);
+  _scene.add(fill);
+
+  _objs = items.slice(0, 5).map((item, i) => {
+    const build = BUILDERS[item.name] ?? makeTresLeches;
+    const group = build();
+    group.userData.id = item.id;
+    const r = REST[i] || REST[2];
+    group.position.set(-14, r.y, r.z);
+    group.rotation.y = r.ry;
+    group.scale.setScalar(r.s);
+    _scene.add(group);
+    return {
+      group, id: item.id,
+      rest: { ...r },
+      target: { x: -14, y: r.y, z: r.z, s: r.s },
+      cur:    { x: -14, y: r.y, z: r.z, s: r.s },
+      focused: false,
+      fo: i * 1.1,
+    };
+  });
+
+  _clock = new THREE.Clock();
+
+  // Raycasting — click + touch both call window.focusDessert
+  function pick(cx, cy) {
+    const rect = canvas.getBoundingClientRect();
+    const nx =  ((cx - rect.left) / rect.width)  * 2 - 1;
+    const ny = -((cy - rect.top)  / rect.height)  * 2 + 1;
+    const rc = new THREE.Raycaster();
+    rc.setFromCamera({ x: nx, y: ny }, _cam);
+    const all = [];
+    _objs.forEach(o => o.group.traverse(c => { if (c.isMesh) all.push(c); }));
+    const hits = rc.intersectObjects(all);
+    if (!hits.length) return;
+    let obj = hits[0].object;
+    while (obj.parent && obj.userData.id === undefined) obj = obj.parent;
+    if (obj.userData.id !== undefined) window.focusDessert(obj.userData.id);
+  }
+  canvas.addEventListener('click',    e => pick(e.clientX, e.clientY));
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    pick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  }, { passive: false });
+
+  // Resize
+  new ResizeObserver(() => {
+    const nW = canvas.offsetWidth, nH = canvas.offsetHeight;
+    if (nW && nH) {
+      _ren.setSize(nW, nH, false);
+      _cam.aspect = nW / nH;
+      _cam.updateProjectionMatrix();
+    }
+  }).observe(canvas.parentElement);
+
+  // Render loop
+  (function tick() {
+    _raf = requestAnimationFrame(tick);
+    const t = _clock.getElapsedTime();
+    _objs.forEach(o => {
+      const spd = 0.10;
+      o.cur.x = lerp(o.cur.x, o.target.x, spd);
+      o.cur.y = lerp(o.cur.y, o.target.y, 0.08);
+      o.cur.z = lerp(o.cur.z, o.target.z, spd);
+      o.cur.s = lerp(o.cur.s, o.target.s, spd);
+      const float = Math.sin(t * 0.75 + o.fo) * 0.048;
+      o.group.position.set(o.cur.x, o.cur.y + float, o.cur.z);
+      o.group.scale.setScalar(o.cur.s);
+      o.group.rotation.y = lerp(o.group.rotation.y, o.focused ? 0 : o.rest.ry, 0.06);
+    });
+    _ren.render(_scene, _cam);
+  })();
+};
+
+// ── Entrance: staggered slide-in from left ────────────────────────────────
+window._threeEntrance = function() {
+  _objs.forEach((o, i) => setTimeout(() => {
+    o.target = { x: o.rest.x, y: o.rest.y, z: o.rest.z, s: o.rest.s };
+  }, i * 130));
+  setTimeout(() => {
+    const h = document.getElementById('stageHint');
+    if (h) h.classList.add('visible');
+  }, _objs.length * 130 + 650);
+};
+
+// ── Focus: pop forward, dim others ───────────────────────────────────────
+window._threeFocus = function(itemId) {
+  const o = _objs.find(m => m.id === itemId);
+  if (!o) return;
+  o.focused = !o.focused;
+  const any = _objs.some(m => m.focused);
+  _objs.forEach(m => {
+    if (m.focused)      m.target = { x: m.rest.x, y: m.rest.y + 0.55, z: m.rest.z + 1.35, s: m.rest.s * 1.34 };
+    else if (any)       m.target = { x: m.rest.x, y: m.rest.y - 0.22, z: m.rest.z - 0.38, s: m.rest.s * 0.74 };
+    else                m.target = { x: m.rest.x, y: m.rest.y,        z: m.rest.z,         s: m.rest.s };
+  });
+};
+
+// ── Exit: staggered fly-out to right ────────────────────────────────────
+window._threeExit = function(cb) {
+  [..._objs].reverse().forEach((o, i) => setTimeout(() => { o.target.x = 14; }, i * 90));
+  setTimeout(() => cb && cb(), _objs.length * 90 + 560);
+};
+
+// ── Reset: snap back off-screen-left ─────────────────────────────────────
+window._threeReset = function() {
+  _objs.forEach(o => {
+    o.focused = false;
+    o.target  = { x: -14, y: o.rest.y, z: o.rest.z, s: o.rest.s };
+    o.cur.x   = -14;
+  });
+};
+
+console.log('[dessert stage] Three.js engine ready ✓');
 </script>
 </body>
 </html>
