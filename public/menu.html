@@ -525,7 +525,7 @@
     .dessert-stage {
       position: relative;
       width: 100%;
-      height: 240px;
+      height: 230px;
       border-radius: 18px;
       overflow: hidden;
       margin-bottom: 1.2rem;
@@ -536,22 +536,57 @@
       background-image: url('/table-bg.jpg');
       background-size: cover;
       background-position: center 60%;
-      filter: blur(5px) brightness(0.50);
+      filter: blur(5px) brightness(0.48);
       transform: scale(1.04);
     }
     .stage-bg-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(26,13,6,0.08) 0%, rgba(26,13,6,0.5) 100%);
+      background: linear-gradient(to bottom, rgba(26,13,6,0.08) 0%, rgba(26,13,6,0.52) 100%);
     }
-    /* Three.js canvas fills stage, transparent bg so table shows through */
-    #dessertCanvas {
+    /* Perspective container — CSS 3D, no WebGL needed */
+    .stage-track {
       position: absolute;
       inset: 0;
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
+      perspective: 620px;
+      perspective-origin: 50% 44%;
+    }
+    .slab {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 70px;
+      margin-left: -35px;
+      margin-top: -56px;
+      border-radius: 11px;
+      overflow: hidden;
       cursor: pointer;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+      will-change: transform, opacity;
+      opacity: 0;
+      z-index: 1;
+    }
+    .slab.slab-focused {
+      box-shadow: 0 18px 44px rgba(212,85,42,0.65), 0 0 0 2.5px rgba(212,85,42,0.75);
+      z-index: 20;
+    }
+    .slab img {
+      width: 100%; height: 88px;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .slab-label {
+      font-size: 0.48rem;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(18,6,2,0.78);
+      padding: 3px 5px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.02em;
+      pointer-events: none;
     }
     .stage-hint {
       position: absolute;
@@ -744,13 +779,20 @@
   function renderDessertStage(items) {
     window._dessertItems = items;
     _threeInited = false;
-    // cleanup old Three.js scene if menu re-renders
     if (window._threeCleanup) window._threeCleanup();
+    const slabs = items.slice(0,5).map((item, i) => {
+      const src = DESSERT_IMAGES[item.name] || `/ds${i+1}.png`;
+      const label = item.name.split(' ').slice(0,2).join(' ');
+      return `<div class="slab" data-id="${item.id}" onclick="focusDessert(${item.id})">
+        <img src="${src}" alt="${item.name}">
+        <div class="slab-label">${label}</div>
+      </div>`;
+    }).join('');
     return `
       <div class="dessert-stage" id="dessertStage">
         <div class="stage-bg"></div>
         <div class="stage-bg-overlay"></div>
-        <canvas id="dessertCanvas"></canvas>
+        <div class="stage-track" id="stageTrack">${slabs}</div>
         <div class="stage-hint" id="stageHint">tap a dessert</div>
       </div>`;
   }
@@ -788,17 +830,16 @@
 
   // Called by IntersectionObserver AND by module script (race-condition guard)
   function _initStageWhenReady(tries) {
-    const canvas = document.getElementById('dessertCanvas');
-    if (!canvas) return;                       // stage not in DOM yet
+    const track = document.getElementById('stageTrack');
+    if (!track) return;
     if (window._threeInit) {
       if (!_threeInited) {
-        window._threeInit(canvas, window._dessertItems || []);
+        window._threeInit(track, window._dessertItems || []);
         _threeInited = true;
       }
       if (!stageEntered) triggerStageEntrance();
-    } else if (tries < 50) {
-      // Three.js CDN still loading — retry every 100 ms (up to 5 s)
-      setTimeout(() => _initStageWhenReady(tries + 1), 100);
+    } else if (tries < 20) {
+      setTimeout(() => _initStageWhenReady(tries + 1), 80);
     }
   }
   window._initStageWhenReady = () => _initStageWhenReady(0);
@@ -1096,193 +1137,112 @@
   }
 </script>
 
-<!-- Three.js loaded as plain script — no ESM, no race conditions -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+<!-- ── DESSERT STAGE ENGINE — pure CSS 3D + rAF, zero CDN deps ── -->
 <script>
 (function() {
-  if (typeof THREE === 'undefined') {
-    console.error('[dessert] Three.js failed to load'); return;
-  }
 
-  const REST = [
-    { x: -1.88, y: -0.10, z: -0.28, ry: -0.28, s: 0.78 },
-    { x: -0.94, y:  0.02, z: -0.10, ry: -0.10, s: 0.90 },
-    { x:  0.0,  y:  0.08, z:  0.0,  ry:  0.0,  s: 1.02 },
-    { x:  0.94, y:  0.02, z: -0.10, ry:  0.10, s: 0.90 },
-    { x:  1.88, y: -0.10, z: -0.28, ry:  0.28, s: 0.78 },
+  // ── REST POSITIONS (px offsets from centre of 340px-wide track) ──
+  var REST = [
+    { x: -148, y: 16,  ry: -16, s: 0.82 },
+    { x: -74,  y: 8,   ry: -6,  s: 0.92 },
+    { x:   0,  y: 0,   ry:  0,  s: 1.02 },
+    { x:  74,  y: 8,   ry:  6,  s: 0.92 },
+    { x: 148,  y: 16,  ry:  16, s: 0.82 },
   ];
-  const SRCS = ['/ds1.png','/ds2.png','/ds3.png','/ds4.png','/ds5.png'];
-  const EDGE = [0xFFF0D8, 0xEDD898, 0x6A3A22, 0xC07830, 0x180602];
-  const lerp  = (a,b,t) => a + (b-a)*t;
 
-  function buildSlab(src, edgeHex) {
-    const g = new THREE.Group();
-    const W = 0.60, H = 0.80, D = 0.07;
+  var _slabs = [], _rafId = null, _startTime = 0;
 
-    // White mat border
-    const border = new THREE.Mesh(
-      new THREE.PlaneGeometry(W+0.055, H+0.055),
-      new THREE.MeshPhongMaterial({ color: 0xFFFAF5, shininess: 6 })
-    );
-    border.position.z = D/2 + 0.001;
-    g.add(border);
-
-    // Photo plane (placeholder colour until texture loads)
-    const photo = new THREE.Mesh(
-      new THREE.PlaneGeometry(W, H),
-      new THREE.MeshPhongMaterial({ color: 0xBBAA99, shininess: 14 })
-    );
-    photo.position.z = D/2 + 0.003;
-    g.add(photo);
-
-    // Slab body — coloured edges visible at angle
-    g.add(new THREE.Mesh(
-      new THREE.BoxGeometry(W+0.075, H+0.075, D),
-      new THREE.MeshPhongMaterial({ color: edgeHex, shininess: 12 })
-    ));
-
-    g.rotation.x = -0.10;   // lean top toward camera
-
-    new THREE.TextureLoader().load(src, function(tex) {
-      photo.material = new THREE.MeshPhongMaterial({ map: tex, shininess: 22 });
-    });
-
-    return g;
-  }
-
-  var _ren, _scene, _cam, _raf, _t0 = 0;
-  var _objs = [];
+  function lerp(a, b, t) { return a + (b - a) * t; }
 
   function cleanup() {
-    if (_raf) cancelAnimationFrame(_raf);
-    _objs.forEach(function(o) {
-      o.group.traverse(function(c) {
-        if (c.isMesh) { c.geometry.dispose(); if(c.material.dispose) c.material.dispose(); }
-      });
-    });
-    if (_ren) _ren.dispose();
-    _objs = [];
+    if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+    _slabs = [];
   }
   window._threeCleanup = cleanup;
 
-  window._threeInit = function(canvas, items) {
+  window._threeInit = function(trackEl, items) {
     cleanup();
-    var W = canvas.offsetWidth  || 340;
-    var H = canvas.offsetHeight || 240;
+    var offX = -(window.innerWidth + 200);
+    _startTime = performance.now();
 
-    _ren = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    _ren.setSize(W, H, false);
-    _ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    _ren.setClearColor(0x000000, 0);
-
-    _scene = new THREE.Scene();
-    _cam   = new THREE.PerspectiveCamera(44, W/H, 0.1, 50);
-    _cam.position.set(0, 0.45, 5.2);
-    _cam.lookAt(0, 0.05, 0);
-
-    _scene.add(new THREE.AmbientLight(0xFFF8F0, 0.80));
-    var key = new THREE.DirectionalLight(0xFFEED8, 1.60);
-    key.position.set(2, 5, 5); _scene.add(key);
-    var rim = new THREE.DirectionalLight(0xC09858, 0.45);
-    rim.position.set(-3, 1, 1); _scene.add(rim);
-
-    _objs = items.slice(0,5).map(function(item, i) {
-      var group = buildSlab(SRCS[i]||'/ds1.png', EDGE[i]||0xD0C0A8);
-      group.userData.id = item.id;
+    _slabs = items.slice(0, 5).map(function(item, i) {
+      var el = trackEl.querySelector('.slab[data-id="' + item.id + '"]');
+      if (!el) return null;
       var r = REST[i] || REST[2];
-      group.position.set(-14, r.y, r.z);
-      group.rotation.y = r.ry;
-      group.scale.setScalar(r.s);
-      _scene.add(group);
-      return { group:group, id:item.id, rest:Object.assign({},r),
-               target:{x:-14,y:r.y,z:r.z,s:r.s},
-               cur:{x:-14,y:r.y,z:r.z,s:r.s},
-               focused:false, fo:i*1.1 };
-    });
-
-    _t0 = performance.now();
-
-    function pick(cx, cy) {
-      var rect = canvas.getBoundingClientRect();
-      var nx = ((cx-rect.left)/rect.width)*2-1;
-      var ny = -((cy-rect.top)/rect.height)*2+1;
-      var rc = new THREE.Raycaster();
-      rc.setFromCamera({x:nx,y:ny}, _cam);
-      var all = [];
-      _objs.forEach(function(o){ o.group.traverse(function(c){ if(c.isMesh) all.push(c); }); });
-      var hits = rc.intersectObjects(all);
-      if (!hits.length) return;
-      var obj = hits[0].object;
-      while (obj.parent && obj.userData.id === undefined) obj = obj.parent;
-      if (obj.userData.id !== undefined) window.focusDessert(obj.userData.id);
-    }
-    canvas.addEventListener('click', function(e){ pick(e.clientX, e.clientY); });
-    canvas.addEventListener('touchend', function(e){
-      e.preventDefault(); pick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    }, { passive: false });
-
-    new ResizeObserver(function(){
-      var nW=canvas.offsetWidth, nH=canvas.offsetHeight;
-      if(nW&&nH){ _ren.setSize(nW,nH,false); _cam.aspect=nW/nH; _cam.updateProjectionMatrix(); }
-    }).observe(canvas.parentElement);
+      return {
+        el: el, id: item.id,
+        rest: { x: r.x, y: r.y, ry: r.ry, s: r.s },
+        cur:  { x: offX, y: r.y, ry: r.ry, s: r.s, op: 0 },
+        target: { x: offX, y: r.y, ry: r.ry, s: r.s, op: 0 },
+        focused: false, fo: i * 1.1
+      };
+    }).filter(Boolean);
 
     (function tick() {
-      _raf = requestAnimationFrame(tick);
-      var t = (performance.now() - _t0) / 1000;
-      _objs.forEach(function(o) {
-        o.cur.x = lerp(o.cur.x, o.target.x, 0.10);
-        o.cur.y = lerp(o.cur.y, o.target.y, 0.08);
-        o.cur.z = lerp(o.cur.z, o.target.z, 0.10);
-        o.cur.s = lerp(o.cur.s, o.target.s, 0.10);
-        var fl = Math.sin(t*0.75 + o.fo)*0.048;
-        o.group.position.set(o.cur.x, o.cur.y+fl, o.cur.z);
-        o.group.scale.setScalar(o.cur.s);
-        o.group.rotation.y = lerp(o.group.rotation.y, o.focused ? 0 : o.rest.ry, 0.06);
+      _rafId = requestAnimationFrame(tick);
+      var t = (performance.now() - _startTime) / 1000;
+      _slabs.forEach(function(s) {
+        s.cur.x  = lerp(s.cur.x,  s.target.x,  0.12);
+        s.cur.y  = lerp(s.cur.y,  s.target.y,  0.10);
+        s.cur.ry = lerp(s.cur.ry, s.target.ry, 0.08);
+        s.cur.s  = lerp(s.cur.s,  s.target.s,  0.12);
+        s.cur.op = lerp(s.cur.op, s.target.op, 0.10);
+        var fl = Math.sin(t * 0.75 + s.fo) * 5;
+        s.el.style.transform = 'translateX(' + s.cur.x + 'px) translateY(' + (s.cur.y + fl) + 'px) rotateY(' + s.cur.ry + 'deg) scale(' + s.cur.s + ')';
+        s.el.style.opacity = s.cur.op;
       });
-      _ren.render(_scene, _cam);
     })();
   };
 
   window._threeEntrance = function() {
-    _objs.forEach(function(o, i) {
-      setTimeout(function(){ o.target = {x:o.rest.x,y:o.rest.y,z:o.rest.z,s:o.rest.s}; }, i*130);
+    _slabs.forEach(function(s, i) {
+      setTimeout(function() {
+        s.target = { x: s.rest.x, y: s.rest.y, ry: s.rest.ry, s: s.rest.s, op: 1 };
+      }, i * 130);
     });
-    setTimeout(function(){
+    setTimeout(function() {
       var h = document.getElementById('stageHint');
       if (h) h.classList.add('visible');
-    }, _objs.length*130 + 600);
+    }, _slabs.length * 130 + 600);
   };
 
   window._threeFocus = function(itemId) {
-    var o = _objs.find(function(m){ return m.id===itemId; });
-    if (!o) return;
-    o.focused = !o.focused;
-    var any = _objs.some(function(m){ return m.focused; });
-    _objs.forEach(function(m) {
-      if (m.focused)    m.target = {x:m.rest.x, y:m.rest.y+0.55, z:m.rest.z+1.35, s:m.rest.s*1.34};
-      else if (any)     m.target = {x:m.rest.x, y:m.rest.y-0.22, z:m.rest.z-0.38, s:m.rest.s*0.74};
-      else              m.target = {x:m.rest.x, y:m.rest.y,      z:m.rest.z,      s:m.rest.s};
+    var slab = null;
+    _slabs.forEach(function(s) { if (s.id === itemId) slab = s; });
+    if (!slab) return;
+    slab.focused = !slab.focused;
+    slab.el.classList.toggle('slab-focused', slab.focused);
+    var any = _slabs.some(function(s) { return s.focused; });
+    _slabs.forEach(function(s) {
+      if (s.focused)      s.target = { x: s.rest.x, y: s.rest.y - 28, ry: 0,         s: s.rest.s * 1.30, op: 1    };
+      else if (any)       s.target = { x: s.rest.x, y: s.rest.y + 18, ry: s.rest.ry, s: s.rest.s * 0.78, op: 0.38 };
+      else                s.target = { x: s.rest.x, y: s.rest.y,      ry: s.rest.ry, s: s.rest.s,        op: 1    };
     });
   };
 
   window._threeExit = function(cb) {
-    var rev = _objs.slice().reverse();
-    rev.forEach(function(o,i){ setTimeout(function(){ o.target.x=14; }, i*90); });
-    setTimeout(function(){ if(cb) cb(); }, rev.length*90+560);
+    var exitX = window.innerWidth + 200;
+    var rev = _slabs.slice().reverse();
+    rev.forEach(function(s, i) {
+      setTimeout(function() { s.target.x = exitX; s.target.op = 0; }, i * 90);
+    });
+    setTimeout(function() { if (cb) cb(); }, rev.length * 90 + 500);
   };
 
   window._threeReset = function() {
-    _objs.forEach(function(o){
-      o.focused = false;
-      o.target = {x:-14, y:o.rest.y, z:o.rest.z, s:o.rest.s};
-      o.cur.x  = -14;
+    var offX = -(window.innerWidth + 200);
+    _slabs.forEach(function(s) {
+      s.focused = false;
+      s.el.classList.remove('slab-focused');
+      s.target = { x: offX, y: s.rest.y, ry: s.rest.ry, s: s.rest.s, op: 0 };
+      s.cur.x = offX; s.cur.op = 0;
     });
   };
 
-  // Self-trigger if canvas already in DOM when this script ran
+  // Self-trigger if DOM already ready when this script ran
   window._initStageWhenReady && window._initStageWhenReady();
 
-  console.log('[dessert] Three.js ready, _threeInit defined ✓');
+  console.log('[dessert] CSS 3D engine ready ✓');
 })();
 </script>
 </body>
