@@ -674,6 +674,13 @@
     'Belgian Chocolate Cake':'/ds5.png',
   };
 
+  const MATCHA_IMAGES = {
+    'Mango Matcha Latte':      '/mt1.jpg',
+    'Matcha Latte':            '/mt2.jpg',
+    'Matcha Cloud':            '/mt3.jpg',
+    'Strawberry Matcha Latte': '/mt4.jpg',
+  };
+
   function isNonVeg(name, desc = '') {
     const text = (name + ' ' + desc).toLowerCase();
     return NON_VEG_KEYWORDS.some(k => text.includes(k));
@@ -771,8 +778,9 @@
            <span class="qty-num">${qty}</span>
            <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
          </div>`;
-    const dsImg = DESSERT_IMAGES[item.name]
-      ? `<img src="${DESSERT_IMAGES[item.name]}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
+    const itemImg = DESSERT_IMAGES[item.name] || MATCHA_IMAGES[item.name];
+    const dsImg = itemImg
+      ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
       : '';
     return `
       <div class="item-row" id="card-${item.id}">
