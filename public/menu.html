@@ -525,7 +525,7 @@
     .dessert-stage {
       position: relative;
       width: 100%;
-      height: 210px;
+      height: 220px;
       border-radius: 18px;
       overflow: hidden;
       margin-bottom: 1.2rem;
@@ -536,13 +536,13 @@
       background-image: url('/table-bg.jpg');
       background-size: cover;
       background-position: center 60%;
-      filter: blur(4px) brightness(0.55);
+      filter: blur(5px) brightness(0.52);
       transform: scale(1.04);
     }
     .stage-bg-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to bottom, rgba(26,13,6,0.15) 0%, rgba(26,13,6,0.5) 100%);
+      background: linear-gradient(to bottom, rgba(26,13,6,0.1) 0%, rgba(26,13,6,0.55) 100%);
     }
     .stage-cards {
       position: absolute;
@@ -551,79 +551,58 @@
       align-items: flex-end;
       justify-content: center;
       gap: 10px;
-      padding: 0 14px 22px;
-      perspective: 700px;
+      padding: 0 14px 26px;
+      perspective: 800px;
     }
+    /* framer-motion controls all transforms/opacity — keep card base styles only */
     .stage-card {
       flex-shrink: 0;
-      width: 70px;
+      width: 68px;
       border-radius: 12px;
-      overflow: hidden;
+      overflow: visible;
       box-shadow: 0 10px 28px rgba(0,0,0,0.45);
       opacity: 0;
-      transform: translateX(-110vw);
-      transition: transform 0.72s cubic-bezier(0.22,1,0.36,1),
-                  opacity 0.5s ease,
-                  box-shadow 0.35s ease,
-                  filter 0.35s ease;
       cursor: pointer;
       position: relative;
+      will-change: transform, opacity;
     }
-    /* resting 3D positions after entrance */
-    .stage-card.entered { opacity: 1; }
-    .stage-card.entered:nth-child(1) { transform: translateY(14px)  rotateY(-12deg) scale(0.88); }
-    .stage-card.entered:nth-child(2) { transform: translateY(6px)   rotateY(-5deg)  scale(0.94); }
-    .stage-card.entered:nth-child(3) { transform: translateY(0px)   rotateY(0deg)   scale(1.0);  }
-    .stage-card.entered:nth-child(4) { transform: translateY(6px)   rotateY(5deg)   scale(0.94); }
-    .stage-card.entered:nth-child(5) { transform: translateY(14px)  rotateY(12deg)  scale(0.88); }
-    /* focused — pops up and forward */
-    .stage-card.focused {
-      transform: translateY(-22px) rotateY(0deg) scale(1.22) !important;
-      box-shadow: 0 22px 50px rgba(212,85,42,0.55), 0 0 0 2px rgba(212,85,42,0.6);
+    /* glow ring only applied via JS class — no transform here */
+    .stage-card.fm-focused {
+      box-shadow: 0 22px 50px rgba(212,85,42,0.6), 0 0 0 2.5px rgba(212,85,42,0.7);
       z-index: 20;
-      opacity: 1 !important;
-      filter: none !important;
-    }
-    /* others dim when any is focused */
-    .stage-card.dimmed {
-      transform: translateY(18px) scale(0.82) !important;
-      opacity: 0.38 !important;
-      filter: blur(1.5px) brightness(0.7);
-    }
-    /* exit — fly out to the right */
-    .stage-card.exiting {
-      opacity: 0 !important;
-      transform: translateX(110vw) !important;
     }
     .stage-card img {
       width: 100%;
-      height: 100px;
+      height: 104px;
       object-fit: cover;
       display: block;
+      border-radius: 12px 12px 0 0;
     }
     .stage-card-label {
-      font-size: 0.53rem;
+      font-size: 0.52rem;
       font-weight: 700;
       color: #fff;
       text-align: center;
       padding: 0.28rem 0.3rem;
-      background: rgba(26,13,6,0.65);
+      background: rgba(26,13,6,0.7);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       letter-spacing: 0.03em;
+      border-radius: 0 0 12px 12px;
     }
     .stage-hint {
       position: absolute;
-      bottom: 6px;
+      bottom: 7px;
       left: 0; right: 0;
       text-align: center;
-      font-size: 0.58rem;
-      color: rgba(255,255,255,0.55);
-      letter-spacing: 0.1em;
+      font-size: 0.56rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.7s ease;
+      pointer-events: none;
     }
     .stage-hint.visible { opacity: 1; }
     .dessert-row { cursor: pointer; transition: background 0.2s; }
@@ -797,6 +776,16 @@
   // ── DESSERT 3D STAGE ──────────────────────────────────────────────────────
   let dessertItemIds = [];
   let stageEntered   = false;
+  let focusedIds     = [];   // tracks which cards are currently focused
+
+  // resting 3D positions (index 0-4)
+  const STAGE_RESTING = [
+    { y: 16,  rotateY: -14, scale: 0.86 },
+    { y: 6,   rotateY: -5,  scale: 0.94 },
+    { y: 0,   rotateY: 0,   scale: 1.02 },
+    { y: 6,   rotateY: 5,   scale: 0.94 },
+    { y: 16,  rotateY: 14,  scale: 0.86 },
+  ];
 
   function renderDessertStage(items) {
     dessertItemIds = items.map(i => i.id);
@@ -820,60 +809,150 @@
 
   function triggerStageEntrance() {
     if (stageEntered) return;
-    const cards = document.querySelectorAll('.stage-card');
+    const cards = [...document.querySelectorAll('.stage-card')];
     if (!cards.length) return;
     stageEntered = true;
-    // reset exit state
-    cards.forEach(c => c.classList.remove('exiting', 'focused', 'dimmed'));
-    cards.forEach((card, i) => {
-      setTimeout(() => {
-        card.classList.add('entered');
-        if (i === cards.length - 1) {
-          setTimeout(() => {
+    focusedIds = [];
+
+    if (window._fmAnimate) {
+      // ── framer-motion spring entrance ──
+      const fm = window._fmAnimate;
+      cards.forEach((card, i) => {
+        card.classList.remove('fm-focused');
+        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
+        fm(card,
+          { x: [-window.innerWidth * 1.1, 0], y: rest.y, rotateY: rest.rotateY, scale: rest.scale, opacity: [0, 1] },
+          { type: 'spring', stiffness: 65, damping: 13, delay: i * 0.11,
+            onComplete: i === cards.length - 1 ? () => {
+              const hint = document.getElementById('stageHint');
+              if (hint) hint.classList.add('visible');
+            } : undefined }
+        );
+      });
+    } else {
+      // CSS fallback
+      cards.forEach((card, i) => {
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = (() => {
+            const r = STAGE_RESTING[i] || STAGE_RESTING[2];
+            return `translateY(${r.y}px) rotateY(${r.rotateY}deg) scale(${r.scale})`;
+          })();
+          card.style.transition = 'transform 0.72s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease';
+          if (i === cards.length - 1) setTimeout(() => {
             const hint = document.getElementById('stageHint');
             if (hint) hint.classList.add('visible');
           }, 500);
-        }
-      }, i * 110);
-    });
+        }, i * 110);
+      });
+    }
   }
 
   // toggle focus — multiple desserts can be selected
   function focusDessert(itemId) {
-    const cards    = document.querySelectorAll('.stage-card');
+    const cards = [...document.querySelectorAll('.stage-card')];
     const clickedCard = document.querySelector(`.stage-card[data-id="${itemId}"]`);
     if (!clickedCard) return;
 
-    const wasFocused = clickedCard.classList.contains('focused');
-    // toggle this card
-    clickedCard.classList.toggle('focused', !wasFocused);
-    clickedCard.classList.remove('dimmed');
+    const wasFocused = focusedIds.includes(itemId);
+    if (wasFocused) {
+      focusedIds = focusedIds.filter(id => id !== itemId);
+    } else {
+      focusedIds.push(itemId);
+    }
 
-    // rebuild dim state based on whether any are focused
-    const anyFocused = [...cards].some(c => c.classList.contains('focused'));
-    cards.forEach(card => {
-      if (!card.classList.contains('focused')) {
-        card.classList.toggle('dimmed', anyFocused);
-      }
-    });
+    const anyFocused = focusedIds.length > 0;
+
+    const hint = document.getElementById('stageHint');
+    if (hint) hint.classList.remove('visible');
+
+    if (window._fmAnimate) {
+      const fm = window._fmAnimate;
+      cards.forEach((card, i) => {
+        const id = parseInt(card.dataset.id);
+        const isFocused = focusedIds.includes(id);
+        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
+        card.classList.toggle('fm-focused', isFocused);
+
+        if (isFocused) {
+          fm(card,
+            { y: -26, rotateY: 0, scale: 1.25, opacity: 1 },
+            { type: 'spring', stiffness: 220, damping: 20 }
+          );
+        } else if (anyFocused) {
+          fm(card,
+            { y: 20, rotateY: 0, scale: 0.80, opacity: 0.35 },
+            { type: 'spring', stiffness: 200, damping: 22 }
+          );
+        } else {
+          // no selection — back to resting
+          fm(card,
+            { y: rest.y, rotateY: rest.rotateY, scale: rest.scale, opacity: 1 },
+            { type: 'spring', stiffness: 200, damping: 22 }
+          );
+        }
+      });
+    } else {
+      // CSS fallback
+      cards.forEach((card, i) => {
+        const id = parseInt(card.dataset.id);
+        const isFocused = focusedIds.includes(id);
+        const rest = STAGE_RESTING[i] || STAGE_RESTING[2];
+        card.classList.toggle('fm-focused', isFocused);
+        if (isFocused) {
+          card.style.transform = 'translateY(-26px) rotateY(0deg) scale(1.25)';
+          card.style.opacity = '1';
+          card.style.filter = 'none';
+        } else if (anyFocused) {
+          card.style.transform = 'translateY(20px) scale(0.80)';
+          card.style.opacity = '0.35';
+          card.style.filter = 'blur(1.5px) brightness(0.7)';
+        } else {
+          card.style.transform = `translateY(${rest.y}px) rotateY(${rest.rotateY}deg) scale(${rest.scale})`;
+          card.style.opacity = '1';
+          card.style.filter = 'none';
+        }
+      });
+    }
 
     // highlight item rows
     const row = document.getElementById(`card-${itemId}`);
     if (row) row.classList.toggle('active-row', !wasFocused);
-
-    // hide hint once interacted
-    const hint = document.getElementById('stageHint');
-    if (hint) hint.classList.remove('visible');
   }
 
   function triggerStageExit(callback) {
-    const cards = document.querySelectorAll('.stage-card');
+    const cards = [...document.querySelectorAll('.stage-card')];
     if (!cards.length) { callback && callback(); return; }
-    // stagger exit to the right, reversed order feels natural
-    [...cards].reverse().forEach((card, i) => {
-      setTimeout(() => card.classList.add('exiting'), i * 80);
+
+    if (window._fmAnimate) {
+      const fm = window._fmAnimate;
+      const reversed = [...cards].reverse();
+      reversed.forEach((card, i) => {
+        fm(card,
+          { x: window.innerWidth * 1.1, opacity: 0 },
+          { duration: 0.42, ease: [0.22, 1, 0.36, 1], delay: i * 0.075 }
+        );
+      });
+      setTimeout(() => { callback && callback(); }, reversed.length * 75 + 420);
+    } else {
+      [...cards].reverse().forEach((card, i) => {
+        setTimeout(() => {
+          card.style.transform = `translateX(${window.innerWidth * 1.1}px)`;
+          card.style.opacity = '0';
+          card.style.transition = 'transform 0.42s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease';
+        }, i * 75);
+      });
+      setTimeout(() => { callback && callback(); }, cards.length * 75 + 450);
+    }
+  }
+
+  function _resetStageCards() {
+    const cards = [...document.querySelectorAll('.stage-card')];
+    focusedIds = [];
+    cards.forEach(c => {
+      c.classList.remove('fm-focused');
+      c.style.cssText = '';   // wipe inline styles set by framer-motion
     });
-    setTimeout(() => { callback && callback(); }, cards.length * 80 + 500);
   }
 
   function watchDessertStage() {
@@ -882,7 +961,7 @@
     stageEntered = false;
     const obs = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) { triggerStageEntrance(); obs.disconnect(); }
-    }, { threshold: 0.2 });
+    }, { threshold: 0.15 });
     obs.observe(stage);
   }
 
@@ -1057,7 +1136,7 @@
     const stage = document.getElementById('dessertStage');
     if (stage && el && el.contains(stage)) {
       stageEntered = false;
-      document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('entered','focused','dimmed'));
+      _resetStageCards();
       setTimeout(triggerStageEntrance, 350);
     }
   }
@@ -1120,8 +1199,7 @@
       this.classList.remove('open');
       // re-enter dessert stage when modal dismissed
       stageEntered = false;
-      document.querySelectorAll('.stage-card').forEach(c =>
-        c.classList.remove('entered','focused','dimmed','exiting'));
+      _resetStageCards();
       setTimeout(triggerStageEntrance, 200);
     }
   });
@@ -1164,6 +1242,25 @@
     document.getElementById('orderNotes').value = '';
     document.getElementById('phoneError').textContent = '';
     document.getElementById('placeBtn').disabled = true;
+  }
+</script>
+
+<!-- ── FRAMER-MOTION CINEMATIC ENGINE ── -->
+<script type="module">
+  // Import framer-motion DOM animation API via ESM CDN
+  let fmAnimate;
+  try {
+    const mod = await import('https://esm.sh/framer-motion@12/dom');
+    fmAnimate = mod.animate;
+  } catch(e) {
+    // CDN load failed — CSS fallback will be used
+    console.warn('[stage] framer-motion not loaded, using CSS fallback', e);
+  }
+
+  if (fmAnimate) {
+    // Expose globally so the regular script block can call it
+    window._fmAnimate = fmAnimate;
+    console.log('[stage] framer-motion loaded ✓');
   }
 </script>
 </body>
