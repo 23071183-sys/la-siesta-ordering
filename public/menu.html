@@ -786,18 +786,30 @@
     if (window._threeReset) window._threeReset();
   }
 
+  // Called by IntersectionObserver AND by module script (race-condition guard)
+  function _initStageWhenReady(tries) {
+    const canvas = document.getElementById('dessertCanvas');
+    if (!canvas) return;                       // stage not in DOM yet
+    if (window._threeInit) {
+      if (!_threeInited) {
+        window._threeInit(canvas, window._dessertItems || []);
+        _threeInited = true;
+      }
+      if (!stageEntered) triggerStageEntrance();
+    } else if (tries < 50) {
+      // Three.js CDN still loading — retry every 100 ms (up to 5 s)
+      setTimeout(() => _initStageWhenReady(tries + 1), 100);
+    }
+  }
+  window._initStageWhenReady = () => _initStageWhenReady(0);
+
   function watchDessertStage() {
     const stage = document.getElementById('dessertStage');
     if (!stage) return;
     stageEntered = false;
     const obs = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        const canvas = document.getElementById('dessertCanvas');
-        if (canvas && window._threeInit && !_threeInited) {
-          window._threeInit(canvas, window._dessertItems || []);
-          _threeInited = true;
-        }
-        triggerStageEntrance();
+        _initStageWhenReady(0);
         obs.disconnect();
       }
     }, { threshold: 0.15 });
@@ -1292,6 +1304,14 @@ window._threeReset = function() {
 };
 
 console.log('[dessert stage] Three.js engine ready ✓');
+
+// Race-condition guard: if user scrolled to Desserts before this module
+// finished downloading, _initStageWhenReady was retrying. Now that all
+// window.* functions are defined it will succeed on next retry.
+// If canvas is already in DOM but retries haven't started, kick one off.
+if (document.getElementById('dessertCanvas')) {
+  window._initStageWhenReady?.();
+}
 </script>
 </body>
 </html>
