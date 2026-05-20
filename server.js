@@ -70,131 +70,131 @@ if (catCount === 0) {
 
   const hotCoffee    = addCat.run('Hot Coffee', 1).lastInsertRowid;
   const hotSpecials  = addCat.run('Hot Specials', 2).lastInsertRowid;
-  const siestaSp     = addCat.run('Siesta Specials', 3).lastInsertRowid;
-  const coldBrew     = addCat.run('Cold Brew', 4).lastInsertRowid;
-  const frappe       = addCat.run('Frappe', 5).lastInsertRowid;
-  const icedCoffee   = addCat.run('Iced Coffee', 6).lastInsertRowid;
-  const milkshakes   = addCat.run('Milkshakes', 7).lastInsertRowid;
-  const mojito       = addCat.run('Mojito', 8).lastInsertRowid;
+  const icedCoffee   = addCat.run('Iced Coffee', 3).lastInsertRowid;
+  const icedSpecials = addCat.run('Iced Specials', 4).lastInsertRowid;
+  const coldBrew     = addCat.run('Cold Brew', 5).lastInsertRowid;
+  const frappe       = addCat.run('Frappe', 6).lastInsertRowid;
+  const mojito       = addCat.run('Mojito', 7).lastInsertRowid;
+  const milkshakes   = addCat.run('Milkshakes', 8).lastInsertRowid;
   const icedTea      = addCat.run('Iced Tea', 9).lastInsertRowid;
-  const food         = addCat.run('Food', 10).lastInsertRowid;
-  const riceBowls    = addCat.run('Rice Bowls', 11).lastInsertRowid;
-  const sweets       = addCat.run('Sweets', 12).lastInsertRowid;
-  const packaged     = addCat.run('Packaged Drinks', 13).lastInsertRowid;
+  const packaged     = addCat.run('Packaged Drinks', 10).lastInsertRowid;
+  const food         = addCat.run('Food', 11).lastInsertRowid;
+  const riceBowls    = addCat.run('Rice Bowls', 12).lastInsertRowid;
+  const sweets       = addCat.run('Sweets', 13).lastInsertRowid;
   const desserts     = addCat.run('Desserts', 14).lastInsertRowid;
 
   // Hot Coffee
-  addItem.run(hotCoffee, 'Espresso',       'Single shot, freshly pulled',          120);
-  addItem.run(hotCoffee, 'Doppio',         'Double espresso shot',                 140);
-  addItem.run(hotCoffee, 'Americano',      'Espresso with hot water',              150);
-  addItem.run(hotCoffee, 'Cortado',        'Espresso with equal parts warm milk',  160);
-  addItem.run(hotCoffee, 'Cappuccino',     'Espresso with steamed milk foam',      170);
-  addItem.run(hotCoffee, 'Cafe Latte',     'Espresso with steamed milk',           170);
-  addItem.run(hotCoffee, 'Flat White',     'Velvety microfoam espresso',           170);
-  addItem.run(hotCoffee, 'Mocha',          'Espresso with chocolate & milk',       180);
+  addItem.run(hotCoffee, 'Espresso',       'Single shot, freshly pulled',         120);
+  addItem.run(hotCoffee, 'Doppio',         'Double espresso shot',                140);
+  addItem.run(hotCoffee, 'Americano',      'Espresso with hot water',             150);
+  addItem.run(hotCoffee, 'Cortado',        'Espresso with equal parts warm milk', 160);
+  addItem.run(hotCoffee, 'Cappuccino',     'Espresso with steamed milk foam',     170);
+  addItem.run(hotCoffee, 'Cafe Latte',     'Espresso with steamed milk',          170);
+  addItem.run(hotCoffee, 'Flat White',     'Velvety microfoam espresso',          170);
+  addItem.run(hotCoffee, 'Mocha',          'Espresso with chocolate & milk',      180);
 
   // Hot Specials
-  addItem.run(hotSpecials, 'Vietnames Latte',        'Condensed milk & robusta espresso',   200);
-  addItem.run(hotSpecials, 'Spanish Latte',           'Espresso with condensed & fresh milk',200);
-  addItem.run(hotSpecials, 'French Vanilla Latte',    'Smooth vanilla-infused latte',        200);
-  addItem.run(hotSpecials, 'White Chocolate',         'Espresso with white chocolate sauce', 200);
-  addItem.run(hotSpecials, 'Roasted Hazelnut Latte',  'Latte with roasted hazelnut syrup',   200);
+  addItem.run(hotSpecials, 'Vietnames Latte',       'Condensed milk & robusta espresso',    200);
+  addItem.run(hotSpecials, 'Spanish Latte',          'Espresso with condensed & fresh milk', 200);
+  addItem.run(hotSpecials, 'French Vanilla Latte',   'Smooth vanilla-infused latte',         200);
+  addItem.run(hotSpecials, 'White Chocolate',        'Espresso with white chocolate sauce',  200);
+  addItem.run(hotSpecials, 'Roasted Hazelnut Latte', 'Latte with roasted hazelnut syrup',    200);
 
-  // Siesta Specials
-  addItem.run(siestaSp, 'Salted Caramel Latte',  'Iced espresso with salted caramel',    220);
-  addItem.run(siestaSp, 'French Toast Latte',    'Cinnamon & maple iced latte',          220);
-  addItem.run(siestaSp, 'Tiramisu Latte',        'Mascarpone & espresso iced latte',     250);
-  addItem.run(siestaSp, 'Bonafee Latte',         'Caramel banana iced latte',            240);
+  // Iced Coffee — basic + specialty lattes
+  addItem.run(icedCoffee, 'Iced Latte',           'Espresso over ice with milk · add-ons: Caramel/Vanilla', 170);
+  addItem.run(icedCoffee, 'Iced Americano',       'Espresso over ice with water',             160);
+  addItem.run(icedCoffee, 'Iced Mocha',           'Espresso, chocolate & ice',                190);
+  addItem.run(icedCoffee, 'Salted Caramel Latte', 'Iced espresso with salted caramel',        220);
+  addItem.run(icedCoffee, 'French Toast Latte',   'Cinnamon & maple iced latte',              220);
+  addItem.run(icedCoffee, 'Tiramisu Latte',       'Mascarpone & espresso iced latte',         250);
+  addItem.run(icedCoffee, 'Bonafee Latte',        'Caramel banana iced latte',                240);
+  addItem.run(icedCoffee, 'Coconut Cloud',        'Iced espresso with coconut milk foam',     240);
+
+  // Iced Specials
+  addItem.run(icedSpecials, 'Vietnames Latte',       'Condensed milk iced espresso',           200);
+  addItem.run(icedSpecials, 'Spanish Latte',          'Condensed & fresh milk iced espresso',   200);
+  addItem.run(icedSpecials, 'French Vanilla Latte',   'Smooth vanilla iced latte',              200);
+  addItem.run(icedSpecials, 'Roasted Hazelnut Latte', 'Hazelnut syrup iced latte',              200);
+  addItem.run(icedSpecials, 'Cranberry Espresso',     'Espresso with cranberry over ice',       200);
+  addItem.run(icedSpecials, 'Orange Sunrise',         'Espresso with fresh orange over ice',    220);
 
   // Cold Brew
-  addItem.run(coldBrew, 'Straight Up',                 'Classic slow-steeped cold brew',         150);
-  addItem.run(coldBrew, 'Siesta Basil',                'Cold brew with fresh basil',             200);
-  addItem.run(coldBrew, 'Coldbrew Gingerale / Tonic',  'Cold brew with ginger ale or tonic',     180);
-  addItem.run(coldBrew, 'Coconut Cloud',               'Cold brew with coconut milk foam',       240);
-  addItem.run(coldBrew, 'Yuzu',                        'Cold brew with yuzu citrus',             220);
-  addItem.run(coldBrew, 'Berry Coldbrew',              'Cold brew with mixed berry syrup',       200);
-  addItem.run(coldBrew, 'Lavender Coldbrew',           'Cold brew with lavender infusion',       200);
-  addItem.run(coldBrew, 'Fridge Cigarette Coffee',     'Smoked cold brew, house specialty',      240);
+  addItem.run(coldBrew, 'Straight Up',                'Classic slow-steeped cold brew',        150);
+  addItem.run(coldBrew, 'Siesta Basil',               'Cold brew with fresh basil',            200);
+  addItem.run(coldBrew, 'Coldbrew Gingerale / Tonic', 'Cold brew with ginger ale or tonic',    180);
+  addItem.run(coldBrew, 'Yuzu',                       'Cold brew with yuzu citrus',            220);
+  addItem.run(coldBrew, 'Berry Coldbrew',             'Cold brew with mixed berry syrup',      200);
+  addItem.run(coldBrew, 'Lavender Coldbrew',          'Cold brew with lavender infusion',      200);
+  addItem.run(coldBrew, 'Fridge Cigarette Coffee',    'Smoked cold brew, house specialty',     240);
 
   // Frappe
-  addItem.run(frappe, 'Classic Frappe',    'Blended coffee frappe · add-ons: Caramel/Hazelnut/Vanilla', 190);
-  addItem.run(frappe, 'Mocha Frappe',      'Chocolate & coffee blended frappe',    220);
-  addItem.run(frappe, 'Ferreo Frappe',     'Ferrero-inspired hazelnut frappe',      220);
-  addItem.run(frappe, 'Salted Caramel',    'Caramel & salt blended frappe',         220);
-  addItem.run(frappe, 'Tiramisu Frappe',   'Mascarpone & espresso frappe',          240);
-  addItem.run(frappe, 'Brownie Frappe',    'Rich chocolate brownie frappe',         240);
-
-  // Iced Coffee
-  addItem.run(icedCoffee, 'Iced Latte',              'Espresso over ice with milk · Caramel/Vanilla', 170);
-  addItem.run(icedCoffee, 'Iced Americano',          'Espresso over ice with water',         160);
-  addItem.run(icedCoffee, 'Iced Mocha',              'Espresso, chocolate & ice',             190);
-  addItem.run(icedCoffee, 'Iced Vietnames Latte',    'Condensed milk iced espresso',          200);
-  addItem.run(icedCoffee, 'Iced Spanish Latte',      'Condensed & fresh milk iced espresso',  200);
-  addItem.run(icedCoffee, 'French Vanilla Iced',     'Smooth vanilla iced latte',             200);
-  addItem.run(icedCoffee, 'Roasted Hazelnut Iced',   'Hazelnut syrup iced latte',             200);
-  addItem.run(icedCoffee, 'Cranberry Espresso',      'Espresso with cranberry over ice',      200);
-  addItem.run(icedCoffee, 'Orange Sunrise',          'Espresso with orange & ice',            220);
-
-  // Milkshakes
-  addItem.run(milkshakes, 'Cookie Crumble',  'Blended cookie milkshake',   220);
-  addItem.run(milkshakes, 'Strawberry',      'Fresh strawberry milkshake',  220);
-  addItem.run(milkshakes, 'Mango',           'Fresh mango milkshake',       220);
-  addItem.run(milkshakes, 'Blueberry',       'Fresh blueberry milkshake',   220);
+  addItem.run(frappe, 'Classic Frappe',   'Blended coffee frappe · add-ons: Caramel/Hazelnut/Vanilla', 190);
+  addItem.run(frappe, 'Mocha Frappe',     'Chocolate & coffee blended frappe',  220);
+  addItem.run(frappe, 'Ferreo Frappe',    'Ferrero-inspired hazelnut frappe',   220);
+  addItem.run(frappe, 'Salted Caramel',   'Caramel & salt blended frappe',      220);
+  addItem.run(frappe, 'Tiramisu Frappe',  'Mascarpone & espresso frappe',       240);
+  addItem.run(frappe, 'Brownie Frappe',   'Rich chocolate brownie frappe',      240);
 
   // Mojito
-  addItem.run(mojito, 'Virgin Mojito',  'Lime, mint, soda, sugar',             180);
-  addItem.run(mojito, 'Watermelon',     'Watermelon mojito with mint & lime',  180);
-  addItem.run(mojito, 'Jamun Spritz',   'Jamun & lime sparkling mojito',       180);
-  addItem.run(mojito, 'Blueberry',      'Blueberry mint mojito',               180);
-  addItem.run(mojito, 'Mango Berry',    'Mango & berry mojito',                180);
-  addItem.run(mojito, 'Rasberry',       'Fresh raspberry mojito',              180);
+  addItem.run(mojito, 'Virgin Mojito', 'Lime, mint, soda, sugar',            180);
+  addItem.run(mojito, 'Watermelon',    'Watermelon mojito with mint & lime', 180);
+  addItem.run(mojito, 'Jamun Spritz',  'Jamun & lime sparkling mojito',      180);
+  addItem.run(mojito, 'Blueberry',     'Blueberry mint mojito',              180);
+  addItem.run(mojito, 'Mango Berry',   'Mango & berry mojito',               180);
+  addItem.run(mojito, 'Rasberry',      'Fresh raspberry mojito',             180);
+
+  // Milkshakes
+  addItem.run(milkshakes, 'Cookie Crumble', 'Blended cookie milkshake',    220);
+  addItem.run(milkshakes, 'Strawberry',     'Fresh strawberry milkshake',  220);
+  addItem.run(milkshakes, 'Mango',          'Fresh mango milkshake',       220);
+  addItem.run(milkshakes, 'Blueberry',      'Fresh blueberry milkshake',   220);
 
   // Iced Tea
   addItem.run(icedTea, 'Lemon',    'Classic lemon iced tea',   180);
   addItem.run(icedTea, 'Peach',    'Sweet peach iced tea',     180);
   addItem.run(icedTea, 'Hibiscus', 'Floral hibiscus iced tea', 180);
 
-  // Food
-  addItem.run(food, 'Andhra Chicken Pita',      'Spicy Andhra-style chicken in pita bread',   350);
-  addItem.run(food, 'Thecha Chicken Wings',     'Crispy wings with green chilli thecha',       320);
-  addItem.run(food, 'Kung Pao Chicken',         'Stir-fried chicken with peanuts & chilli',    300);
-  addItem.run(food, 'Paneer 65',                'Crispy spiced paneer bites',                  320);
-  addItem.run(food, 'Chicken Tender',           'Juicy breaded chicken tenders',               280);
-  addItem.run(food, 'Chicken Keema Sandwich',   'Spiced chicken mince in a toasted bun',       320);
-  addItem.run(food, 'Spicy Bombay Sandwich',    'Masala veggies, chutney & cheese',            280);
-  addItem.run(food, 'Veg Keema Sandos',         'Spiced soy keema in a Japanese-style bun',    280);
-  addItem.run(food, 'Thecha Spaghetti',         'Spaghetti with fiery green chilli thecha',    350);
-  addItem.run(food, 'Alfredo Pasta',            'Creamy Alfredo sauce · add chicken +₹50',     280);
-  addItem.run(food, 'Arrabbiata Pasta',         'Spicy tomato sauce pasta · add chicken +₹50', 280);
-  addItem.run(food, 'Mexican Samosa Chaat',     'Crispy samosa with Mexican toppings',         220);
-  addItem.run(food, 'Avocado Toasties',         'Smashed avocado on toasted sourdough',        300);
-  addItem.run(food, 'Chilli Cheese Toasties',   'Melted cheese with green chilli toast',       300);
-  addItem.run(food, 'Creamy Veggie Toasties',   'Creamy vegetable filling on toast',           300);
-  addItem.run(food, 'Creamy Chicken Toasties',  'Creamy chicken filling on toast',             300);
-  addItem.run(food, 'Siesta Fries',             'Seasoned house-style fries',                  200);
-
-  // Rice Bowls
-  addItem.run(riceBowls, 'Saoji Rice Bowl',            'Fiery Nagpur-style Saoji chicken curry with rice', 320);
-  addItem.run(riceBowls, 'Makhani Chicken Rice Bowl',  'Butter chicken gravy over steamed rice',           320);
-  addItem.run(riceBowls, 'Makhani Paneer Rice Bowl',   'Butter paneer gravy over steamed rice',            300);
-  addItem.run(riceBowls, 'Mexican Rice Bowl',          'Spiced Mexican-style rice with salsa & beans',     280);
-  addItem.run(riceBowls, 'Oriental Rice Bowl',         'Stir-fried Oriental veggies with rice',            280);
-
-  // Sweets
-  addItem.run(sweets, 'Mango Smoothie Bowl',    'Fresh mango, granola & toppings',      260);
-  addItem.run(sweets, 'Blueberry Smoothie Bowl','Fresh blueberry, granola & toppings',  260);
-
   // Packaged Drinks
   addItem.run(packaged, 'Water Bottle', 'Still water 500ml',  40);
   addItem.run(packaged, 'Redbull',      'Energy drink 250ml', 180);
   addItem.run(packaged, 'Diet Coke',    'Diet Coke 300ml',    70);
 
+  // Food
+  addItem.run(food, 'Andhra Chicken Pita',      'Spicy Andhra-style chicken in pita bread',    350);
+  addItem.run(food, 'Thecha Chicken Wings',     'Crispy wings with green chilli thecha',        320);
+  addItem.run(food, 'Kung Pao Chicken',         'Stir-fried chicken with peanuts & chilli',     300);
+  addItem.run(food, 'Paneer 65',                'Crispy spiced paneer bites',                   320);
+  addItem.run(food, 'Chicken Tender',           'Juicy breaded chicken tenders',                280);
+  addItem.run(food, 'Chicken Keema Sandwich',   'Spiced chicken mince in a toasted bun',        320);
+  addItem.run(food, 'Spicy Bombay Sandwich',    'Masala veggies, chutney & cheese',             280);
+  addItem.run(food, 'Veg Keema Sandos',         'Spiced soy keema in a Japanese-style bun',     280);
+  addItem.run(food, 'Thecha Spaghetti',         'Spaghetti with fiery green chilli thecha',     350);
+  addItem.run(food, 'Alfredo Pasta',            'Creamy Alfredo sauce · add chicken +₹50',      280);
+  addItem.run(food, 'Arrabbiata Pasta',         'Spicy tomato sauce pasta · add chicken +₹50',  280);
+  addItem.run(food, 'Mexican Samosa Chaat',     'Crispy samosa with Mexican toppings',          220);
+  addItem.run(food, 'Avocado Toasties',         'Smashed avocado on toasted sourdough',         300);
+  addItem.run(food, 'Chilli Cheese Toasties',   'Melted cheese with green chilli toast',        300);
+  addItem.run(food, 'Creamy Veggie Toasties',   'Creamy vegetable filling on toast',            300);
+  addItem.run(food, 'Creamy Chicken Toasties',  'Creamy chicken filling on toast',              300);
+  addItem.run(food, 'Siesta Fries',             'Seasoned house-style fries',                   200);
+
+  // Rice Bowls
+  addItem.run(riceBowls, 'Saoji Rice Bowl',           'Fiery Nagpur-style Saoji chicken curry with rice', 320);
+  addItem.run(riceBowls, 'Makhani Chicken Rice Bowl', 'Butter chicken gravy over steamed rice',           320);
+  addItem.run(riceBowls, 'Makhani Paneer Rice Bowl',  'Butter paneer gravy over steamed rice',            300);
+  addItem.run(riceBowls, 'Mexican Rice Bowl',         'Spiced Mexican-style rice with salsa & beans',     280);
+  addItem.run(riceBowls, 'Oriental Rice Bowl',        'Stir-fried Oriental veggies with rice',            280);
+
+  // Sweets
+  addItem.run(sweets, 'Mango Smoothie Bowl',     'Fresh mango, granola & toppings',     260);
+  addItem.run(sweets, 'Blueberry Smoothie Bowl', 'Fresh blueberry, granola & toppings', 260);
+
   // Desserts
-  addItem.run(desserts, 'Mango Tres Leches',     'Light sponge cake soaked in flavored milk, topped with fresh Alphonso Mangoes', 390);
-  addItem.run(desserts, 'Mango Misu',            'Fruity tiramisu with layers of soft biscuits, creamy filling and sweet mango puree', 360);
-  addItem.run(desserts, 'Tiramisu',              'Ladyfinger biscuits soaked in espresso, layered with mascarpone and Belgian cocoa', 330);
-  addItem.run(desserts, 'Chocolate Croissant',   'Golden layered croissant filled with luscious chocolate, crisp outside & soft inside', 290);
-  addItem.run(desserts, 'Belgian Chocolate Cake','Decadent Belgian chocolate cake with intense cocoa taste', 290);
+  addItem.run(desserts, 'Mango Tres Leches',      'Light sponge cake soaked in flavored milk, topped with fresh Alphonso Mangoes',      390);
+  addItem.run(desserts, 'Mango Misu',             'Fruity tiramisu with layers of soft biscuits, creamy filling and sweet mango puree', 360);
+  addItem.run(desserts, 'Tiramisu',               'Ladyfinger biscuits soaked in espresso, layered with mascarpone and Belgian cocoa',  330);
+  addItem.run(desserts, 'Chocolate Croissant',    'Golden layered croissant filled with luscious chocolate, crisp outside & soft inside',290);
+  addItem.run(desserts, 'Belgian Chocolate Cake', 'Decadent Belgian chocolate cake with intense cocoa taste',                           290);
 }
 
 
