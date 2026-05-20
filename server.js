@@ -77,11 +77,16 @@ if (catCount === 0) {
   const mojito       = addCat.run('Mojito', 7).lastInsertRowid;
   const milkshakes   = addCat.run('Milkshakes', 8).lastInsertRowid;
   const icedTea      = addCat.run('Iced Tea', 9).lastInsertRowid;
-  const packaged     = addCat.run('Packaged Drinks', 10).lastInsertRowid;
-  const food         = addCat.run('Food', 11).lastInsertRowid;
-  const riceBowls    = addCat.run('Rice Bowls', 12).lastInsertRowid;
-  const sweets       = addCat.run('Sweets', 13).lastInsertRowid;
-  const desserts     = addCat.run('Desserts', 14).lastInsertRowid;
+  const packaged        = addCat.run('Packaged Drinks', 10).lastInsertRowid;
+  const globalFusions   = addCat.run('Global Fusions', 11).lastInsertRowid;
+  const toasties        = addCat.run('Toasties', 12).lastInsertRowid;
+  const pasta           = addCat.run('Pasta', 13).lastInsertRowid;
+  const sandwiches      = addCat.run('Sandwiches', 14).lastInsertRowid;
+  const mains           = addCat.run('Mains', 15).lastInsertRowid;
+  const riceBowls       = addCat.run('Special Rice Bowls', 16).lastInsertRowid;
+  const sides           = addCat.run('Sides', 17).lastInsertRowid;
+  const sweets          = addCat.run('Sweet', 18).lastInsertRowid;
+  const desserts        = addCat.run('Desserts', 19).lastInsertRowid;
 
   // Hot Coffee
   addItem.run(hotCoffee, 'Espresso',       'Single shot, freshly pulled',         120);
@@ -159,35 +164,56 @@ if (catCount === 0) {
   addItem.run(packaged, 'Redbull',      'Energy drink 250ml', 180);
   addItem.run(packaged, 'Diet Coke',    'Diet Coke 300ml',    70);
 
-  // Food
-  addItem.run(food, 'Andhra Chicken Pita',      'Spicy Andhra-style chicken in pita bread',    350);
-  addItem.run(food, 'Thecha Chicken Wings',     'Crispy wings with green chilli thecha',        320);
-  addItem.run(food, 'Kung Pao Chicken',         'Stir-fried chicken with peanuts & chilli',     300);
-  addItem.run(food, 'Paneer 65',                'Crispy spiced paneer bites',                   320);
-  addItem.run(food, 'Chicken Tender',           'Juicy breaded chicken tenders',                280);
-  addItem.run(food, 'Chicken Keema Sandwich',   'Spiced chicken mince in a toasted bun',        320);
-  addItem.run(food, 'Spicy Bombay Sandwich',    'Masala veggies, chutney & cheese',             280);
-  addItem.run(food, 'Veg Keema Sandos',         'Spiced soy keema in a Japanese-style bun',     280);
-  addItem.run(food, 'Thecha Spaghetti',         'Spaghetti with fiery green chilli thecha',     350);
-  addItem.run(food, 'Alfredo Pasta',            'Creamy Alfredo sauce · add chicken +₹50',      280);
-  addItem.run(food, 'Arrabbiata Pasta',         'Spicy tomato sauce pasta · add chicken +₹50',  280);
-  addItem.run(food, 'Mexican Samosa Chaat',     'Crispy samosa with Mexican toppings',          220);
-  addItem.run(food, 'Avocado Toasties',         'Smashed avocado on toasted sourdough',         300);
-  addItem.run(food, 'Chilli Cheese Toasties',   'Melted cheese with green chilli toast',        300);
-  addItem.run(food, 'Creamy Veggie Toasties',   'Creamy vegetable filling on toast',            300);
-  addItem.run(food, 'Creamy Chicken Toasties',  'Creamy chicken filling on toast',              300);
-  addItem.run(food, 'Siesta Fries',             'Seasoned house-style fries',                   200);
+  // Global Fusions
+  addItem.run(globalFusions, 'Andhra Chicken Pita',   'Spicy Andhra-style chicken in pita bread',  380);
+  addItem.run(globalFusions, 'Paneer Fingers',        'Crispy golden paneer fingers',               380);
+  addItem.run(globalFusions, 'Thecha Spaghetti',      'Spaghetti with fiery green chilli thecha',   360);
+  addItem.run(globalFusions, 'Thecha Chicken Wings',  'Crispy wings with green chilli thecha',      360);
+  addItem.run(globalFusions, 'Kung Pao Chicken',      'Stir-fried chicken with peanuts & chilli',   360);
+  addItem.run(globalFusions, 'Mexican Samosa Chaat',  'Crispy samosa with Mexican toppings',        300);
 
-  // Rice Bowls
-  addItem.run(riceBowls, 'Saoji Rice Bowl',           'Fiery Nagpur-style Saoji chicken curry with rice', 320);
-  addItem.run(riceBowls, 'Makhani Chicken Rice Bowl', 'Butter chicken gravy over steamed rice',           320);
-  addItem.run(riceBowls, 'Makhani Paneer Rice Bowl',  'Butter paneer gravy over steamed rice',            300);
-  addItem.run(riceBowls, 'Mexican Rice Bowl',         'Spiced Mexican-style rice with salsa & beans',     280);
-  addItem.run(riceBowls, 'Oriental Rice Bowl',        'Stir-fried Oriental veggies with rice',            280);
+  // Toasties
+  addItem.run(toasties, 'Avocado Toasties',         'Smashed avocado on toasted sourdough',      300);
+  addItem.run(toasties, 'Chilli Cheese Toasties',   'Melted cheese with green chilli toast',     300);
+  addItem.run(toasties, 'Creamy Veggie Toasties',   'Creamy vegetable filling on toast',         300);
+  addItem.run(toasties, 'Creamy Mushroom Toasties', 'Creamy mushroom filling on toast',          300);
+  addItem.run(toasties, 'Creamy Chicken Toasties',  'Creamy chicken filling on toast',           300);
 
-  // Sweets
-  addItem.run(sweets, 'Mango Smoothie Bowl',     'Fresh mango, granola & toppings',     260);
-  addItem.run(sweets, 'Blueberry Smoothie Bowl', 'Fresh blueberry, granola & toppings', 260);
+  // Pasta
+  addItem.run(pasta, 'Aglio Olio',       'Garlic & olive oil spaghetti · add chicken +₹50',  330);
+  addItem.run(pasta, 'Pesto Pasta',      'Fresh basil pesto pasta · add chicken +₹50',        330);
+  addItem.run(pasta, 'Pink Sauce Pasta', 'Creamy tomato pink sauce · add chicken +₹50',       320);
+  addItem.run(pasta, 'Alfredo Pasta',    'Creamy Alfredo sauce · add chicken +₹50',           300);
+  addItem.run(pasta, 'Arrabbiata Pasta', 'Spicy tomato sauce pasta · add chicken +₹50',       300);
+
+  // Sandwiches
+  addItem.run(sandwiches, 'Chicken Keema',     'Spiced chicken mince in a toasted bun',           330);
+  addItem.run(sandwiches, 'Truffle Mushroom',  'Truffle oil & mushroom in toasted sourdough',     330);
+  addItem.run(sandwiches, 'Veg Keema Sandos',  'Spiced soy keema in a Japanese-style bun',        300);
+  addItem.run(sandwiches, 'Spicy Bombay',      'Masala veggies, chutney & cheese',                280);
+
+  // Mains
+  addItem.run(mains, 'Paneer Steak Bowl',     'Grilled paneer steak with sides',              360);
+  addItem.run(mains, 'Chicken Steak Bowl',    'Grilled chicken steak with sides',             390);
+  addItem.run(mains, 'Pizza Chicken Loaded',  'Loaded pizza with chicken toppings',           450);
+  addItem.run(mains, 'Pizza Veggie Loaded',   'Loaded pizza with fresh veggie toppings',      400);
+
+  // Special Rice Bowls
+  addItem.run(riceBowls, 'Saoji Rice Bowl',           'Fiery Nagpur-style Saoji chicken curry with rice', 360);
+  addItem.run(riceBowls, 'Makhani Chicken Rice Bowl', 'Butter chicken gravy over steamed rice',           360);
+  addItem.run(riceBowls, 'Makhani Paneer Rice Bowl',  'Butter paneer gravy over steamed rice',            340);
+  addItem.run(riceBowls, 'Mexican Rice Bowl',         'Spiced Mexican-style rice with salsa & beans',     340);
+  addItem.run(riceBowls, 'Oriental Rice Bowl',        'Stir-fried Oriental veggies with rice',            340);
+
+  // Sides
+  addItem.run(sides, 'Chicken Tender', 'Juicy breaded chicken tenders', 280);
+  addItem.run(sides, 'Siesta Fries',   'Seasoned house-style fries',    240);
+
+  // Sweet
+  addItem.run(sweets, 'Mango Smoothie Bowl',     'Fresh mango, granola & toppings',                260);
+  addItem.run(sweets, 'Blueberry Smoothie Bowl', 'Fresh blueberry, granola & toppings',            260);
+  addItem.run(sweets, 'French Toast',            'Golden French toast · add-ons: Nutella/Alphonso mango/Espresso cream/Blueberry', 300);
+  addItem.run(sweets, 'Pancakes',                'Fluffy pancakes · add-ons: Nutella/Alphonso mango/Espresso cream/Blueberry',     300);
 
   // Desserts
   addItem.run(desserts, 'Mango Tres Leches',      'Light sponge cake soaked in flavored milk, topped with fresh Alphonso Mangoes',      390);
