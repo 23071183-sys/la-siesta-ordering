@@ -266,6 +266,9 @@ app.get('/menu', (req, res) => res.sendFile(path.join(__dirname, 'public', 'menu
 // Order status tracking page
 app.get('/status', (req, res) => res.sendFile(path.join(__dirname, 'public', 'status.html')));
 
+// Admin panel
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
