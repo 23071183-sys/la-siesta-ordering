@@ -387,7 +387,7 @@
       letter-spacing: 0.08em; margin: 1rem 0 1.4rem;
     }
     .new-order-btn {
-      margin-top: 0.75rem; padding: 0.75rem 2rem;
+      display: block; margin-top: 0.75rem; padding: 0.75rem 2rem;
       background: var(--orange); color: var(--white); border: none;
       border-radius: 8px; font-family: 'DM Sans', sans-serif;
       font-size: 0.9rem; font-weight: 600; cursor: pointer;
@@ -619,7 +619,11 @@
   </div>
   <h2>Order Placed!</h2>
   <div class="order-num" id="successNum">#0001</div>
-  <p>Your order is at the counter.<br>Sit back &amp; relax — we'll bring it to you ☕</p>
+  <p id="successWait">Sit back &amp; relax — we'll have it ready shortly ☕</p>
+  <a id="trackOrderBtn" href="/status?order=1"
+     style="display:inline-block;margin:1rem 0 0;padding:0.55rem 1.5rem;background:var(--light);color:var(--dark);border-radius:8px;font-size:0.82rem;font-weight:600;text-decoration:none;border:1.5px solid rgba(0,0,0,0.08)">
+    📍 Track Order Status
+  </a>
   <button class="new-order-btn" onclick="resetOrder()">Order More</button>
 </div>
 
@@ -994,7 +998,14 @@
       const data = await res.json();
       if (data.success) {
         document.getElementById('orderModal').classList.remove('open');
-        document.getElementById('successNum').textContent = `#${String(data.order_id).padStart(4,'0')}`;
+        const orderIdStr = String(data.order_id).padStart(4,'0');
+        document.getElementById('successNum').textContent = `#${orderIdStr}`;
+        // Wait time message
+        const wait = data.wait_minutes || 10;
+        document.getElementById('successWait').textContent =
+          `Ready in about ${wait}–${wait + 5} min. Sit back & relax ☕`;
+        // Track link
+        document.getElementById('trackOrderBtn').href = `/status?order=${data.order_id}`;
         document.getElementById('successScreen').classList.add('show');
         cart = {};
         updateCartBar();

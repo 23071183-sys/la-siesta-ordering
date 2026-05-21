@@ -254,6 +254,9 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.ht
 // Menu/ordering page
 app.get('/menu', (req, res) => res.sendFile(path.join(__dirname, 'public', 'menu.html')));
 
+// Order status tracking page
+app.get('/status', (req, res) => res.sendFile(path.join(__dirname, 'public', 'status.html')));
+
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
@@ -297,8 +300,14 @@ app.post('/api/orders', (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
 
+  // Estimate wait time based on active orders ahead
+  const { cnt: activeCount } = db.prepare(
+    "SELECT COUNT(*) as cnt FROM orders WHERE status IN ('pending','preparing') AND id != ?"
+  ).get(orderId);
+  const waitMinutes = Math.max(5, activeCount * 4 + 5);
+
   io.emit('new_order', order);
-  res.json({ success: true, order_id: orderId });
+  res.json({ success: true, order_id: orderId, wait_minutes: waitMinutes });
 });
 
 app.get('/api/orders', (req, res) => {
@@ -311,6 +320,13 @@ app.get('/api/orders', (req, res) => {
     o.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id);
   }
   res.json(rows);
+});
+
+app.get('/api/orders/:id', (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
+  res.json(order);
 });
 
 app.patch('/api/orders/:id/status', (req, res) => {
