@@ -361,6 +361,28 @@
     .phone-input { flex: 1; }
     .field-error { font-size: 0.75rem; color: #e43b4f; margin-top: 0.3rem; min-height: 1rem; }
 
+    /* ── HOUSE SPECIAL ── */
+    .hs-star {
+      color: var(--orange);
+      font-size: 0.75rem;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+    .hs-badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: rgba(212,85,42,0.09);
+      border: 1px solid rgba(212,85,42,0.22);
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+
     /* ── SUCCESS ── */
     .success-screen {
       display: none; position: fixed; inset: 0;
@@ -844,12 +866,15 @@
       ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
       : '';
     const clickAttr = isDesserts ? `onclick="focusDessert(${item.id})"` : '';
+    const hsBadge = item.is_house_special
+      ? `<span class="hs-badge">✦ House Special</span>`
+      : '';
     return `
       <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" ${clickAttr}>
         <div class="item-left">
           ${vegHtml}
-          <div class="item-name">${item.name}</div>
-          <div class="item-price">₹${item.price}</div>
+          <div class="item-name">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
+          <div class="item-price">₹${item.price}${hsBadge}</div>
           ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
           ${inlineImg}
         </div>

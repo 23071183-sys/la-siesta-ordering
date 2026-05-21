@@ -580,14 +580,17 @@
       <table class="items-table">
         <thead>
           <tr>
-            <th>Name</th><th>Category</th><th>Price</th><th>Available</th><th></th>
+            <th>Name</th><th>Category</th><th>Price</th><th>Available</th><th title="House Special">✦</th><th></th>
           </tr>
         </thead>
         <tbody>
           ${all.map(i => `
             <tr id="row-${i.id}">
               <td>
-                <div class="item-name-cell">${i.name}</div>
+                <div class="item-name-cell">
+                  ${i.is_house_special ? '<span style="color:var(--orange);font-size:0.85rem;margin-right:4px">✦</span>' : ''}
+                  ${i.name}
+                </div>
                 ${i.description ? `<div class="item-desc-cell">${i.description}</div>` : ''}
               </td>
               <td style="color:var(--muted);font-size:0.82rem">${i.catName}</td>
@@ -598,6 +601,11 @@
                   <div class="toggle-track"></div>
                   <div class="toggle-thumb"></div>
                 </label>
+              </td>
+              <td>
+                <button class="btn btn-sm" id="hs-btn-${i.id}"
+                  style="background:${i.is_house_special ? 'rgba(212,85,42,0.12)' : '#f5f5f5'};color:${i.is_house_special ? 'var(--orange)' : '#bbb'};border:1px solid ${i.is_house_special ? 'rgba(212,85,42,0.3)' : 'var(--border)'}"
+                  onclick="toggleSpecial(${i.id})" title="${i.is_house_special ? 'Remove house special' : 'Mark as house special'}">✦</button>
               </td>
               <td>
                 <button class="btn btn-red btn-sm" onclick="deleteItem(${i.id})">Delete</button>
@@ -657,6 +665,13 @@
     const r = await fetch(`/api/admin/items/${id}/toggle`, { method: 'PATCH' });
     const { available } = await r.json();
     toast(available ? 'Item marked available' : 'Item hidden from menu (86\'d)');
+  }
+
+  async function toggleSpecial(id) {
+    const r = await fetch(`/api/admin/items/${id}/toggle-special`, { method: 'PATCH' });
+    const { is_house_special } = await r.json();
+    toast(is_house_special ? '✦ Marked as House Special' : 'House Special removed');
+    loadMenu();
   }
 
   async function deleteItem(id) {

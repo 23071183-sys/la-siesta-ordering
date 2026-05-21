@@ -230,6 +230,15 @@ if (catCount === 0) {
   addItem.run(desserts, 'Belgian Chocolate Cake', 'Decadent Belgian chocolate cake with intense cocoa taste',                           290);
 }
 
+// ── MIGRATION: add is_house_special column if missing ───────────────────────
+const hsColExists = db.prepare("PRAGMA table_info(menu_items)").all().some(c => c.name === 'is_house_special');
+if (!hsColExists) {
+  db.prepare("ALTER TABLE menu_items ADD COLUMN is_house_special INTEGER DEFAULT 0").run();
+  // Auto-mark known house items by description keyword
+  db.prepare("UPDATE menu_items SET is_house_special = 1 WHERE description LIKE '%house%' OR name LIKE 'Siesta%'").run();
+  console.log('[Migration] is_house_special column added');
+}
+
 // ── MIGRATION: add Matcha category if missing ────────────────────────────────
 const matchaExists = db.prepare("SELECT id FROM categories WHERE name = 'Matcha'").get();
 if (!matchaExists) {
@@ -395,6 +404,13 @@ app.patch('/api/admin/items/:id/toggle', (req, res) => {
   const next = item.available ? 0 : 1;
   db.prepare('UPDATE menu_items SET available = ? WHERE id = ?').run(next, req.params.id);
   res.json({ available: next });
+});
+
+app.patch('/api/admin/items/:id/toggle-special', (req, res) => {
+  const item = db.prepare('SELECT is_house_special FROM menu_items WHERE id = ?').get(req.params.id);
+  const next = item.is_house_special ? 0 : 1;
+  db.prepare('UPDATE menu_items SET is_house_special = ? WHERE id = ?').run(next, req.params.id);
+  res.json({ is_house_special: next });
 });
 
 // ── SOCKET.IO ────────────────────────────────────────────────────────────────
