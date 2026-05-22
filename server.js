@@ -294,17 +294,27 @@ app.get('/api/menu', (req, res) => {
   })));
 });
 
+// ── SAFE MIGRATIONS ─────────────────────────────────────────────────────────
+;(function () {
+  const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
+  if (!cols.includes('discount'))    db.prepare("ALTER TABLE orders ADD COLUMN discount    REAL DEFAULT 0").run();
+  if (!cols.includes('tip'))         db.prepare("ALTER TABLE orders ADD COLUMN tip         REAL DEFAULT 0").run();
+  if (!cols.includes('waiter_name')) db.prepare("ALTER TABLE orders ADD COLUMN waiter_name TEXT DEFAULT ''").run();
+  if (!cols.includes('order_type'))  db.prepare("ALTER TABLE orders ADD COLUMN order_type  TEXT DEFAULT 'indoor'").run();
+})();
+
 // ── ORDER API ────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
   const { table_number, customer_name, customer_phone, notes, items } = req.body;
   if (!table_number || !items?.length) {
     return res.status(400).json({ error: 'table_number and items are required' });
   }
-  if (!customer_phone || !/^[6-9]\d{9}$/.test(customer_phone)) {
+  // Phone optional for POS; only validate format if provided
+  if (customer_phone && !/^[6-9]\d{9}$/.test(customer_phone)) {
     return res.status(400).json({ error: 'Enter a valid 10-digit phone number' });
   }
 
-  const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const total = items.reduce((s, i) => s + (i.price || i.item_price) * i.quantity, 0);
 
   const insertOrder = db.prepare(
     'INSERT INTO orders (table_number, customer_name, customer_phone, notes, total) VALUES (?, ?, ?, ?, ?)'
@@ -316,9 +326,9 @@ app.post('/api/orders', (req, res) => {
   let orderId;
   db.exec('BEGIN');
   try {
-    const { lastInsertRowid } = insertOrder.run(table_number, customer_name || '', customer_phone, notes || '', total);
+    const { lastInsertRowid } = insertOrder.run(table_number, customer_name || '', customer_phone || '', notes || '', total);
     for (const item of items) {
-      insertItem.run(lastInsertRowid, item.id, item.name, item.price, item.quantity, item.notes || '');
+      insertItem.run(lastInsertRowid, item.id || item.item_id, item.name || item.item_name || '', item.price || item.item_price, item.quantity, item.notes || '');
     }
     orderId = lastInsertRowid;
     db.exec('COMMIT');
@@ -330,14 +340,13 @@ app.post('/api/orders', (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
   order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId);
 
-  // Estimate wait time based on active orders ahead
   const { cnt: activeCount } = db.prepare(
     "SELECT COUNT(*) as cnt FROM orders WHERE status IN ('pending','preparing') AND id != ?"
   ).get(orderId);
   const waitMinutes = Math.max(5, activeCount * 4 + 5);
 
   io.emit('new_order', order);
-  res.json({ success: true, order_id: orderId, wait_minutes: waitMinutes });
+  res.json({ success: true, order_id: orderId, wait_minutes: waitMinutes, order });
 });
 
 app.get('/api/orders', (req, res) => {
@@ -345,7 +354,6 @@ app.get('/api/orders', (req, res) => {
   const rows = status && status !== 'all'
     ? db.prepare('SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC').all(status)
     : db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 200').all();
-
   for (const o of rows) {
     o.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id);
   }
@@ -361,14 +369,62 @@ app.get('/api/orders/:id', (req, res) => {
 
 app.patch('/api/orders/:id/status', (req, res) => {
   const { status } = req.body;
-  if (!['pending', 'preparing', 'done'].includes(status)) {
+  const allowed = ['pending', 'preparing', 'done', 'settled', 'cancelled', 'on_hold'];
+  if (!allowed.includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
   db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, req.params.id);
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
-  order.items  = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
+  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
   io.emit('order_updated', order);
   res.json(order);
+});
+
+app.patch('/api/orders/:id', (req, res) => {
+  const { table_number, waiter_name, order_type, customer_name } = req.body;
+  const fields = [], vals = [];
+  if (table_number  !== undefined) { fields.push('table_number = ?');  vals.push(Number(table_number)); }
+  if (waiter_name   !== undefined) { fields.push('waiter_name = ?');   vals.push(waiter_name); }
+  if (order_type    !== undefined) { fields.push('order_type = ?');    vals.push(order_type); }
+  if (customer_name !== undefined) { fields.push('customer_name = ?'); vals.push(customer_name); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(req.params.id);
+  db.prepare(`UPDATE orders SET ${fields.join(', ')} WHERE id = ?`).run(...vals);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
+  io.emit('order_updated', order);
+  res.json(order);
+});
+
+app.patch('/api/orders/:id/discount', (req, res) => {
+  const { discount, type } = req.body;
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  const subtotal = db.prepare('SELECT SUM(item_price * quantity) as s FROM order_items WHERE order_id = ?').get(req.params.id).s || 0;
+  const discountAmt = type === 'percent' ? (subtotal * discount / 100) : Number(discount);
+  const tax = (subtotal - discountAmt) * 0.05;
+  const newTotal = subtotal - discountAmt + tax;
+  db.prepare('UPDATE orders SET discount = ?, total = ? WHERE id = ?').run(discountAmt, newTotal, req.params.id);
+  const updated = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  updated.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(req.params.id);
+  io.emit('order_updated', updated);
+  res.json(updated);
+});
+
+app.patch('/api/orders/:id/tip', (req, res) => {
+  const { tip } = req.body;
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Not found' });
+  // Remove old tip, add new
+  const subtotal = db.prepare('SELECT SUM(item_price * quantity) as s FROM order_items WHERE order_id = ?').get(req.params.id).s || 0;
+  const discount = order.discount || 0;
+  const tax = (subtotal - discount) * 0.05;
+  const newTotal = subtotal - discount + tax + Number(tip);
+  db.prepare('UPDATE orders SET tip = ?, total = ? WHERE id = ?').run(Number(tip), newTotal, req.params.id);
+  const updated = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  updated.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(req.params.id);
+  io.emit('order_updated', updated);
+  res.json(updated);
 });
 
 // ── ADMIN API ────────────────────────────────────────────────────────────────
