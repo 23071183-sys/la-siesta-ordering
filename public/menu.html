@@ -845,31 +845,33 @@
 
   function renderItemRow(item, catName = '', isDesserts = false) {
     const qty = cart[item.id]?.qty || 0;
+    const unavailable = item.is_available === false;
     const nv = isNonVeg(item.name, item.description);
     const vegHtml = FOOD_CATS.includes(catName)
       ? `<div class="veg-icon${nv?' nonveg':''}"><div class="dot"></div></div>`
       : '';
-    const ctrl = qty === 0
-      ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
-      : `<div class="qty-ctrl">
-           <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
-           <span class="qty-num">${qty}</span>
-           <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
-         </div>`;
+    const ctrl = unavailable
+      ? `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`
+      : qty === 0
+        ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
+        : `<div class="qty-ctrl">
+             <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+             <span class="qty-num">${qty}</span>
+             <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+           </div>`;
     // Inline photos for Matcha and Desserts
     const itemImg = MATCHA_IMAGES[item.name] || DESSERT_IMAGES[item.name];
     const inlineImg = itemImg
-      ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
+      ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;${unavailable?'opacity:0.4;filter:grayscale(1);':''}">`
       : '';
-    const clickAttr = isDesserts ? `onclick="focusDessert(${item.id})"` : '';
     const hsBadge = item.is_house_special
       ? `<span class="hs-badge">✦ House Special</span>`
       : '';
     return `
-      <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" ${clickAttr}>
+      <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" style="${unavailable?'opacity:0.55;':''}">
         <div class="item-left">
           ${vegHtml}
-          <div class="item-name">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
+          <div class="item-name" style="${unavailable?'color:#8a7070;':''}">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
           <div class="item-price">₹${item.price}${hsBadge}</div>
           ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
           ${inlineImg}
@@ -887,6 +889,7 @@
 
   function addItem(id) {
     const item = getItemById(id);
+    if (item.is_available === false) return;
     cart[id] = { id, name: item.name, price: item.price, qty: (cart[id]?.qty || 0) + 1 };
     refreshCtrl(id);
     updateCartBar();

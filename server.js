@@ -287,8 +287,11 @@ app.get('/counter', (req, res) => res.sendFile(path.join(__dirname, 'public', 'c
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
-  const items = db.prepare('SELECT * FROM menu_items WHERE available = 1 ORDER BY category_id, name').all();
-  res.json(cats.map(c => ({ ...c, items: items.filter(i => i.category_id === c.id) })));
+  const items = db.prepare('SELECT * FROM menu_items ORDER BY category_id, name').all();
+  res.json(cats.map(c => ({
+    ...c,
+    items: items.filter(i => i.category_id === c.id).map(i => ({ ...i, is_available: i.available === 1 }))
+  })));
 });
 
 // ── ORDER API ────────────────────────────────────────────────────────────────
