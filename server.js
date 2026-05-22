@@ -269,6 +269,9 @@ app.get('/status', (req, res) => res.sendFile(path.join(__dirname, 'public', 'st
 // Admin panel
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
+// Counter / POS dashboard
+app.get('/counter', (req, res) => res.sendFile(path.join(__dirname, 'public', 'counter.html')));
+
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
