@@ -828,21 +828,17 @@
       });
       if (items.length === 0) continue;
       anyVisible = true;
-      const isDesserts = cat.name === 'Desserts';
-      const stageHtml  = isDesserts ? renderDessertStage(items) : '';
       html += `
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
           <div class="cat-title">${cat.name}</div>
           <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
-          ${stageHtml}
-          ${items.map(item => renderItemRow(item, cat.name, isDesserts)).join('')}
+          ${items.map(item => renderItemRow(item, cat.name, false)).join('')}
         </div>`;
     }
 
     document.getElementById('menuContent').innerHTML = html + `<div class="empty-search" id="emptySearch" style="display:${anyVisible?'none':'block'}">No items found</div>`;
     if (query || vegOnly) return; // don't re-setup scroll spy on filter
     setupScrollSpy();
-    watchDessertStage();
   }
 
   const FOOD_CATS = ['Global Fusions', 'Toasties', 'Pasta', 'Sandwiches', 'Mains', 'Special Rice Bowls', 'Sides', 'Sweet', 'Desserts'];
