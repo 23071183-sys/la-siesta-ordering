@@ -350,10 +350,17 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.get('/api/orders', (req, res) => {
-  const { status } = req.query;
-  const rows = status && status !== 'all'
-    ? db.prepare('SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC').all(status)
-    : db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 200').all();
+  const { status, table } = req.query;
+  let rows;
+  if (table) {
+    rows = status && status !== 'all'
+      ? db.prepare('SELECT * FROM orders WHERE table_number = ? AND status = ? ORDER BY created_at DESC').all(Number(table), status)
+      : db.prepare('SELECT * FROM orders WHERE table_number = ? ORDER BY created_at DESC LIMIT 50').all(Number(table));
+  } else {
+    rows = status && status !== 'all'
+      ? db.prepare('SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC').all(status)
+      : db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 200').all();
+  }
   for (const o of rows) {
     o.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id);
   }
