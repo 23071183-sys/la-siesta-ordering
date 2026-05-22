@@ -860,8 +860,8 @@
            <span class="qty-num">${qty}</span>
            <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
          </div>`;
-    // only show inline photo for Matcha; Desserts uses the 3D stage
-    const itemImg = MATCHA_IMAGES[item.name];
+    // Inline photos for Matcha and Desserts
+    const itemImg = MATCHA_IMAGES[item.name] || DESSERT_IMAGES[item.name];
     const inlineImg = itemImg
       ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;">`
       : '';
