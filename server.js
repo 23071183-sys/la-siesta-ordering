@@ -16,7 +16,12 @@ if (fs.existsSync(envPath)) {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  }
+});
 
 // ── DATABASE SETUP ──────────────────────────────────────────────────────────
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'orders.db');
@@ -254,6 +259,13 @@ if (!matchaExists) {
 }
 
 // ── MIDDLEWARE ───────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
