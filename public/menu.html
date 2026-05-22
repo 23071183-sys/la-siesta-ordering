@@ -29,7 +29,7 @@
       background: var(--cream2);
       color: var(--dark);
       min-height: 100vh;
-      padding-bottom: 90px;
+      padding-bottom: 150px; /* cart bar (90px) + bottom nav (56px) */
     }
 
     /* ── RESTAURANT HEADER ── */
@@ -538,6 +538,161 @@
       .sidebar-btn { font-size: 0.7rem; padding: 0.9rem 0.55rem; }
       .item-name { font-size: 0.95rem; }
     }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 110;
+      background: var(--dark);
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.62rem 0 0.55rem;
+      gap: 0.22rem;
+      background: none; border: none; cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+      color: rgba(250,245,236,0.38);
+      transition: color 0.15s;
+      position: relative;
+    }
+    .nav-tab.active { color: var(--orange); }
+    .nav-tab svg { flex-shrink: 0; }
+    .nav-tab .nav-badge {
+      position: absolute; top: 6px; right: calc(50% - 20px);
+      min-width: 16px; height: 16px; border-radius: 8px;
+      background: var(--orange); color: #fff;
+      font-size: 9px; font-weight: 800; padding: 0 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Cart bar sits above the nav */
+    .cart-bar { bottom: 56px; }
+
+    /* ── ORDERS PANEL ── */
+    .orders-panel {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      bottom: 56px;
+      background: var(--cream2);
+      z-index: 50;
+      overflow-y: auto;
+    }
+    .orders-panel.show { display: flex; }
+
+    .orders-header {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--dark);
+      padding: 1rem 1rem 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .orders-header-top {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .orders-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; font-weight: 700; font-style: italic;
+      color: var(--cream);
+    }
+    .orders-table-chip {
+      background: rgba(196,80,31,0.2);
+      border: 1px solid rgba(196,80,31,0.4);
+      color: var(--orange-l);
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.22rem 0.65rem; border-radius: 20px;
+      letter-spacing: 0.05em;
+    }
+
+    .orders-empty {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.75rem; padding: 3rem 2rem; text-align: center;
+      color: var(--gray);
+    }
+    .orders-empty svg { opacity: 0.35; }
+    .orders-empty p { font-size: 0.9rem; }
+    .orders-empty small { font-size: 0.75rem; opacity: 0.65; }
+
+    .orders-list { padding: 0.75rem 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .order-card {
+      background: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(43,24,16,0.10);
+      animation: cardIn 0.3s ease;
+    }
+    @keyframes cardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    .order-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 0.9rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-card-id {
+      font-weight: 700; font-size: 0.95rem; color: var(--dark);
+    }
+    .order-card-time {
+      font-size: 0.72rem; color: var(--gray); margin-top: 1px;
+    }
+    .order-status-pill {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.25rem 0.7rem; border-radius: 20px;
+    }
+    .pill-pending   { background: rgba(196,80,31,0.12); color: var(--orange); border:1px solid rgba(196,80,31,0.25); }
+    .pill-preparing { background: rgba(234,179,8,0.12);  color: #ca8a04;       border:1px solid rgba(234,179,8,0.25); }
+    .pill-done      { background: rgba(34,197,94,0.12);  color: #16a34a;       border:1px solid rgba(34,197,94,0.25); }
+    .pill-settled   { background: rgba(99,102,241,0.10); color: #6366f1;       border:1px solid rgba(99,102,241,0.22); }
+    .pill-cancelled { background: rgba(239,68,68,0.10);  color: #dc2626;       border:1px solid rgba(239,68,68,0.22); }
+
+    /* Mini stepper */
+    .order-stepper {
+      display: flex; align-items: center; padding: 0.6rem 0.9rem 0.55rem;
+      gap: 0; border-bottom: 1px solid var(--border);
+    }
+    .ost-dot {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem;
+      border: 2px solid var(--border);
+      background: var(--light);
+      color: var(--gray);
+      font-weight: 700;
+    }
+    .ost-dot.active { border-color: var(--orange); background: rgba(196,80,31,0.12); color: var(--orange); }
+    .ost-dot.done   { border-color: #16a34a; background: rgba(22,163,74,0.1); color: #16a34a; }
+    .ost-line { flex: 1; height: 2px; background: var(--border); position: relative; overflow: hidden; border-radius: 1px; }
+    .ost-line-fill { position: absolute; inset: 0; background: var(--orange); width: 0%; transition: width 0.6s ease; border-radius: 1px; }
+    .ost-line-fill.done-fill { background: #16a34a; width: 100%; }
+    .ost-label-row {
+      display: flex; justify-content: space-between;
+      padding: 0.15rem 0.9rem 0.5rem;
+      font-size: 0.6rem; color: var(--gray); letter-spacing: 0.04em;
+    }
+
+    .order-items-body { padding: 0.6rem 0.9rem; }
+    .oi-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.28rem 0; font-size: 0.82rem;
+      border-bottom: 1px solid var(--border); color: var(--dark);
+    }
+    .oi-row:last-child { border-bottom: none; }
+    .oi-qty { color: var(--orange); font-weight: 700; margin-right: 0.35rem; font-size: 0.78rem; }
+    .oi-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0.9rem 0.7rem;
+      font-size: 0.85rem; font-weight: 700; color: var(--orange);
+      border-top: 1px solid var(--border);
+    }
+
+    .orders-loading {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 2.5rem; color: var(--gray); font-size: 0.88rem;
+    }
   </style>
 </head>
 <body>
@@ -631,6 +786,42 @@
     <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Place Order</button>
   </div>
 </div>
+
+<!-- ORDERS PANEL -->
+<div class="orders-panel" id="ordersPanel">
+  <div class="orders-header">
+    <div class="orders-header-top">
+      <div class="orders-title">My Orders</div>
+      <div class="orders-table-chip" id="ordersTableChip">Table —</div>
+    </div>
+  </div>
+  <div id="ordersBody">
+    <div class="orders-loading" id="ordersLoading">
+      <span class="loading-dots"><span></span><span></span><span></span></span>
+      Loading orders…
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-tab active" id="navMenu" onclick="switchTab('menu')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    Menu
+  </button>
+  <button class="nav-tab" id="navOrders" onclick="switchTab('orders')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1"/>
+      <path d="M9 12h6M9 16h4"/>
+    </svg>
+    My Orders
+    <span class="nav-badge" id="ordersBadge" style="display:none"></span>
+  </button>
+</nav>
 
 <!-- SUCCESS -->
 <div class="success-screen" id="successScreen">
@@ -1050,6 +1241,183 @@
     document.getElementById('orderNotes').value = '';
     document.getElementById('phoneError').textContent = '';
     document.getElementById('placeBtn').disabled = true;
+  }
+
+  // ── ORDERS TAB ────────────────────────────────────────────────────────────
+  let tableOrders = [];
+  let ordersLoaded = false;
+  let currentTab = 'menu';
+
+  document.getElementById('ordersTableChip').textContent = 'Table ' + tableNumber;
+
+  function switchTab(tab) {
+    currentTab = tab;
+    const menuBtn    = document.getElementById('navMenu');
+    const ordersBtn  = document.getElementById('navOrders');
+    const panel      = document.getElementById('ordersPanel');
+    const menuLayout = document.querySelector('.menu-layout');
+    const searchWrap = document.querySelector('.search-wrap');
+    const filterBar  = document.querySelector('.filter-bar');
+
+    if (tab === 'orders') {
+      menuBtn.classList.remove('active');
+      ordersBtn.classList.add('active');
+      panel.classList.add('show');
+      searchWrap.style.display = 'none';
+      filterBar.style.display  = 'none';
+      menuLayout.style.display = 'none';
+      // hide cart bar while on orders tab
+      document.getElementById('cartBar').classList.remove('visible');
+      document.getElementById('ordersBadge').style.display = 'none';
+      if (!ordersLoaded) loadTableOrders();
+    } else {
+      ordersBtn.classList.remove('active');
+      menuBtn.classList.add('active');
+      panel.classList.remove('show');
+      searchWrap.style.display = '';
+      filterBar.style.display  = '';
+      menuLayout.style.display = '';
+      // restore cart bar if items in cart
+      updateCartBar();
+    }
+  }
+
+  async function loadTableOrders() {
+    document.getElementById('ordersLoading').style.display = 'flex';
+    try {
+      const res = await fetch('/api/orders?table=' + tableNumber);
+      const data = await res.json();
+      tableOrders = data;
+      ordersLoaded = true;
+      renderTableOrders();
+    } catch(e) {
+      document.getElementById('ordersBody').innerHTML =
+        '<div class="orders-empty"><p>Could not load orders.</p><small>Check your connection and try again.</small></div>';
+    }
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+    return Math.floor(diff / 3600) + 'h ago';
+  }
+
+  function pillClass(status) {
+    return { pending: 'pill-pending', preparing: 'pill-preparing', done: 'pill-done',
+             settled: 'pill-settled', cancelled: 'pill-cancelled' }[status] || 'pill-pending';
+  }
+  function pillLabel(status) {
+    return { pending: 'Received', preparing: 'Preparing', done: 'Ready!',
+             settled: 'Settled', cancelled: 'Cancelled' }[status] || status;
+  }
+
+  function stepperHTML(status) {
+    const step = { pending: 0, preparing: 1, done: 2, settled: 2 }[status] ?? 0;
+    const dot = (i) => {
+      const cls = i < step ? 'done' : i === step ? 'active' : '';
+      const icon = i < step ? '✓' : (i === 0 ? '📋' : i === 1 ? '🍳' : '✅');
+      return `<div class="ost-dot ${cls}">${icon}</div>`;
+    };
+    const line = (i) => {
+      const fill = step > i ? 'done-fill' : (step === i + 1 ? 'done-fill' : '');
+      const w    = step > i ? '100%' : '0%';
+      return `<div class="ost-line"><div class="ost-line-fill ${fill}" style="width:${w}"></div></div>`;
+    };
+    if (['settled','cancelled'].includes(status)) return '';
+    return `
+      <div class="order-stepper">${dot(0)}${line(0)}${dot(1)}${line(1)}${dot(2)}</div>
+      <div class="ost-label-row"><span>Received</span><span>Preparing</span><span>Ready</span></div>`;
+  }
+
+  function renderOrderCard(order) {
+    const itemsHTML = (order.items || []).map(i =>
+      `<div class="oi-row">
+        <span><span class="oi-qty">${i.quantity}×</span>${i.item_name}</span>
+        <span>₹${i.item_price * i.quantity}</span>
+      </div>`
+    ).join('');
+
+    return `
+      <div class="order-card" id="oc-${order.id}">
+        <div class="order-card-head">
+          <div>
+            <div class="order-card-id">Order #${String(order.id).padStart(4,'0')}</div>
+            <div class="order-card-time">${timeAgo(order.created_at)}</div>
+          </div>
+          <div class="order-status-pill ${pillClass(order.status)}">${pillLabel(order.status)}</div>
+        </div>
+        ${stepperHTML(order.status)}
+        <div class="order-items-body">${itemsHTML}</div>
+        <div class="oi-total-row"><span>Total</span><span>₹${Number(order.total||0).toFixed(0)}</span></div>
+      </div>`;
+  }
+
+  function renderTableOrders() {
+    document.getElementById('ordersLoading').style.display = 'none';
+    const active = tableOrders.filter(o => !['settled','cancelled'].includes(o.status));
+    if (tableOrders.length === 0) {
+      document.getElementById('ordersBody').innerHTML = `
+        <div class="orders-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
+          </svg>
+          <p>No orders yet</p>
+          <small>Your orders for Table ${tableNumber} will appear here.</small>
+        </div>`;
+      return;
+    }
+    document.getElementById('ordersBody').innerHTML =
+      '<div class="orders-list">' + tableOrders.map(renderOrderCard).join('') + '</div>';
+  }
+
+  function updateOrderCard(order) {
+    if (order.table_number !== tableNumber) return;
+    // update or prepend in array
+    const idx = tableOrders.findIndex(o => o.id === order.id);
+    if (idx >= 0) tableOrders[idx] = order;
+    else { tableOrders.unshift(order); }
+
+    if (currentTab === 'orders') {
+      renderTableOrders();
+    } else {
+      // show badge on Orders tab
+      const active = tableOrders.filter(o => !['settled','cancelled'].includes(o.status)).length;
+      const badge = document.getElementById('ordersBadge');
+      if (active > 0) { badge.style.display = 'flex'; badge.textContent = active; }
+      else badge.style.display = 'none';
+    }
+  }
+
+  // Hook into socket for this table's order updates
+  (function hookOrdersSocket() {
+    // Load socket.io dynamically if not already loaded
+    function attachSocket() {
+      if (typeof io !== 'undefined') {
+        const s = io();
+        s.on('new_order', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('order_updated', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        return;
+      }
+      // socket.io not loaded — load it
+      const sc = document.createElement('script');
+      sc.src = '/socket.io/socket.io.js';
+      sc.onload = () => {
+        const s = io();
+        s.on('new_order', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('order_updated', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+      };
+      document.body.appendChild(sc);
+    }
+    attachSocket();
+  })();
+
+  // After placing a new order, refresh orders tab
+  const _origPlaceOrder = placeOrder;
+  async function placeOrder() {
+    await _origPlaceOrder();
+    ordersLoaded = false; // force reload next time
   }
 </script>
 
