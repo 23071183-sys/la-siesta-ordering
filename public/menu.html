@@ -795,12 +795,11 @@
       <div class="orders-table-chip" id="ordersTableChip">Table —</div>
     </div>
   </div>
-  <div id="ordersBody">
-    <div class="orders-loading" id="ordersLoading">
-      <span class="loading-dots"><span></span><span></span><span></span></span>
-      Loading orders…
-    </div>
+  <div class="orders-loading" id="ordersLoading" style="display:none">
+    <span class="loading-dots"><span></span><span></span><span></span></span>
+    Loading orders…
   </div>
+  <div id="ordersBody"></div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1160,7 +1159,14 @@
   function updatePlaceBtn() {
     const name  = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
-    document.getElementById('placeBtn').disabled = !(name && /^[6-9]\d{9}$/.test(phone));
+    // Phone is optional — only validate format if something was entered
+    const phoneOk = !phone || /^[6-9]\d{9}$/.test(phone);
+    if (phone && !phoneOk) {
+      document.getElementById('phoneError').textContent = 'Enter a valid 10-digit number';
+    } else {
+      document.getElementById('phoneError').textContent = '';
+    }
+    document.getElementById('placeBtn').disabled = !(name && phoneOk);
   }
 
   function openCheckout() {
@@ -1211,24 +1217,25 @@
         })
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success || data.order_id || data.order) {
+        const orderId = data.order_id || data.order?.id;
         document.getElementById('orderModal').classList.remove('open');
-        const orderIdStr = String(data.order_id).padStart(4,'0');
+        const orderIdStr = String(orderId).padStart(4,'0');
         document.getElementById('successNum').textContent = `#${orderIdStr}`;
-        // Wait time message
         const wait = data.wait_minutes || 10;
         document.getElementById('successWait').textContent =
           `Ready in about ${wait}–${wait + 5} min. Sit back & relax ☕`;
-        // Track link
-        document.getElementById('trackOrderBtn').href = `/status?order=${data.order_id}`;
+        document.getElementById('trackOrderBtn').href = `/status?order=${orderId}`;
         document.getElementById('successScreen').classList.add('show');
         cart = {};
         updateCartBar();
+        ordersLoaded = false; // refresh orders tab next time it's opened
       } else {
-        alert('Something went wrong. Please try again.');
+        const msg = data.error || 'Something went wrong. Please try again.';
+        alert(msg);
         btn.disabled = false; btn.textContent = 'Place Order';
       }
-    } catch {
+    } catch(err) {
       alert('Connection error. Please try again.');
       btn.disabled = false; btn.textContent = 'Place Order';
     }
@@ -1283,15 +1290,21 @@
   }
 
   async function loadTableOrders() {
-    document.getElementById('ordersLoading').style.display = 'flex';
+    const loading = document.getElementById('ordersLoading');
+    const body    = document.getElementById('ordersBody');
+    loading.style.display = 'flex';
+    body.innerHTML = '';
     try {
       const res = await fetch('/api/orders?table=' + tableNumber);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      tableOrders = data;
+      tableOrders = Array.isArray(data) ? data : [];
       ordersLoaded = true;
+      loading.style.display = 'none';
       renderTableOrders();
     } catch(e) {
-      document.getElementById('ordersBody').innerHTML =
+      loading.style.display = 'none';
+      body.innerHTML =
         '<div class="orders-empty"><p>Could not load orders.</p><small>Check your connection and try again.</small></div>';
     }
   }
@@ -1354,7 +1367,6 @@
   }
 
   function renderTableOrders() {
-    document.getElementById('ordersLoading').style.display = 'none';
     const active = tableOrders.filter(o => !['settled','cancelled'].includes(o.status));
     if (tableOrders.length === 0) {
       document.getElementById('ordersBody').innerHTML = `
@@ -1373,7 +1385,7 @@
   }
 
   function updateOrderCard(order) {
-    if (order.table_number !== tableNumber) return;
+    if (Number(order.table_number) !== Number(tableNumber)) return;
     // update or prepend in array
     const idx = tableOrders.findIndex(o => o.id === order.id);
     if (idx >= 0) tableOrders[idx] = order;
@@ -1413,12 +1425,6 @@
     attachSocket();
   })();
 
-  // After placing a new order, refresh orders tab
-  const _origPlaceOrder = placeOrder;
-  async function placeOrder() {
-    await _origPlaceOrder();
-    ordersLoaded = false; // force reload next time
-  }
 </script>
 
 <!-- ── DESSERT STAGE ENGINE — pure CSS 3D + rAF, zero CDN deps ── -->
