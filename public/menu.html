@@ -1316,8 +1316,11 @@
       const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}`);
       const data = await res.json();
       if (data.valid) {
+        const remark = data.discount_type === 'percent'
+          ? `${data.discount_value}% flat off`
+          : `₹${data.discount_value} flat off`;
         fb.className = 'coupon-feedback valid';
-        fb.innerHTML = `<span>✓</span> Valid coupon`;
+        fb.innerHTML = `<span>✓</span> ${remark}`;
         btn.textContent = '✓ Valid';
       } else {
         fb.className = 'coupon-feedback invalid';
