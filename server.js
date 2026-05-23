@@ -297,15 +297,81 @@ app.get('/api/menu', (req, res) => {
 // ── SAFE MIGRATIONS ─────────────────────────────────────────────────────────
 ;(function () {
   const cols = db.prepare('PRAGMA table_info(orders)').all().map(c => c.name);
-  if (!cols.includes('discount'))    db.prepare("ALTER TABLE orders ADD COLUMN discount    REAL DEFAULT 0").run();
-  if (!cols.includes('tip'))         db.prepare("ALTER TABLE orders ADD COLUMN tip         REAL DEFAULT 0").run();
-  if (!cols.includes('waiter_name')) db.prepare("ALTER TABLE orders ADD COLUMN waiter_name TEXT DEFAULT ''").run();
-  if (!cols.includes('order_type'))  db.prepare("ALTER TABLE orders ADD COLUMN order_type  TEXT DEFAULT 'indoor'").run();
+  if (!cols.includes('discount'))     db.prepare("ALTER TABLE orders ADD COLUMN discount     REAL DEFAULT 0").run();
+  if (!cols.includes('tip'))          db.prepare("ALTER TABLE orders ADD COLUMN tip          REAL DEFAULT 0").run();
+  if (!cols.includes('waiter_name'))  db.prepare("ALTER TABLE orders ADD COLUMN waiter_name  TEXT DEFAULT ''").run();
+  if (!cols.includes('order_type'))   db.prepare("ALTER TABLE orders ADD COLUMN order_type   TEXT DEFAULT 'indoor'").run();
+  if (!cols.includes('coupon_code'))  db.prepare("ALTER TABLE orders ADD COLUMN coupon_code  TEXT DEFAULT ''").run();
+
+  // Coupons table
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS coupons (
+      id             INTEGER PRIMARY KEY AUTOINCREMENT,
+      code           TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+      discount_type  TEXT    NOT NULL DEFAULT 'percent',
+      discount_value REAL    NOT NULL DEFAULT 0,
+      min_order      REAL    DEFAULT 0,
+      max_uses       INTEGER DEFAULT 0,
+      uses_count     INTEGER DEFAULT 0,
+      expires_at     TEXT    DEFAULT NULL,
+      active         INTEGER DEFAULT 1,
+      description    TEXT    DEFAULT ''
+    )
+  `).run();
+
+  // Seed sample coupons if none exist
+  const { cnt } = db.prepare('SELECT COUNT(*) as cnt FROM coupons').get();
+  if (cnt === 0) {
+    const ins = db.prepare(`INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, description)
+                            VALUES (?, ?, ?, ?, ?, ?)`);
+    ins.run('WELCOME10', 'percent', 10, 0,   100, '10% off for new customers');
+    ins.run('FLAT50',    'flat',    50, 300, 50,  '₹50 off on orders above ₹300');
+    ins.run('SIESTA20',  'percent', 20, 500, 30,  '20% off on orders above ₹500');
+  }
 })();
+
+// ── COUPON API ───────────────────────────────────────────────────────────────
+app.get('/api/coupons/verify', (req, res) => {
+  const code = (req.query.code || '').trim();
+  const orderTotal = parseFloat(req.query.total) || 0;
+  if (!code) return res.status(400).json({ error: 'No code provided' });
+
+  const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? COLLATE NOCASE AND active = 1').get(code);
+  if (!coupon) return res.status(404).json({ valid: false, error: 'Invalid coupon code' });
+
+  if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+    return res.status(400).json({ valid: false, error: 'This coupon has expired' });
+  }
+  if (coupon.max_uses > 0 && coupon.uses_count >= coupon.max_uses) {
+    return res.status(400).json({ valid: false, error: 'This coupon has reached its usage limit' });
+  }
+  if (coupon.min_order > 0 && orderTotal < coupon.min_order) {
+    return res.status(400).json({
+      valid: false,
+      error: `Minimum order of ₹${coupon.min_order} required for this coupon`
+    });
+  }
+
+  const discountAmt = coupon.discount_type === 'percent'
+    ? Math.min((orderTotal * coupon.discount_value) / 100, orderTotal)
+    : Math.min(coupon.discount_value, orderTotal);
+
+  res.json({
+    valid: true,
+    code: coupon.code,
+    discount_type: coupon.discount_type,
+    discount_value: coupon.discount_value,
+    discount_amount: +discountAmt.toFixed(2),
+    description: coupon.description,
+    message: coupon.discount_type === 'percent'
+      ? `${coupon.discount_value}% off — you save ₹${discountAmt.toFixed(0)}`
+      : `₹${coupon.discount_value} off applied`,
+  });
+});
 
 // ── ORDER API ────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
-  const { table_number, customer_name, customer_phone, notes, items } = req.body;
+  const { table_number, customer_name, customer_phone, notes, items, coupon_code } = req.body;
   if (!table_number || !items?.length) {
     return res.status(400).json({ error: 'table_number and items are required' });
   }
@@ -314,10 +380,24 @@ app.post('/api/orders', (req, res) => {
     return res.status(400).json({ error: 'Enter a valid 10-digit phone number' });
   }
 
-  const total = items.reduce((s, i) => s + (i.price || i.item_price) * i.quantity, 0);
+  const subtotal = items.reduce((s, i) => s + (i.price || i.item_price) * i.quantity, 0);
+
+  // Apply coupon if provided
+  let discountAmt = 0;
+  let validCoupon = null;
+  if (coupon_code) {
+    const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? COLLATE NOCASE AND active = 1').get(coupon_code.trim());
+    if (coupon && !(coupon.max_uses > 0 && coupon.uses_count >= coupon.max_uses)) {
+      discountAmt = coupon.discount_type === 'percent'
+        ? Math.min((subtotal * coupon.discount_value) / 100, subtotal)
+        : Math.min(coupon.discount_value, subtotal);
+      validCoupon = coupon;
+    }
+  }
+  const total = +(subtotal - discountAmt).toFixed(2);
 
   const insertOrder = db.prepare(
-    'INSERT INTO orders (table_number, customer_name, customer_phone, notes, total) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO orders (table_number, customer_name, customer_phone, notes, total, discount, coupon_code) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
   const insertItem = db.prepare(
     'INSERT INTO order_items (order_id, item_id, item_name, item_price, quantity, notes) VALUES (?, ?, ?, ?, ?, ?)'
@@ -326,7 +406,10 @@ app.post('/api/orders', (req, res) => {
   let orderId;
   db.exec('BEGIN');
   try {
-    const { lastInsertRowid } = insertOrder.run(table_number, customer_name || '', customer_phone || '', notes || '', total);
+    const { lastInsertRowid } = insertOrder.run(
+      table_number, customer_name || '', customer_phone || '', notes || '',
+      total, discountAmt, coupon_code ? coupon_code.trim().toUpperCase() : ''
+    );
     for (const item of items) {
       insertItem.run(lastInsertRowid, item.id || item.item_id, item.name || item.item_name || '', item.price || item.item_price, item.quantity, item.notes || '');
     }
@@ -335,6 +418,11 @@ app.post('/api/orders', (req, res) => {
   } catch (e) {
     db.exec('ROLLBACK');
     throw e;
+  }
+
+  // Increment coupon usage
+  if (validCoupon) {
+    db.prepare('UPDATE coupons SET uses_count = uses_count + 1 WHERE id = ?').run(validCoupon.id);
   }
 
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
