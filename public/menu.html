@@ -153,9 +153,9 @@
     .cat-sidebar {
       width: 88px; flex-shrink: 0;
       position: sticky; top: 48px;
-      height: calc(100vh - 48px);
+      height: calc(100vh - 48px - 56px); /* 56px = bottom nav height */
       overflow-y: auto; scrollbar-width: none;
-      overscroll-behavior: none;
+      overscroll-behavior: contain;
       background: var(--cream2);
       border-right: 1px solid var(--border);
     }
