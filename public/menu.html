@@ -361,6 +361,41 @@
     .phone-input { flex: 1; }
     .field-error { font-size: 0.75rem; color: #e43b4f; margin-top: 0.3rem; min-height: 1rem; }
 
+    /* ── COUPON FIELD ── */
+    .coupon-row {
+      display: flex; gap: 0.5rem; align-items: stretch;
+    }
+    .coupon-input {
+      flex: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+    .coupon-btn {
+      flex-shrink: 0;
+      padding: 0 1.1rem;
+      background: var(--dark); color: var(--cream);
+      border: 1.5px solid var(--dark); border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .coupon-btn:active { opacity: 0.8; }
+    .coupon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .coupon-feedback {
+      margin-top: 0.4rem; font-size: 0.78rem; min-height: 1.1rem;
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .coupon-feedback.valid   { color: var(--green); }
+    .coupon-feedback.invalid { color: #e43b4f; }
+    .coupon-savings-chip {
+      display: inline-flex; align-items: center; gap: 0.28rem;
+      margin-top: 0.5rem;
+      background: rgba(61,145,66,0.1); border: 1px solid rgba(61,145,66,0.25);
+      color: var(--green); border-radius: 8px;
+      padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600;
+    }
+    .sum-row.discount-row { color: var(--green); }
+
     /* ── HOUSE SPECIAL ── */
     .hs-star {
       color: var(--orange);
@@ -783,6 +818,18 @@
       <label class="form-label">Special Requests</label>
       <input class="form-input" id="orderNotes" type="text" placeholder="No sugar, extra ice, oat milk…">
     </div>
+
+    <div class="form-group">
+      <label class="form-label">Coupon Code</label>
+      <div class="coupon-row">
+        <input class="form-input coupon-input" id="couponInput" type="text"
+               placeholder="Enter code (e.g. WELCOME10)"
+               oninput="onCouponInput()" autocomplete="off" spellcheck="false">
+        <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Apply</button>
+      </div>
+      <div class="coupon-feedback" id="couponFeedback"></div>
+    </div>
+
     <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Place Order</button>
   </div>
 </div>
@@ -1170,32 +1217,19 @@
   }
 
   function openCheckout() {
-    const items = Object.values(cart);
-    const total = items.reduce((s,i) => s + i.price * i.qty, 0);
-    const summary = items.map(i => `
-        <div class="sum-row">
-          <span>${i.qty}× ${i.name}</span>
-          <span>₹${i.price * i.qty}</span>
-        </div>`).join('') +
-      `<div class="sum-row total-row"><span>Total</span><span>₹${total}</span></div>`;
-
-    const stage = document.getElementById('dessertStage');
-    if (stage) {
-      // play exit animation then open modal
-      triggerStageExit(() => {
-        document.getElementById('orderSummary').innerHTML = summary;
-        document.getElementById('orderModal').classList.add('open');
-      });
-    } else {
-      document.getElementById('orderSummary').innerHTML = summary;
+    const open = () => {
+      updateOrderSummary();
       document.getElementById('orderModal').classList.add('open');
-    }
+    };
+    const stage = document.getElementById('dessertStage');
+    if (stage) triggerStageExit(open);
+    else open();
   }
 
   document.getElementById('orderModal').addEventListener('click', function(e) {
     if (e.target === this) {
       this.classList.remove('open');
-      // re-enter dessert stage when modal dismissed
+      resetCoupon();
       stageEntered = false;
       _resetStageCards();
       setTimeout(triggerStageEntrance, 200);
@@ -1213,6 +1247,7 @@
           customer_name: document.getElementById('custName').value.trim(),
           customer_phone: document.getElementById('custPhone').value.trim(),
           notes: document.getElementById('orderNotes').value.trim(),
+          coupon_code: appliedCoupon ? appliedCoupon.code : '',
           items: Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.qty }))
         })
       });
@@ -1229,6 +1264,7 @@
         document.getElementById('successScreen').classList.add('show');
         cart = {};
         updateCartBar();
+        resetCoupon();
         ordersLoaded = false; // refresh orders tab next time it's opened
       } else {
         const msg = data.error || 'Something went wrong. Please try again.';
@@ -1248,6 +1284,86 @@
     document.getElementById('orderNotes').value = '';
     document.getElementById('phoneError').textContent = '';
     document.getElementById('placeBtn').disabled = true;
+    resetCoupon();
+  }
+
+  // ── COUPON ────────────────────────────────────────────────────────────────
+  let appliedCoupon = null; // { code, discount_amount, message }
+
+  function onCouponInput() {
+    const val = document.getElementById('couponInput').value.trim();
+    document.getElementById('couponBtn').disabled = val.length < 2;
+    // If user edits code after applying, clear the applied state
+    if (appliedCoupon && val.toUpperCase() !== appliedCoupon.code) {
+      appliedCoupon = null;
+      document.getElementById('couponFeedback').className = 'coupon-feedback';
+      document.getElementById('couponFeedback').innerHTML = '';
+      updateOrderSummary();
+    }
+  }
+
+  async function applyCoupon() {
+    const code = document.getElementById('couponInput').value.trim();
+    if (!code) return;
+    const fb = document.getElementById('couponFeedback');
+    const btn = document.getElementById('couponBtn');
+    btn.disabled = true; btn.textContent = '…';
+    fb.className = 'coupon-feedback'; fb.innerHTML = 'Verifying…';
+
+    const cartItems = Object.values(cart);
+    const subtotal  = cartItems.reduce((s,i) => s + i.price * i.qty, 0);
+
+    try {
+      const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}&total=${subtotal}`);
+      const data = await res.json();
+      if (data.valid) {
+        appliedCoupon = data;
+        fb.className = 'coupon-feedback valid';
+        fb.innerHTML = `<span>✓</span> ${data.message}`;
+        document.getElementById('couponBtn').textContent = '✓ Applied';
+        updateOrderSummary();
+      } else {
+        appliedCoupon = null;
+        fb.className = 'coupon-feedback invalid';
+        fb.innerHTML = `<span>✕</span> ${data.error}`;
+        btn.disabled = false; btn.textContent = 'Apply';
+        updateOrderSummary();
+      }
+    } catch {
+      fb.className = 'coupon-feedback invalid';
+      fb.innerHTML = '<span>✕</span> Could not verify. Try again.';
+      btn.disabled = false; btn.textContent = 'Apply';
+    }
+  }
+
+  function updateOrderSummary() {
+    const items    = Object.values(cart);
+    const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
+    const discount = appliedCoupon ? appliedCoupon.discount_amount : 0;
+    const total    = subtotal - discount;
+
+    let html = items.map(i =>
+      `<div class="sum-row"><span>${i.qty}× ${i.name}</span><span>₹${i.price * i.qty}</span></div>`
+    ).join('');
+    if (discount > 0) {
+      html += `<div class="sum-row discount-row">
+        <span>🏷 Coupon (${appliedCoupon.code})</span>
+        <span>−₹${discount.toFixed(0)}</span>
+      </div>`;
+    }
+    html += `<div class="sum-row total-row"><span>Total</span><span>₹${total.toFixed(0)}</span></div>`;
+    const el = document.getElementById('orderSummary');
+    if (el) el.innerHTML = html;
+  }
+
+  function resetCoupon() {
+    appliedCoupon = null;
+    const inp = document.getElementById('couponInput');
+    const fb  = document.getElementById('couponFeedback');
+    const btn = document.getElementById('couponBtn');
+    if (inp) { inp.value = ''; }
+    if (fb)  { fb.className = 'coupon-feedback'; fb.innerHTML = ''; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Apply'; }
   }
 
   // ── ORDERS TAB ────────────────────────────────────────────────────────────
