@@ -825,7 +825,7 @@
         <input class="form-input coupon-input" id="couponInput" type="text"
                placeholder="Enter code (e.g. WELCOME10)"
                oninput="onCouponInput()" autocomplete="off" spellcheck="false">
-        <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Apply</button>
+        <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Verify</button>
       </div>
       <div class="coupon-feedback" id="couponFeedback"></div>
     </div>
@@ -1247,7 +1247,6 @@
           customer_name: document.getElementById('custName').value.trim(),
           customer_phone: document.getElementById('custPhone').value.trim(),
           notes: document.getElementById('orderNotes').value.trim(),
-          coupon_code: appliedCoupon ? appliedCoupon.code : '',
           items: Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.qty }))
         })
       });
@@ -1287,83 +1286,59 @@
     resetCoupon();
   }
 
-  // ── COUPON ────────────────────────────────────────────────────────────────
-  let appliedCoupon = null; // { code, discount_amount, message }
-
+  // ── COUPON VERIFY (legitimacy check only, no discount applied) ───────────
   function onCouponInput() {
     const val = document.getElementById('couponInput').value.trim();
     document.getElementById('couponBtn').disabled = val.length < 2;
-    // If user edits code after applying, clear the applied state
-    if (appliedCoupon && val.toUpperCase() !== appliedCoupon.code) {
-      appliedCoupon = null;
-      document.getElementById('couponFeedback').className = 'coupon-feedback';
-      document.getElementById('couponFeedback').innerHTML = '';
-      updateOrderSummary();
-    }
+    // Clear result if code is edited after a check
+    document.getElementById('couponFeedback').className = 'coupon-feedback';
+    document.getElementById('couponFeedback').innerHTML = '';
+    document.getElementById('couponBtn').textContent = 'Verify';
   }
 
   async function applyCoupon() {
     const code = document.getElementById('couponInput').value.trim();
     if (!code) return;
-    const fb = document.getElementById('couponFeedback');
+    const fb  = document.getElementById('couponFeedback');
     const btn = document.getElementById('couponBtn');
     btn.disabled = true; btn.textContent = '…';
-    fb.className = 'coupon-feedback'; fb.innerHTML = 'Verifying…';
-
-    const cartItems = Object.values(cart);
-    const subtotal  = cartItems.reduce((s,i) => s + i.price * i.qty, 0);
-
+    fb.className = 'coupon-feedback'; fb.innerHTML = 'Checking…';
     try {
-      const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}&total=${subtotal}`);
+      const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}`);
       const data = await res.json();
       if (data.valid) {
-        appliedCoupon = data;
         fb.className = 'coupon-feedback valid';
-        fb.innerHTML = `<span>✓</span> ${data.message}`;
-        document.getElementById('couponBtn').textContent = '✓ Applied';
-        updateOrderSummary();
+        fb.innerHTML = `<span>✓</span> Valid coupon`;
+        btn.textContent = '✓ Valid';
       } else {
-        appliedCoupon = null;
         fb.className = 'coupon-feedback invalid';
         fb.innerHTML = `<span>✕</span> ${data.error}`;
-        btn.disabled = false; btn.textContent = 'Apply';
-        updateOrderSummary();
+        btn.disabled = false; btn.textContent = 'Verify';
       }
     } catch {
       fb.className = 'coupon-feedback invalid';
       fb.innerHTML = '<span>✕</span> Could not verify. Try again.';
-      btn.disabled = false; btn.textContent = 'Apply';
+      btn.disabled = false; btn.textContent = 'Verify';
     }
   }
 
   function updateOrderSummary() {
     const items    = Object.values(cart);
     const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
-    const discount = appliedCoupon ? appliedCoupon.discount_amount : 0;
-    const total    = subtotal - discount;
-
-    let html = items.map(i =>
+    const html = items.map(i =>
       `<div class="sum-row"><span>${i.qty}× ${i.name}</span><span>₹${i.price * i.qty}</span></div>`
-    ).join('');
-    if (discount > 0) {
-      html += `<div class="sum-row discount-row">
-        <span>🏷 Coupon (${appliedCoupon.code})</span>
-        <span>−₹${discount.toFixed(0)}</span>
-      </div>`;
-    }
-    html += `<div class="sum-row total-row"><span>Total</span><span>₹${total.toFixed(0)}</span></div>`;
+    ).join('') + `<div class="sum-row total-row"><span>Total</span><span>₹${subtotal}</span></div>`;
     const el = document.getElementById('orderSummary');
     if (el) el.innerHTML = html;
   }
 
   function resetCoupon() {
-    appliedCoupon = null;
     const inp = document.getElementById('couponInput');
     const fb  = document.getElementById('couponFeedback');
     const btn = document.getElementById('couponBtn');
-    if (inp) { inp.value = ''; }
+    if (inp) inp.value = '';
     if (fb)  { fb.className = 'coupon-feedback'; fb.innerHTML = ''; }
-    if (btn) { btn.disabled = true; btn.textContent = 'Apply'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Verify'; }
   }
 
   // ── ORDERS TAB ────────────────────────────────────────────────────────────
