@@ -361,7 +361,20 @@
     .phone-input { flex: 1; }
     .field-error { font-size: 0.75rem; color: #e43b4f; margin-top: 0.3rem; min-height: 1rem; }
 
-    /* ── COUPON FIELD ── */
+    /* ── COUPON SECTION (on menu page) ── */
+    .coupon-section {
+      margin: 0.5rem 0.85rem 1.2rem;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1rem 0.85rem;
+    }
+    .coupon-section-title {
+      font-size: 0.68rem; font-weight: 700; color: var(--gray);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
     .coupon-row {
       display: flex; gap: 0.5rem; align-items: stretch;
     }
@@ -382,19 +395,11 @@
     .coupon-btn:active { opacity: 0.8; }
     .coupon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .coupon-feedback {
-      margin-top: 0.4rem; font-size: 0.78rem; min-height: 1.1rem;
-      display: flex; align-items: center; gap: 0.35rem;
+      margin-top: 0.5rem; font-size: 0.8rem;
+      display: flex; align-items: center; gap: 0.35rem; min-height: 1.1rem;
     }
-    .coupon-feedback.valid   { color: var(--green); }
+    .coupon-feedback.valid   { color: var(--green); font-weight: 600; }
     .coupon-feedback.invalid { color: #e43b4f; }
-    .coupon-savings-chip {
-      display: inline-flex; align-items: center; gap: 0.28rem;
-      margin-top: 0.5rem;
-      background: rgba(61,145,66,0.1); border: 1px solid rgba(61,145,66,0.25);
-      color: var(--green); border-radius: 8px;
-      padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600;
-    }
-    .sum-row.discount-row { color: var(--green); }
 
     /* ── HOUSE SPECIAL ── */
     .hs-star {
@@ -777,6 +782,21 @@
 
 </div>
 
+<!-- COUPON VERIFY SECTION -->
+<div class="coupon-section" id="couponSection">
+  <div class="coupon-section-title">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    Have a coupon?
+  </div>
+  <div class="coupon-row">
+    <input class="form-input coupon-input" id="couponInput" type="text"
+           placeholder="Enter code" oninput="onCouponInput()"
+           autocomplete="off" spellcheck="false">
+    <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Verify</button>
+  </div>
+  <div class="coupon-feedback" id="couponFeedback"></div>
+</div>
+
 <!-- CART BAR -->
 <div class="cart-bar" id="cartBar">
   <div class="cart-bar-left">
@@ -817,17 +837,6 @@
     <div class="form-group">
       <label class="form-label">Special Requests</label>
       <input class="form-input" id="orderNotes" type="text" placeholder="No sugar, extra ice, oat milk…">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Coupon Code</label>
-      <div class="coupon-row">
-        <input class="form-input coupon-input" id="couponInput" type="text"
-               placeholder="Enter code (e.g. WELCOME10)"
-               oninput="onCouponInput()" autocomplete="off" spellcheck="false">
-        <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Verify</button>
-      </div>
-      <div class="coupon-feedback" id="couponFeedback"></div>
     </div>
 
     <button class="place-btn" id="placeBtn" onclick="placeOrder()" disabled>Place Order</button>
@@ -1364,6 +1373,7 @@
       searchWrap.style.display = 'none';
       filterBar.style.display  = 'none';
       menuLayout.style.display = 'none';
+      document.getElementById('couponSection').style.display = 'none';
       // hide cart bar while on orders tab
       document.getElementById('cartBar').classList.remove('visible');
       document.getElementById('ordersBadge').style.display = 'none';
@@ -1375,6 +1385,7 @@
       searchWrap.style.display = '';
       filterBar.style.display  = '';
       menuLayout.style.display = '';
+      document.getElementById('couponSection').style.display = '';
       // restore cart bar if items in cart
       updateCartBar();
     }
