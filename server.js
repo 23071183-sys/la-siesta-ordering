@@ -326,8 +326,11 @@ app.get('/api/menu', (req, res) => {
                             VALUES (?, ?, ?, ?, ?, ?)`);
     ins.run('WELCOME10', 'percent', 10, 0,   100, '10% off for new customers');
     ins.run('FLAT50',    'flat',    50, 300, 50,  '₹50 off on orders above ₹300');
-    ins.run('SIESTA20',  'percent', 20, 500, 30,  '20% off on orders above ₹500');
+    ins.run('SIESTA20',  'percent', 20, 0,   30,  '20% off your order');
   }
+
+  // Ensure all percent-based coupons have no minimum order requirement
+  db.prepare("UPDATE coupons SET min_order = 0 WHERE discount_type = 'percent'").run();
 })();
 
 // ── COUPON API ───────────────────────────────────────────────────────────────
