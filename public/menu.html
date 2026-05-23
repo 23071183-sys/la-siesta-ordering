@@ -793,6 +793,8 @@
            placeholder="Enter code" oninput="onCouponInput()"
            autocomplete="off" spellcheck="false">
     <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Verify</button>
+    <button class="coupon-btn" id="redeemBtn" onclick="redeemCoupon()"
+            style="display:none; background:#16a34a; border-color:#16a34a;">Redeem</button>
   </div>
   <div class="coupon-feedback" id="couponFeedback"></div>
 </div>
@@ -1295,14 +1297,16 @@
     resetCoupon();
   }
 
-  // ── COUPON VERIFY (legitimacy check only, no discount applied) ───────────
+  // ── COUPON VERIFY + REDEEM ────────────────────────────────────────────────
   function onCouponInput() {
     const val = document.getElementById('couponInput').value.trim();
     document.getElementById('couponBtn').disabled = val.length < 2;
-    // Clear result if code is edited after a check
     document.getElementById('couponFeedback').className = 'coupon-feedback';
     document.getElementById('couponFeedback').innerHTML = '';
     document.getElementById('couponBtn').textContent = 'Verify';
+    // Hide redeem button whenever input changes
+    const rb = document.getElementById('redeemBtn');
+    if (rb) rb.style.display = 'none';
   }
 
   async function applyCoupon() {
@@ -1312,6 +1316,8 @@
     const btn = document.getElementById('couponBtn');
     btn.disabled = true; btn.textContent = '…';
     fb.className = 'coupon-feedback'; fb.innerHTML = 'Checking…';
+    const rb = document.getElementById('redeemBtn');
+    if (rb) rb.style.display = 'none';
     try {
       const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}`);
       const data = await res.json();
@@ -1322,6 +1328,8 @@
         fb.className = 'coupon-feedback valid';
         fb.innerHTML = `<span>✓</span> ${remark}`;
         btn.textContent = '✓ Valid';
+        // Show Redeem button
+        if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.textContent = 'Redeem'; }
       } else {
         fb.className = 'coupon-feedback invalid';
         fb.innerHTML = `<span>✕</span> ${data.error}`;
@@ -1331,6 +1339,37 @@
       fb.className = 'coupon-feedback invalid';
       fb.innerHTML = '<span>✕</span> Could not verify. Try again.';
       btn.disabled = false; btn.textContent = 'Verify';
+    }
+  }
+
+  async function redeemCoupon() {
+    const code = document.getElementById('couponInput').value.trim();
+    if (!code) return;
+    const fb  = document.getElementById('couponFeedback');
+    const rb  = document.getElementById('redeemBtn');
+    rb.disabled = true; rb.textContent = '…';
+    try {
+      const res  = await fetch('/api/coupons/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fb.className = 'coupon-feedback valid';
+        fb.innerHTML = `<span>✓</span> Coupon redeemed! Show this to your waiter.`;
+        rb.style.display = 'none';
+        document.getElementById('couponBtn').style.display = 'none';
+        document.getElementById('couponInput').disabled = true;
+      } else {
+        fb.className = 'coupon-feedback invalid';
+        fb.innerHTML = `<span>✕</span> ${data.error}`;
+        rb.disabled = false; rb.textContent = 'Redeem';
+      }
+    } catch {
+      fb.className = 'coupon-feedback invalid';
+      fb.innerHTML = '<span>✕</span> Could not redeem. Try again.';
+      rb.disabled = false; rb.textContent = 'Redeem';
     }
   }
 
@@ -1348,9 +1387,11 @@
     const inp = document.getElementById('couponInput');
     const fb  = document.getElementById('couponFeedback');
     const btn = document.getElementById('couponBtn');
-    if (inp) inp.value = '';
+    const rb  = document.getElementById('redeemBtn');
+    if (inp) { inp.value = ''; inp.disabled = false; }
     if (fb)  { fb.className = 'coupon-feedback'; fb.innerHTML = ''; }
-    if (btn) { btn.disabled = true; btn.textContent = 'Verify'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Verify'; btn.style.display = ''; }
+    if (rb)  { rb.style.display = 'none'; rb.disabled = false; rb.textContent = 'Redeem'; }
   }
 
   // ── ORDERS TAB ────────────────────────────────────────────────────────────

@@ -419,6 +419,24 @@ app.get('/api/coupons/verify', (req, res) => {
   });
 });
 
+app.post('/api/coupons/redeem', (req, res) => {
+  const code = ((req.body && req.body.code) || '').trim();
+  if (!code) return res.status(400).json({ error: 'No code provided' });
+
+  const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? COLLATE NOCASE AND active = 1').get(code);
+  if (!coupon) return res.status(404).json({ success: false, error: 'Invalid coupon code' });
+
+  if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+    return res.status(400).json({ success: false, error: 'This coupon has expired' });
+  }
+  if (coupon.max_uses > 0 && coupon.uses_count >= coupon.max_uses) {
+    return res.status(400).json({ success: false, error: 'This coupon has already been used' });
+  }
+
+  db.prepare('UPDATE coupons SET uses_count = uses_count + 1 WHERE id = ?').run(coupon.id);
+  res.json({ success: true, code: coupon.code });
+});
+
 // ── ORDER API ────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
   const { table_number, customer_name, customer_phone, notes, items, coupon_code } = req.body;
