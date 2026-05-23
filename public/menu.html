@@ -155,8 +155,10 @@
       position: sticky; top: 48px;
       height: calc(100vh - 48px);
       overflow-y: auto; scrollbar-width: none;
+      overscroll-behavior: none;
       background: var(--cream2);
       border-right: 1px solid var(--border);
+      touch-action: pan-y;
     }
     .cat-sidebar::-webkit-scrollbar { display: none; }
     .sidebar-btn {
@@ -1207,6 +1209,27 @@
       document.querySelectorAll('.cat-section').forEach(s => obs.observe(s));
     }, 400);
   }
+
+  // Forward sidebar touch swipes to the main page scroll
+  ;(function () {
+    const sidebar = document.getElementById('catSidebar');
+    let startY = 0, startScrollY = 0, startSidebarScroll = 0;
+    sidebar.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY;
+      startScrollY = window.scrollY;
+      startSidebarScroll = sidebar.scrollTop;
+    }, { passive: true });
+    sidebar.addEventListener('touchmove', e => {
+      const dy = startY - e.touches[0].clientY;
+      // If sidebar can scroll in this direction, let it; otherwise scroll the page
+      const sidebarCanScroll =
+        (dy > 0 && sidebar.scrollTop < sidebar.scrollHeight - sidebar.clientHeight) ||
+        (dy < 0 && sidebar.scrollTop > 0);
+      if (!sidebarCanScroll) {
+        window.scrollTo(0, startScrollY + dy);
+      }
+    }, { passive: true });
+  })();
 
   function onPhoneInput() {
     const phone = document.getElementById('custPhone').value;
