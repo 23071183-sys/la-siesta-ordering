@@ -378,6 +378,9 @@ app.get('/api/menu', (req, res) => {
     {code:'LS15-C8VZ6J',pct:15},{code:'LS15-4CTYHJ',pct:15},{code:'LS15-7TEM6F',pct:15},
     {code:'LS15-ZF4RGB',pct:15},{code:'LS15-D4AHF4',pct:15},{code:'LS15-VJ6NXL',pct:15},
   ]);
+
+  // Ensure all LS-prefixed batch coupons are strictly single-use across all tiers
+  db.prepare("UPDATE coupons SET max_uses = 1 WHERE code LIKE 'LS50-%' OR code LIKE 'LS30-%' OR code LIKE 'LS15-%' OR code LIKE 'LS10-%'").run();
 })();
 
 // ── COUPON API ───────────────────────────────────────────────────────────────
