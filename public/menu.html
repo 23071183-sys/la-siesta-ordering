@@ -1209,19 +1209,6 @@
     }, 400);
   }
 
-  // Sidebar swipes always scroll the main page — sidebar scrolls programmatically via scrollspy
-  ;(function () {
-    const sidebar = document.getElementById('catSidebar');
-    let startY = 0, startScrollY = 0;
-    sidebar.addEventListener('touchstart', e => {
-      startY = e.touches[0].clientY;
-      startScrollY = window.scrollY;
-    }, { passive: true });
-    sidebar.addEventListener('touchmove', e => {
-      const dy = startY - e.touches[0].clientY;
-      window.scrollTo(0, startScrollY + dy);
-    }, { passive: true });
-  })();
 
   function onPhoneInput() {
     const phone = document.getElementById('custPhone').value;
