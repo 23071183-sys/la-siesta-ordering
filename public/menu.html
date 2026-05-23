@@ -153,9 +153,8 @@
     .cat-sidebar {
       width: 88px; flex-shrink: 0;
       position: sticky; top: 48px;
-      height: calc(100vh - 48px - 56px); /* 56px = bottom nav height */
-      overflow-y: auto; scrollbar-width: none;
-      overscroll-behavior: contain;
+      height: calc(100vh - 48px - 56px);
+      overflow: hidden; /* no user scroll — controlled programmatically */
       background: var(--cream2);
       border-right: 1px solid var(--border);
     }
@@ -1179,7 +1178,7 @@
 
   function scrollToCat(id, btn) {
     document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    if (btn) { btn.classList.add('active'); scrollSidebarToActive(btn); }
     const el = document.getElementById(`cat-${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // re-trigger dessert stage entrance if scrolling to Desserts
@@ -1199,7 +1198,7 @@
           document.querySelectorAll('.sidebar-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.cat === id);
           });
-          document.getElementById(`side-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          scrollSidebarToActive(document.getElementById(`side-${id}`));
         }
       });
     }, { rootMargin: '-100px 0px -55% 0px', threshold: 0 });
@@ -1209,6 +1208,27 @@
     }, 400);
   }
 
+
+  // Sidebar touch → scroll main page; sidebar scrolls programmatically via scrollspy
+  ;(function () {
+    const sidebar = document.getElementById('catSidebar');
+    let startY = 0, startPageY = 0;
+    sidebar.addEventListener('touchstart', e => {
+      startY     = e.touches[0].clientY;
+      startPageY = window.scrollY;
+    }, { passive: true });
+    sidebar.addEventListener('touchmove', e => {
+      window.scrollTo(0, startPageY + (startY - e.touches[0].clientY));
+    }, { passive: true });
+  })();
+
+  function scrollSidebarToActive(btn) {
+    const sidebar = document.getElementById('catSidebar');
+    if (!btn || !sidebar) return;
+    // Centre the active button within the sidebar's visible area
+    const target = btn.offsetTop - sidebar.clientHeight / 2 + btn.clientHeight / 2;
+    sidebar.scrollTop = Math.max(0, target);
+  }
 
   function onPhoneInput() {
     const phone = document.getElementById('custPhone').value;
