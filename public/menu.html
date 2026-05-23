@@ -1034,9 +1034,16 @@
   }
 
   function renderSidebar() {
-    document.getElementById('catSidebar').innerHTML = menu.map((cat, i) =>
-      `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
-    ).join('') + `<button class="sidebar-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>`;
+    document.getElementById('catSidebar').innerHTML =
+      `<button class="sidebar-top-btn" onclick="scrollToBottom()" title="Jump to bottom" style="border-top:none;border-bottom:1px solid var(--border);">↓</button>` +
+      menu.map((cat, i) =>
+        `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
+      ).join('') +
+      `<button class="sidebar-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>`;
+  }
+
+  function scrollToBottom() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }
 
   function toggleVeg() {
