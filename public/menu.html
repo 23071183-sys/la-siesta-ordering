@@ -1138,14 +1138,31 @@
                <span class="qty-num">${qty}</span>
                <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
              </div>`;
-    // Inline photos for Matcha and Desserts
+    // Inline photos for Matcha, Desserts, and other special items
     const itemImg = MATCHA_IMAGES[item.name] || DESSERT_IMAGES[item.name];
     const inlineImg = itemImg
-      ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:10px;margin:0.6rem 0 0.2rem;object-fit:cover;max-height:160px;display:block;${unavailable?'opacity:0.4;filter:grayscale(1);':''}">`
+      ? `<img src="${itemImg}" alt="${item.name}" style="width:100%;border-radius:12px;margin-top:0.75rem;object-fit:cover;max-height:200px;display:block;${unavailable?'opacity:0.4;filter:grayscale(1);':''}">`
       : '';
     const hsBadge = item.is_house_special
       ? `<span class="hs-badge">✦ House Special</span>`
       : '';
+    // If item has an inline image, stack vertically so image spans full width
+    if (inlineImg) {
+      return `
+        <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}"
+             style="flex-direction:column;${unavailable?'opacity:0.55;':''}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;">
+            <div class="item-left">
+              ${vegHtml}
+              <div class="item-name" style="${unavailable?'color:#8a7070;':''}">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
+              <div class="item-price">₹${item.price}${hsBadge}</div>
+              ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+            </div>
+            <div class="item-right" id="ctrl-${item.id}">${ctrl}</div>
+          </div>
+          ${inlineImg}
+        </div>`;
+    }
     return `
       <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" style="${unavailable?'opacity:0.55;':''}">
         <div class="item-left">
@@ -1153,7 +1170,6 @@
           <div class="item-name" style="${unavailable?'color:#8a7070;':''}">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
           <div class="item-price">₹${item.price}${hsBadge}</div>
           ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
-          ${inlineImg}
         </div>
         <div class="item-right" id="ctrl-${item.id}">${ctrl}</div>
       </div>`;
