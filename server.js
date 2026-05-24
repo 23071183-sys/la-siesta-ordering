@@ -303,6 +303,14 @@ app.get('/api/menu', (req, res) => {
   if (!cols.includes('order_type'))   db.prepare("ALTER TABLE orders ADD COLUMN order_type   TEXT DEFAULT 'indoor'").run();
   if (!cols.includes('coupon_code'))  db.prepare("ALTER TABLE orders ADD COLUMN coupon_code  TEXT DEFAULT ''").run();
 
+  // Settings table — key/value store for site config
+  db.prepare(`CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT ''
+  )`).run();
+  // Default: ordering disabled until admin enables it from POS
+  db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES ('ordering_enabled', '0')").run();
+
   // Coupons table
   db.prepare(`
     CREATE TABLE IF NOT EXISTS coupons (
@@ -591,6 +599,28 @@ app.patch('/api/orders/:id/tip', (req, res) => {
   updated.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(req.params.id);
   io.emit('order_updated', updated);
   res.json(updated);
+});
+
+// ── SETTINGS API ─────────────────────────────────────────────────────────────
+app.get('/api/settings', (req, res) => {
+  const rows = db.prepare('SELECT key, value FROM settings').all();
+  const out = {};
+  rows.forEach(r => { out[r.key] = r.value === '1' || r.value === 'true' ? true : r.value === '0' || r.value === 'false' ? false : r.value; });
+  res.json(out);
+});
+
+app.patch('/api/settings', (req, res) => {
+  const allowed = ['ordering_enabled'];
+  const updates = Object.entries(req.body || {}).filter(([k]) => allowed.includes(k));
+  if (!updates.length) return res.status(400).json({ error: 'No valid keys' });
+  const stmt = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
+  updates.forEach(([k, v]) => stmt.run(k, String(v)));
+  // Broadcast setting change to all connected clients
+  const rows = db.prepare('SELECT key, value FROM settings').all();
+  const out = {};
+  rows.forEach(r => { out[r.key] = r.value === '1' || r.value === 'true' ? true : r.value === '0' || r.value === 'false' ? false : r.value; });
+  io.emit('settings_updated', out);
+  res.json(out);
 });
 
 // ── ADMIN API ────────────────────────────────────────────────────────────────
