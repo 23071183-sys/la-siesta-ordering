@@ -1016,6 +1016,26 @@
   tableNumber = parseInt(params.get('table')) || 1;
   document.getElementById('tableBadge').textContent = `Table ${tableNumber}`;
 
+  // ── ORDERING MODE ──────────────────────────────────────────────────────────
+  let orderingEnabled = false;
+
+  function applyOrderingMode(enabled) {
+    orderingEnabled = enabled;
+    // Cart bar + bottom nav orders tab
+    document.getElementById('cartBar').style.display    = enabled ? '' : 'none';
+    document.getElementById('navOrders').style.display  = enabled ? '' : 'none';
+    // If orders tab is open but ordering just got disabled, switch to menu
+    if (!enabled && currentTab === 'orders') switchTab('menu');
+    // Re-render menu so ADD buttons show/hide
+    if (menu.length) renderMenu();
+    // Adjust body padding — no cart bar means only nav height needed
+    document.body.style.paddingBottom = enabled ? '150px' : '70px';
+  }
+
+  fetch('/api/settings').then(r => r.json()).then(s => {
+    applyOrderingMode(!!s.ordering_enabled);
+  }).catch(() => applyOrderingMode(false));
+
   fetch('/api/menu').then(r => r.json()).then(data => {
     menu = data;
     renderSidebar();
@@ -1105,15 +1125,17 @@
     const vegHtml = FOOD_CATS.includes(catName)
       ? `<div class="veg-icon${nv?' nonveg':''}"><div class="dot"></div></div>`
       : '';
-    const ctrl = unavailable
-      ? `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`
-      : qty === 0
-        ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
-        : `<div class="qty-ctrl">
-             <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
-             <span class="qty-num">${qty}</span>
-             <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
-           </div>`;
+    const ctrl = !orderingEnabled
+      ? ''
+      : unavailable
+        ? `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`
+        : qty === 0
+          ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
+          : `<div class="qty-ctrl">
+               <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+               <span class="qty-num">${qty}</span>
+               <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+             </div>`;
     // Inline photos for Matcha and Desserts
     const itemImg = MATCHA_IMAGES[item.name] || DESSERT_IMAGES[item.name];
     const inlineImg = itemImg
@@ -1579,21 +1601,21 @@
 
   // Hook into socket for this table's order updates
   (function hookOrdersSocket() {
-    // Load socket.io dynamically if not already loaded
     function attachSocket() {
       if (typeof io !== 'undefined') {
         const s = io();
-        s.on('new_order', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
-        s.on('order_updated', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
         return;
       }
-      // socket.io not loaded — load it
       const sc = document.createElement('script');
       sc.src = '/socket.io/socket.io.js';
       sc.onload = () => {
         const s = io();
-        s.on('new_order', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
-        s.on('order_updated', o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
+        s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
       };
       document.body.appendChild(sc);
     }
