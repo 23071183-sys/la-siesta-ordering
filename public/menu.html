@@ -907,6 +907,7 @@
   let tableNumber = 1;
   let vegOnly = false;
   let nonVegOnly = false;
+  let scrollSpyObserver = null;
 
   const NON_VEG_KEYWORDS = ['chicken', 'egg', 'mutton', 'prawn', 'fish', 'beef', 'pork', 'keema', 'bonafide'];
 
@@ -1044,9 +1045,7 @@
 
   fetch('/api/menu').then(r => r.json()).then(data => {
     menu = data;
-    renderSidebar();
     renderMenu();
-    setupScrollSpy();
   });
 
   function scrollToTop() {
@@ -1059,10 +1058,11 @@
     }
   }
 
-  function renderSidebar() {
+  function renderSidebar(cats) {
+    const list = cats || menu;
     document.getElementById('catSidebar').innerHTML =
       `<button class="sidebar-top-btn" onclick="scrollToBottom()" title="Jump to bottom" style="border-top:none;border-bottom:1px solid var(--border);">↓</button>` +
-      menu.map((cat, i) =>
+      list.map((cat, i) =>
         `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
       ).join('') +
       `<button class="sidebar-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>`;
@@ -1096,6 +1096,7 @@
     const query = document.getElementById('searchInput').value.trim().toLowerCase();
     let html = '';
     let anyVisible = false;
+    const visibleCats = [];
 
     for (const cat of menu) {
       // hide drink categories when veg/non-veg filter is active
@@ -1109,6 +1110,7 @@
       });
       if (items.length === 0) continue;
       anyVisible = true;
+      visibleCats.push(cat);
       html += `
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
           <div class="cat-title">${cat.name}</div>
@@ -1118,7 +1120,8 @@
     }
 
     document.getElementById('menuContent').innerHTML = html + `<div class="empty-search" id="emptySearch" style="display:${anyVisible?'none':'block'}">No items found</div>`;
-    if (query || vegOnly) return; // don't re-setup scroll spy on filter
+    if (query) return; // search results don't need sidebar/scrollspy
+    renderSidebar(visibleCats);
     setupScrollSpy();
   }
 
@@ -1245,7 +1248,8 @@
   }
 
   function setupScrollSpy() {
-    const obs = new IntersectionObserver(entries => {
+    if (scrollSpyObserver) { scrollSpyObserver.disconnect(); scrollSpyObserver = null; }
+    scrollSpyObserver = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
           const id = e.target.dataset.cat;
@@ -1258,7 +1262,7 @@
     }, { rootMargin: '-100px 0px -55% 0px', threshold: 0 });
 
     setTimeout(() => {
-      document.querySelectorAll('.cat-section').forEach(s => obs.observe(s));
+      document.querySelectorAll('.cat-section').forEach(s => scrollSpyObserver.observe(s));
     }, 400);
   }
 
