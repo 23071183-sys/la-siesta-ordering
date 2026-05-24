@@ -483,12 +483,10 @@
       inset: 0;
       background: linear-gradient(to bottom, rgba(26,13,6,0.08) 0%, rgba(26,13,6,0.52) 100%);
     }
-    /* Perspective container — CSS 3D, no WebGL needed */
+    /* 2D-only track — no perspective, so overflow:hidden always clips */
     .stage-track {
       position: absolute;
       inset: 0;
-      perspective: 620px;
-      perspective-origin: 50% 44%;
     }
     .slab {
       position: absolute;
@@ -504,12 +502,12 @@
       transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease, box-shadow 0.3s ease;
       z-index: 1;
     }
-    /* Default rest positions — set via CSS so they show without JS */
-    .slab-pos-0 { transform: translateX(-62px) translateY(12px) rotateY(-18deg) scale(0.77); z-index: 1; }
-    .slab-pos-1 { transform: translateX(-32px) translateY(6px)  rotateY(-8deg)  scale(0.89); z-index: 2; }
-    .slab-pos-2 { transform: translateX(0px)   translateY(0px)  rotateY(0deg)   scale(1.02); z-index: 3; }
-    .slab-pos-3 { transform: translateX(32px)  translateY(6px)  rotateY(8deg)   scale(0.89); z-index: 2; }
-    .slab-pos-4 { transform: translateX(62px)  translateY(12px) rotateY(18deg)  scale(0.77); z-index: 1; }
+    /* Default rest positions — 2D only (no rotateY) so overflow:hidden clips correctly */
+    .slab-pos-0 { transform: translateX(-62px) translateY(12px) scale(0.77); z-index: 1; }
+    .slab-pos-1 { transform: translateX(-32px) translateY(6px)  scale(0.89); z-index: 2; }
+    .slab-pos-2 { transform: translateX(0px)   translateY(0px)  scale(1.02); z-index: 3; }
+    .slab-pos-3 { transform: translateX(32px)  translateY(6px)  scale(0.89); z-index: 2; }
+    .slab-pos-4 { transform: translateX(62px)  translateY(12px) scale(0.77); z-index: 1; }
     .slab.slab-focused {
       box-shadow: 0 18px 44px rgba(212,85,42,0.65), 0 0 0 2.5px rgba(212,85,42,0.75);
       z-index: 20;
@@ -1657,13 +1655,13 @@
 <script>
 (function() {
 
-  // REST positions mirror the CSS .slab-pos-* classes
+  // REST positions mirror the CSS .slab-pos-* classes (2D only — no rotateY)
   var REST = [
-    { x: -62, y: 12, ry: -18, s: 0.77 },
-    { x: -32, y:  6, ry:  -8, s: 0.89 },
-    { x:   0, y:  0, ry:   0, s: 1.02 },
-    { x:  32, y:  6, ry:   8, s: 0.89 },
-    { x:  62, y: 12, ry:  18, s: 0.77 },
+    { x: -62, y: 12, s: 0.77 },
+    { x: -32, y:  6, s: 0.89 },
+    { x:   0, y:  0, s: 1.02 },
+    { x:  32, y:  6, s: 0.89 },
+    { x:  62, y: 12, s: 0.77 },
   ];
 
   var _slabs = [];
@@ -1698,11 +1696,11 @@
     _slabs.forEach(function(s) {
       if (s.focused) {
         var r = s.rest;
-        s.el.style.transform = 'translateX('+r.x+'px) translateY('+(r.y-28)+'px) rotateY(0deg) scale('+(r.s*1.30)+')';
+        s.el.style.transform = 'translateX('+r.x+'px) translateY('+(r.y-28)+'px) scale('+(r.s*1.30)+')';
         s.el.style.opacity = '1';
       } else if (any) {
         var r = s.rest;
-        s.el.style.transform = 'translateX('+r.x+'px) translateY('+(r.y+12)+'px) rotateY('+r.ry+'deg) scale('+(r.s*0.82)+')';
+        s.el.style.transform = 'translateX('+r.x+'px) translateY('+(r.y+12)+'px) scale('+(r.s*0.82)+')';
         s.el.style.opacity = '0.32';
       } else {
         // Clear inline styles — CSS .slab-pos-* class takes over
