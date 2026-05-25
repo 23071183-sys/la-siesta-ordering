@@ -14,10 +14,79 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+// ── WhatsApp notifications via Twilio ──────────────────────────────────────
+const WA_SID   = process.env.TWILIO_ACCOUNT_SID;
+const WA_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const WA_FROM  = process.env.TWILIO_WA_FROM || 'whatsapp:+14155238886'; // Twilio sandbox default
+
+async function sendWhatsApp(phone, message) {
+  if (!phone || !WA_SID || !WA_TOKEN) return; // skip if no phone or not configured
+  const to = `whatsapp:+91${phone}`;
+  try {
+    const r = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${WA_SID}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${WA_SID}:${WA_TOKEN}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ From: WA_FROM, To: to, Body: message }).toString(),
+      }
+    );
+    const d = await r.json();
+    if (r.ok) console.log(`[WA] ✓ sent to ${phone} — sid ${d.sid}`);
+    else      console.error(`[WA] ✗ ${d.message}`);
+  } catch (e) {
+    console.error('[WA] fetch error:', e.message);
+  }
+}
+
+function waOrderReceived(order) {
+  if (!order.customer_phone) return;
+  const name  = order.customer_name ? `, ${order.customer_name}` : '';
+  const items = (order.items || []).map(i => `  • ${i.quantity}× ${i.item_name}`).join('\n');
+  sendWhatsApp(order.customer_phone,
+`🍽️ *La Siesta* — Order Received!
+
+Hi${name}! Your order *#${String(order.id).padStart(4,'0')}* is confirmed.
+📍 Table ${order.table_number}
+${items}
+💰 Total: ₹${order.total}
+
+Track your order live:
+https://la-siesta-ordering.onrender.com/status?order=${order.id}`
+  );
+}
+
+function waPreparingStarted(order) {
+  if (!order.customer_phone) return;
+  const name = order.customer_name ? `, ${order.customer_name}` : '';
+  sendWhatsApp(order.customer_phone,
+`👨‍🍳 *La Siesta* — Kitchen Update
+
+Hi${name}! Your order *#${String(order.id).padStart(4,'0')}* is now being prepared.
+We'll notify you the moment it's ready! 🙌`
+  );
+}
+
+function waOrderReady(order) {
+  if (!order.customer_phone) return;
+  const name = order.customer_name ? `, ${order.customer_name}` : '';
+  sendWhatsApp(order.customer_phone,
+`✅ *La Siesta* — Order Ready!
+
+Hi${name}! Your order *#${String(order.id).padStart(4,'0')}* is ready for pickup.
+Please collect from the counter. Enjoy your meal! 🍴`
+  );
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
+
     origin: '*',
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   }
@@ -513,6 +582,7 @@ app.post('/api/orders', (req, res) => {
   const waitMinutes = Math.max(5, activeCount * 4 + 5);
 
   io.emit('new_order', order);
+  waOrderReceived(order); // WhatsApp: order received
   res.json({ success: true, order_id: orderId, wait_minutes: waitMinutes, order });
 });
 
@@ -551,6 +621,9 @@ app.patch('/api/orders/:id/status', (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
   io.emit('order_updated', order);
+  // WhatsApp notifications on key status transitions
+  if (status === 'preparing') waPreparingStarted(order);
+  if (status === 'done')      waOrderReady(order);
   res.json(order);
 });
 
