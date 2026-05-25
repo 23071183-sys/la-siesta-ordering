@@ -12,3 +12,7 @@ services:
         value: lasiesta2024
       - key: FAST2SMS_API_KEY
         sync: false
+      - key: ULTRAMSG_INSTANCE
+        value: instance177576
+      - key: ULTRAMSG_TOKEN
+        value: qb53ajv2e4amt2vl
