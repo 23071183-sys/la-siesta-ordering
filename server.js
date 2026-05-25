@@ -14,29 +14,29 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-// ── WhatsApp notifications via Twilio ──────────────────────────────────────
-const WA_SID   = process.env.TWILIO_ACCOUNT_SID;
-const WA_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const WA_FROM  = process.env.TWILIO_WA_FROM || 'whatsapp:+14155238886'; // Twilio sandbox default
+// ── WhatsApp notifications via UltraMsg ────────────────────────────────────
+// Setup: ultramsg.com → sign up → create instance → scan QR → copy creds
+const UM_INSTANCE = process.env.ULTRAMSG_INSTANCE; // e.g. instance12345
+const UM_TOKEN    = process.env.ULTRAMSG_TOKEN;     // your token
 
 async function sendWhatsApp(phone, message) {
-  if (!phone || !WA_SID || !WA_TOKEN) return; // skip if no phone or not configured
-  const to = `whatsapp:+91${phone}`;
+  if (!phone || !UM_INSTANCE || !UM_TOKEN) return; // skip if not configured
   try {
     const r = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${WA_SID}/Messages.json`,
+      `https://api.ultramsg.com/${UM_INSTANCE}/messages/chat`,
       {
         method: 'POST',
-        headers: {
-          'Authorization': 'Basic ' + Buffer.from(`${WA_SID}:${WA_TOKEN}`).toString('base64'),
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({ From: WA_FROM, To: to, Body: message }).toString(),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          token: UM_TOKEN,
+          to:    `+91${phone}`,
+          body:  message,
+        }).toString(),
       }
     );
     const d = await r.json();
-    if (r.ok) console.log(`[WA] ✓ sent to ${phone} — sid ${d.sid}`);
-    else      console.error(`[WA] ✗ ${d.message}`);
+    if (d.sent === 'true' || d.sent === true) console.log(`[WA] ✓ sent to ${phone}`);
+    else console.error(`[WA] ✗`, d);
   } catch (e) {
     console.error('[WA] fetch error:', e.message);
   }
