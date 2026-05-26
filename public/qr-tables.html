@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>La Siesta — Table QR Codes</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Georgia', serif; background: #f5f0eb; padding: 32px; }
@@ -26,37 +25,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     break-inside: avoid;
   }
-  .table-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: #8a7060;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .table-num {
-    font-size: 36px;
-    font-weight: 700;
-    color: #2c1810;
-    line-height: 1;
-  }
-  canvas { border-radius: 8px; }
-  .scan-text {
-    font-size: 11px;
-    color: #b0a090;
-    letter-spacing: 0.5px;
-  }
-  .logo {
-    font-size: 14px;
-    font-weight: 700;
-    color: #c0855a;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-  }
+  .logo { font-size: 13px; font-weight: 700; color: #c0855a; letter-spacing: 1.5px; text-transform: uppercase; }
+  .table-label { font-size: 11px; font-weight: 700; color: #8a7060; letter-spacing: 2px; text-transform: uppercase; }
+  .table-num { font-size: 36px; font-weight: 700; color: #2c1810; line-height: 1; }
+  .card img { width: 160px; height: 160px; border-radius: 8px; display: block; }
+  .scan-text { font-size: 11px; color: #b0a090; letter-spacing: 0.5px; }
 
-  /* Print styles */
   @media print {
     body { background: #fff; padding: 16px; }
     .no-print { display: none !important; }
@@ -77,31 +54,25 @@
   </button>
 </div>
 
-<div class="grid" id="grid"></div>
+<div class="grid">
+  <!-- Cards generated below -->
+</div>
 
 <script>
-const BASE_URL = 'https://la-siesta-ordering.onrender.com/menu?table=';
-const TOTAL    = 22;
-const grid     = document.getElementById('grid');
+const BASE = 'https://la-siesta-ordering.onrender.com/menu?table=';
+const grid = document.querySelector('.grid');
 
-for (let t = 1; t <= TOTAL; t++) {
-  const card = document.createElement('div');
-  card.className = 'card';
-
-  const logo      = document.createElement('div'); logo.className = 'logo'; logo.textContent = 'La Siesta';
-  const lbl       = document.createElement('div'); lbl.className  = 'table-label'; lbl.textContent = 'Table';
-  const num       = document.createElement('div'); num.className  = 'table-num';   num.textContent = t;
-  const canvas    = document.createElement('canvas');
-  const scanText  = document.createElement('div'); scanText.className = 'scan-text'; scanText.textContent = 'Scan to view menu & order';
-
-  card.append(logo, lbl, num, canvas, scanText);
-  grid.appendChild(card);
-
-  QRCode.toCanvas(canvas, BASE_URL + t, {
-    width: 160,
-    margin: 1,
-    color: { dark: '#2c1810', light: '#ffffff' },
-  });
+for (let t = 1; t <= 22; t++) {
+  const url = BASE + t;
+  const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&color=2c1810&bgcolor=ffffff&data=' + encodeURIComponent(url);
+  grid.innerHTML += `
+    <div class="card">
+      <div class="logo">La Siesta</div>
+      <div class="table-label">Table</div>
+      <div class="table-num">${t}</div>
+      <img src="${qrSrc}" alt="QR Table ${t}" loading="lazy">
+      <div class="scan-text">Scan to view menu &amp; order</div>
+    </div>`;
 }
 </script>
 </body>
