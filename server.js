@@ -356,7 +356,7 @@ app.get('/counter', (req, res) => res.sendFile(path.join(__dirname, 'public', 'c
 
 // QR codes print page — server-side generated with embedded data URIs
 app.get('/qr-tables', async (req, res) => {
-  const BASE = 'https://la-siesta-ordering.onrender.com/menu?table=';
+  const BASE = 'https://la-siesta-ordering.onrender.com/?table=';
   const cards = await Promise.all(
     Array.from({ length: 22 }, (_, i) => i + 1).map(async t => {
       const dataUrl = await QRCode.toDataURL(BASE + t, {

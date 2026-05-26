@@ -624,6 +624,18 @@
     });
   }
 
+  // ── TABLE FROM QR ─────────────────────────
+  // If page was opened via QR code (?table=N), wire all order links to that table
+  const tableParam = new URLSearchParams(window.location.search).get('table');
+  if (tableParam) {
+    const menuUrl = `/menu?table=${encodeURIComponent(tableParam)}`;
+    ['heroCta', 'ctaBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.href = menuUrl;
+    });
+    document.querySelectorAll('a.pill[href*="/menu"]').forEach(el => { el.href = menuUrl; });
+  }
+
   // ── NAV SCROLL ────────────────────────────
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
