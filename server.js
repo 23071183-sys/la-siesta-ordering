@@ -353,6 +353,9 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 // Counter / POS dashboard
 app.get('/counter', (req, res) => res.sendFile(path.join(__dirname, 'public', 'counter.html')));
 
+// QR codes print page
+app.get('/qr-tables', (req, res) => res.sendFile(path.join(__dirname, 'public', 'qr-tables.html')));
+
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
