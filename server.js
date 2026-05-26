@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const QRCode = require('qrcode');
 const Database = require('better-sqlite3');
 
 // Load .env file if present
@@ -353,8 +354,59 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'adm
 // Counter / POS dashboard
 app.get('/counter', (req, res) => res.sendFile(path.join(__dirname, 'public', 'counter.html')));
 
-// QR codes print page
-app.get('/qr-tables', (req, res) => res.sendFile(path.join(__dirname, 'public', 'qr-tables.html')));
+// QR codes print page — server-side generated with embedded data URIs
+app.get('/qr-tables', async (req, res) => {
+  const BASE = 'https://la-siesta-ordering.onrender.com/menu?table=';
+  const cards = await Promise.all(
+    Array.from({ length: 22 }, (_, i) => i + 1).map(async t => {
+      const dataUrl = await QRCode.toDataURL(BASE + t, {
+        width: 200, margin: 1,
+        color: { dark: '#2c1810', light: '#ffffff' },
+      });
+      return `
+        <div class="card">
+          <div class="logo">La Siesta</div>
+          <div class="table-label">Table</div>
+          <div class="table-num">${t}</div>
+          <img src="${dataUrl}" alt="QR Table ${t}">
+          <div class="scan-text">Scan to view menu &amp; order</div>
+        </div>`;
+    })
+  );
+  res.send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>La Siesta — Table QR Codes</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Georgia',serif;background:#f5f0eb;padding:32px}
+  h1{text-align:center;font-size:22px;color:#2c1810;margin-bottom:6px;letter-spacing:1px}
+  p.sub{text-align:center;font-size:13px;color:#8a7060;margin-bottom:32px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:960px;margin:0 auto}
+  .card{background:#fff;border-radius:16px;padding:20px 16px 16px;text-align:center;
+    box-shadow:0 2px 12px rgba(0,0,0,.08);border:1px solid #e8ddd5;
+    display:flex;flex-direction:column;align-items:center;gap:8px;break-inside:avoid}
+  .logo{font-size:13px;font-weight:700;color:#c0855a;letter-spacing:1.5px;text-transform:uppercase}
+  .table-label{font-size:11px;font-weight:700;color:#8a7060;letter-spacing:2px;text-transform:uppercase}
+  .table-num{font-size:36px;font-weight:700;color:#2c1810;line-height:1}
+  .card img{width:160px;height:160px;border-radius:8px}
+  .scan-text{font-size:11px;color:#b0a090;letter-spacing:.5px}
+  @media print{
+    body{background:#fff;padding:16px}
+    .no-print{display:none!important}
+    .grid{gap:16px}
+    .card{box-shadow:none;border:1.5px solid #ddd}
+  }
+</style></head><body>
+<h1>La Siesta</h1>
+<p class="sub">Scan to order from your table</p>
+<div class="no-print" style="text-align:center;margin-bottom:24px">
+  <button onclick="window.print()" style="background:#c0855a;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">
+    🖨️ Print All QR Codes
+  </button>
+</div>
+<div class="grid">${cards.join('')}</div>
+</body></html>`);
+});
 
 // ── MENU API ─────────────────────────────────────────────────────────────────
 app.get('/api/menu', (req, res) => {
