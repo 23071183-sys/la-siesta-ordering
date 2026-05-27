@@ -12,6 +12,8 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+      - key: POS_PIN
+        sync: false
       - key: FAST2SMS_API_KEY
         sync: false
       - key: ULTRAMSG_INSTANCE
