@@ -778,13 +778,11 @@ app.delete('/api/tables/:id', requireAuth, (req, res) => {
 // ── SETTINGS API ─────────────────────────────────────────────────────────────
 app.get('/api/settings', (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings').all();
-  const out = {};
-  rows.forEach(r => { out[r.key] = r.value === '1' || r.value === 'true' ? true : r.value === '0' || r.value === 'false' ? false : r.value; });
-  res.json(out);
+  res.json(rows); // return as array [{key,value}] for admin dashboard
 });
 
 app.patch('/api/settings', (req, res) => {
-  const allowed = ['ordering_enabled'];
+  const allowed = ['ordering_enabled', 'restaurant_name', 'tax_rate'];
   const updates = Object.entries(req.body || {}).filter(([k]) => allowed.includes(k));
   if (!updates.length) return res.status(400).json({ error: 'No valid keys' });
   const stmt = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
