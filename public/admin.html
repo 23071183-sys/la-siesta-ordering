@@ -370,6 +370,15 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
 let menuData=[], allOrders=[], tablesData=[], pendingCt=0, kfilt='active', curArea='indoor';
+let _token = sessionStorage.getItem('admin_token') || null;
+
+// ── AUTH FETCH — wraps all admin API calls with Bearer token ──
+async function adminFetch(url, opts={}){
+  opts.headers = { ...opts.headers, 'Authorization': 'Bearer '+_token };
+  const r = await fetch(url, opts);
+  if(r.status===401){ doAutoLogout(); return r; }
+  return r;
+}
 
 // ── AUTH ──
 async function doLogin(){
@@ -379,18 +388,27 @@ async function doLogin(){
   if(!email||!pass){errEl.textContent='Please enter email and password.';errEl.style.display='block';return;}
   const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
   if(r.ok){
+    const data=await r.json();
+    _token=data.token;
+    sessionStorage.setItem('admin_token',_token);
     errEl.style.display='none';
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').classList.add('visible');
     loadDash(); loadMenu(); loadKitchen(); connectSocket();
     document.getElementById('orderDateF').value=new Date().toISOString().slice(0,10);
   } else {
-    errEl.textContent='Invalid email or password.';
+    const data=await r.json().catch(()=>({}));
+    errEl.textContent=data.error||'Invalid email or password.';
     errEl.style.display='block';
     document.getElementById('loginPass').value='';
   }
 }
-function logout(){
+async function logout(){
+  if(_token) await adminFetch('/api/admin/logout',{method:'POST'}).catch(()=>{});
+  doAutoLogout();
+}
+function doAutoLogout(){
+  _token=null; sessionStorage.removeItem('admin_token');
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('loginEmail').value='';
@@ -400,6 +418,16 @@ function toggleForgot(){
   const box=document.getElementById('forgotBox');
   box.style.display=box.style.display==='block'?'none':'block';
 }
+
+// Auto-restore session on page load
+window.addEventListener('DOMContentLoaded',()=>{
+  if(_token){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').classList.add('visible');
+    loadDash(); loadMenu(); loadKitchen(); connectSocket();
+    document.getElementById('orderDateF').value=new Date().toISOString().slice(0,10);
+  }
+});
 
 // ── PANELS ──
 function showPanel(name,btn){
@@ -539,7 +567,8 @@ function updateBadge(){
 
 // ── MENU ──
 async function loadMenu(){
-  const r=await fetch('/api/admin/menu');
+  const r=await adminFetch('/api/admin/menu');
+  if(!r.ok)return;
   menuData=await r.json();
   renderCats(); renderItems(); popCatSelect();
 }
@@ -596,7 +625,7 @@ async function savePrice(id){
   if(!price||price<0)return;
   const item=menuData.flatMap(c=>c.items).find(i=>i.id===id);
   if(!item)return;
-  await fetch(`/api/admin/items/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:item.name,description:item.description,price,available:item.available,category_id:item.category_id})});
+  await adminFetch(`/api/admin/items/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:item.name,description:item.description,price,available:item.available,category_id:item.category_id})});
   toast(`Price updated to ₹${price}`); loadMenu();
 }
 function popCatSelect(){
@@ -605,14 +634,14 @@ function popCatSelect(){
 async function addCat(){
   const name=document.getElementById('newCatName').value.trim();
   if(!name)return;
-  await fetch('/api/admin/categories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  await adminFetch('/api/admin/categories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
   document.getElementById('newCatName').value='';
   toast(`"${name}" added`); loadMenu();
 }
 async function delCat(id){
   const c=menuData.find(x=>x.id===id);
   if(!confirm(`Delete "${c?.name}" and all its items?`))return;
-  await fetch(`/api/admin/categories/${id}`,{method:'DELETE'});
+  await adminFetch(`/api/admin/categories/${id}`,{method:'DELETE'});
   toast('Category deleted'); loadMenu();
 }
 async function addItem(){
@@ -621,25 +650,25 @@ async function addItem(){
   const price=parseFloat(document.getElementById('newItemPrice').value);
   const desc=document.getElementById('newItemDesc').value.trim();
   if(!name||!price){toast('Name and price required');return;}
-  await fetch('/api/admin/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category_id:catId,name,description:desc,price})});
+  await adminFetch('/api/admin/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({category_id:catId,name,description:desc,price})});
   document.getElementById('newItemName').value='';
   document.getElementById('newItemPrice').value='';
   document.getElementById('newItemDesc').value='';
   toast(`"${name}" added`); loadMenu();
 }
 async function toggleItem(id){
-  const r=await fetch(`/api/admin/items/${id}/toggle`,{method:'PATCH'});
+  const r=await adminFetch(`/api/admin/items/${id}/toggle`,{method:'PATCH'});
   const {available}=await r.json();
   toast(available?'Item available':'Item hidden (86\'d)');
 }
 async function toggleSpecial(id){
-  const r=await fetch(`/api/admin/items/${id}/toggle-special`,{method:'PATCH'});
+  const r=await adminFetch(`/api/admin/items/${id}/toggle-special`,{method:'PATCH'});
   const {is_house_special}=await r.json();
   toast(is_house_special?'✦ House Special set':'Special removed'); loadMenu();
 }
 async function delItem(id){
   if(!confirm('Delete this item?'))return;
-  await fetch(`/api/admin/items/${id}`,{method:'DELETE'});
+  await adminFetch(`/api/admin/items/${id}`,{method:'DELETE'});
   toast('Item deleted'); loadMenu();
 }
 
