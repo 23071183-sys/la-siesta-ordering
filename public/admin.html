@@ -525,6 +525,7 @@
 <script>
 let menuData=[], allOrders=[], tablesData=[], pendingCt=0, kfilt='active', curArea='indoor';
 let _token = sessionStorage.getItem('admin_token') || null;
+let _adminEmail = sessionStorage.getItem('admin_email') || '';
 
 // ── AUTH FETCH — wraps all admin API calls with Bearer token ──
 async function adminFetch(url, opts={}){
@@ -544,7 +545,9 @@ async function doLogin(){
   if(r.ok){
     const data=await r.json();
     _token=data.token;
+    _adminEmail=email;
     sessionStorage.setItem('admin_token',_token);
+    sessionStorage.setItem('admin_email',email);
     errEl.style.display='none';
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').classList.add('visible');
@@ -562,7 +565,8 @@ async function logout(){
   doAutoLogout();
 }
 function doAutoLogout(){
-  _token=null; sessionStorage.removeItem('admin_token');
+  _token=null; _adminEmail='';
+  sessionStorage.removeItem('admin_token'); sessionStorage.removeItem('admin_email');
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('app').classList.remove('visible');
   document.getElementById('loginEmail').value='';
@@ -999,7 +1003,8 @@ function renderTables(occupied=new Set()){
     </div>`).join('');
 }
 async function addTable(){
-  const r=await fetch('/api/tables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({area:curArea})});
+  const r=await adminFetch('/api/tables',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({area:curArea})});
+  if(!r.ok){toast('Failed to add table');return;}
   const t=await r.json();
   toast(`Table T${t.number} added`); loadTables();
 }
@@ -1008,13 +1013,13 @@ async function removeLastTable(){
   if(!areaTs.length){toast('No tables to remove');return;}
   const last=areaTs[areaTs.length-1];
   if(!confirm(`Remove Table T${last.number}?`))return;
-  await fetch(`/api/tables/${last.id}`,{method:'DELETE'});
+  await adminFetch(`/api/tables/${last.id}`,{method:'DELETE'});
   toast(`T${last.number} removed`); loadTables();
 }
 async function delTable(id){
   const t=tablesData.find(x=>x.id===id);
   if(!confirm(`Remove Table T${t?.number}?`))return;
-  await fetch(`/api/tables/${id}`,{method:'DELETE'});
+  await adminFetch(`/api/tables/${id}`,{method:'DELETE'});
   toast('Table removed'); loadTables();
 }
 
@@ -1126,12 +1131,12 @@ async function loadSettings(){
   if(get('restaurant_name')) document.getElementById('setRestName').value=get('restaurant_name');
   if(get('tax_rate')) document.getElementById('setTaxRate').value=get('tax_rate');
   document.getElementById('orderingToggle').checked = get('ordering_enabled')!=='0';
-  // show email from token context (just display placeholder)
-  document.getElementById('settingEmail').textContent=document.getElementById('loginEmail')?.value||'admin@lasiesta.in';
+  document.getElementById('settingEmail').textContent=_adminEmail||sessionStorage.getItem('admin_email')||'—';
 }
 async function saveSetting(key,value){
-  await adminFetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value:String(value)})});
-  toast(`${key.replace(/_/g,' ')} saved ✓`);
+  const r=await adminFetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({[key]:String(value)})});
+  if(r.ok) toast(`${key.replace(/_/g,' ')} saved ✓`);
+  else toast('Failed to save setting');
 }
 
 // ── SOCKET.IO ──
