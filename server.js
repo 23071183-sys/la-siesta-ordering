@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const QRCode = require('qrcode');
 const Database = require('better-sqlite3');
 
@@ -796,39 +797,85 @@ app.patch('/api/settings', (req, res) => {
   res.json(out);
 });
 
-// ── ADMIN API ────────────────────────────────────────────────────────────────
+// ── ADMIN AUTH ───────────────────────────────────────────────────────────────
 const ADMIN_PASS  = process.env.ADMIN_PASSWORD || 'lasiesta2024';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL    || 'admin@lasiesta.in';
+const TOKEN_TTL   = 24 * 60 * 60 * 1000; // 24 hours
+
+// Session store: token -> expiry timestamp
+const sessions = new Map();
+
+// Prune expired tokens every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, exp] of sessions) if (exp < now) sessions.delete(token);
+}, 60 * 60 * 1000);
+
+// Rate limiter: max 10 login attempts per IP per 15 min
+const loginAttempts = new Map();
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const window = 15 * 60 * 1000;
+  const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + window };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + window; }
+  entry.count++;
+  loginAttempts.set(ip, entry);
+  return entry.count <= 10;
+}
+
+// Auth middleware — applied to all /api/admin/* except login
+function requireAdmin(req, res, next) {
+  const header = req.headers['authorization'] || '';
+  const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token || !sessions.has(token) || sessions.get(token) < Date.now()) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
 
 app.post('/api/admin/login', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
+  }
   const { email, password } = req.body;
   const emailOk = email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase();
   const passOk  = password === ADMIN_PASS;
-  (emailOk && passOk)
-    ? res.json({ success: true })
-    : res.status(401).json({ error: 'Invalid email or password' });
+  if (emailOk && passOk) {
+    const token = crypto.randomBytes(32).toString('hex');
+    sessions.set(token, Date.now() + TOKEN_TTL);
+    return res.json({ token });
+  }
+  res.status(401).json({ error: 'Invalid email or password' });
 });
 
-app.get('/api/admin/menu', (req, res) => {
+app.post('/api/admin/logout', requireAdmin, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  sessions.delete(token);
+  res.json({ success: true });
+});
+
+// ── ADMIN API ────────────────────────────────────────────────────────────────
+app.get('/api/admin/menu', requireAdmin, (req, res) => {
   const cats  = db.prepare('SELECT * FROM categories ORDER BY sort_order').all();
   const items = db.prepare('SELECT * FROM menu_items ORDER BY category_id, name').all();
   res.json(cats.map(c => ({ ...c, items: items.filter(i => i.category_id === c.id) })));
 });
 
-app.post('/api/admin/categories', (req, res) => {
+app.post('/api/admin/categories', requireAdmin, (req, res) => {
   const { name } = req.body;
   const { max } = db.prepare('SELECT MAX(sort_order) as max FROM categories').get();
   const { lastInsertRowid: id } = db.prepare('INSERT INTO categories (name, sort_order) VALUES (?, ?)').run(name, (max || 0) + 1);
   res.json({ id, name, sort_order: (max || 0) + 1 });
 });
 
-app.delete('/api/admin/categories/:id', (req, res) => {
+app.delete('/api/admin/categories/:id', requireAdmin, (req, res) => {
   db.prepare('DELETE FROM menu_items WHERE category_id = ?').run(req.params.id);
   db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-app.post('/api/admin/items', (req, res) => {
+app.post('/api/admin/items', requireAdmin, (req, res) => {
   const { category_id, name, description, price } = req.body;
   const { lastInsertRowid: id } = db.prepare(
     'INSERT INTO menu_items (category_id, name, description, price) VALUES (?, ?, ?, ?)'
@@ -836,7 +883,7 @@ app.post('/api/admin/items', (req, res) => {
   res.json({ id, category_id, name, description, price, available: 1 });
 });
 
-app.put('/api/admin/items/:id', (req, res) => {
+app.put('/api/admin/items/:id', requireAdmin, (req, res) => {
   const { name, description, price, available } = req.body;
   db.prepare(
     'UPDATE menu_items SET name = ?, description = ?, price = ?, available = ? WHERE id = ?'
@@ -845,12 +892,12 @@ app.put('/api/admin/items/:id', (req, res) => {
   res.json({ success: true });
 });
 
-app.delete('/api/admin/items/:id', (req, res) => {
+app.delete('/api/admin/items/:id', requireAdmin, (req, res) => {
   db.prepare('DELETE FROM menu_items WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
-app.patch('/api/admin/items/:id/toggle', (req, res) => {
+app.patch('/api/admin/items/:id/toggle', requireAdmin, (req, res) => {
   const item = db.prepare('SELECT available FROM menu_items WHERE id = ?').get(req.params.id);
   const next = item.available ? 0 : 1;
   db.prepare('UPDATE menu_items SET available = ? WHERE id = ?').run(next, req.params.id);
@@ -858,7 +905,7 @@ app.patch('/api/admin/items/:id/toggle', (req, res) => {
   res.json({ available: next });
 });
 
-app.patch('/api/admin/items/:id/toggle-special', (req, res) => {
+app.patch('/api/admin/items/:id/toggle-special', requireAdmin, (req, res) => {
   const item = db.prepare('SELECT is_house_special FROM menu_items WHERE id = ?').get(req.params.id);
   const next = item.is_house_special ? 0 : 1;
   db.prepare('UPDATE menu_items SET is_house_special = ? WHERE id = ?').run(next, req.params.id);
