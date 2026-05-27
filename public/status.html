@@ -325,8 +325,8 @@
   <!-- READY BANNER -->
   <div class="ready-banner" id="readyBanner">
     <div class="ready-emoji">🎉</div>
-    <div class="ready-text">Your order is ready!</div>
-    <div class="ready-sub">Please collect from the counter</div>
+    <div class="ready-text">Your order will reach you shortly!</div>
+    <div class="ready-sub">Sit back and relax — it's on its way 🍽️</div>
   </div>
 
   <!-- ITEMS -->
@@ -370,7 +370,7 @@
   const STATUS_DATA = {
     pending:   { msg: 'Order received!',      sub: 'The kitchen has your order — hang tight…', step: 0 },
     preparing: { msg: 'Being prepared now',   sub: 'Your food is being made — won\'t be long!', step: 1 },
-    done:      { msg: 'Ready for pickup! 🎉', sub: 'Please collect your order from the counter.', step: 2 }
+    done:      { msg: 'Your order will reach you shortly! 🎉', sub: 'Sit back and relax — it\'s on its way to your table.', step: 2 }
   };
 
   function renderStatus(status) {
