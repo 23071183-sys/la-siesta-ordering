@@ -21,11 +21,16 @@
     .login-brand { font-family:'Playfair Display',serif; font-size:1.7rem; color:var(--dark); margin-bottom:.25rem; }
     .login-brand em { font-style:italic; color:var(--or); }
     .login-sub { font-size:.72rem; color:var(--muted); margin-bottom:2rem; letter-spacing:.1em; text-transform:uppercase; }
-    .login-input { width:100%; padding:.85rem 1rem; border:1.5px solid var(--bdr); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.95rem; text-align:center; letter-spacing:.15em; outline:none; margin-bottom:1rem; transition:border-color .2s; }
+    .login-label { display:block; font-size:.68rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-align:left; margin-bottom:.3rem; }
+    .login-input { width:100%; padding:.82rem 1rem; border:1.5px solid var(--bdr); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.93rem; outline:none; margin-bottom:1rem; transition:border-color .2s; background:#fff; color:var(--dark); }
     .login-input:focus { border-color:var(--or); }
-    .login-btn { width:100%; padding:.85rem; background:var(--or); color:#fff; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer; }
+    .login-btn { width:100%; padding:.85rem; background:var(--or); color:#fff; border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer; margin-top:.25rem; }
     .login-btn:hover { background:var(--or-d); }
-    .login-err { font-size:.8rem; color:var(--red); margin-top:.6rem; display:none; }
+    .login-err { font-size:.8rem; color:var(--red); margin-top:.65rem; display:none; }
+    .forgot-link { display:inline-block; font-size:.78rem; color:var(--or); cursor:pointer; margin-top:.85rem; text-decoration:underline; }
+    .forgot-box { display:none; margin-top:1rem; background:#fff7f2; border:1px solid rgba(212,85,42,.2); border-radius:9px; padding:.85rem 1rem; text-align:left; }
+    .forgot-box p { font-size:.82rem; color:var(--text); line-height:1.6; }
+    .forgot-box a { color:var(--or); font-weight:600; }
 
     /* SHELL */
     .app { display:none; min-height:100vh; }
@@ -206,10 +211,25 @@
   <div class="login-box">
     <div class="login-brand"><em>La</em> SIESTA</div>
     <div class="login-sub">Admin Dashboard</div>
+
+    <label class="login-label" for="loginEmail">Email</label>
+    <input class="login-input" id="loginEmail" type="email" placeholder="admin@lasiesta.in"
+           onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+
+    <label class="login-label" for="loginPass">Password</label>
     <input class="login-input" id="loginPass" type="password" placeholder="Enter password"
-           onkeydown="if(event.key==='Enter')doLogin()">
+           onkeydown="if(event.key==='Enter')doLogin()" style="margin-bottom:0">
+
     <button class="login-btn" onclick="doLogin()">Sign In</button>
-    <div class="login-err" id="loginErr">Incorrect password.</div>
+    <div class="login-err" id="loginErr">Invalid email or password.</div>
+
+    <div><span class="forgot-link" onclick="toggleForgot()">Forgot password?</span></div>
+    <div class="forgot-box" id="forgotBox">
+      <p>Contact the restaurant manager to reset credentials.<br>
+        📞 <a href="tel:+91XXXXXXXXXX">+91 XXXXXXXXXX</a><br>
+        ✉️ <a href="mailto:admin@lasiesta.in">admin@lasiesta.in</a>
+      </p>
+    </div>
   </div>
 </div>
 
@@ -353,19 +373,32 @@ let menuData=[], allOrders=[], tablesData=[], pendingCt=0, kfilt='active', curAr
 
 // ── AUTH ──
 async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
-  const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
+  const errEl=document.getElementById('loginErr');
+  if(!email||!pass){errEl.textContent='Please enter email and password.';errEl.style.display='block';return;}
+  const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
   if(r.ok){
+    errEl.style.display='none';
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').classList.add('visible');
     loadDash(); loadMenu(); loadKitchen(); connectSocket();
     document.getElementById('orderDateF').value=new Date().toISOString().slice(0,10);
-  } else { document.getElementById('loginErr').style.display='block'; }
+  } else {
+    errEl.textContent='Invalid email or password.';
+    errEl.style.display='block';
+    document.getElementById('loginPass').value='';
+  }
 }
 function logout(){
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginEmail').value='';
   document.getElementById('loginPass').value='';
+}
+function toggleForgot(){
+  const box=document.getElementById('forgotBox');
+  box.style.display=box.style.display==='block'?'none':'block';
 }
 
 // ── PANELS ──

@@ -797,12 +797,16 @@ app.patch('/api/settings', (req, res) => {
 });
 
 // ── ADMIN API ────────────────────────────────────────────────────────────────
-const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'lasiesta2024';
+const ADMIN_PASS  = process.env.ADMIN_PASSWORD || 'lasiesta2024';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL    || 'admin@lasiesta.in';
 
 app.post('/api/admin/login', (req, res) => {
-  req.body.password === ADMIN_PASS
+  const { email, password } = req.body;
+  const emailOk = email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase();
+  const passOk  = password === ADMIN_PASS;
+  (emailOk && passOk)
     ? res.json({ success: true })
-    : res.status(401).json({ error: 'Wrong password' });
+    : res.status(401).json({ error: 'Invalid email or password' });
 });
 
 app.get('/api/admin/menu', (req, res) => {
