@@ -1626,6 +1626,40 @@
     }
   }
 
+  // Real-time item availability update
+  function applyItemAvailability(id, available) {
+    // Update the in-memory menu data
+    for (const cat of menu) {
+      const item = cat.items.find(i => i.id === id);
+      if (item) { item.is_available = available; break; }
+    }
+    // Update the control cell (add/qty button → "Not Available" badge or vice versa)
+    const ctrl = document.getElementById('ctrl-' + id);
+    const card = document.getElementById('card-' + id);
+    if (!ctrl) return;
+    if (!available) {
+      // Mark unavailable
+      ctrl.innerHTML = `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`;
+      if (card) card.style.opacity = '0.55';
+    } else {
+      // Mark available again — show ADD button (qty likely 0)
+      const qty = cart[id]?.qty || 0;
+      ctrl.innerHTML = qty === 0
+        ? `<button class="add-btn" onclick="addItem(${id})"><span>+</span> ADD</button>`
+        : `<div class="qty-ctrl">
+             <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+             <span class="qty-num">${qty}</span>
+             <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+           </div>`;
+      if (card) card.style.opacity = '';
+    }
+    // If item was in cart and is now unavailable, remove it
+    if (!available && cart[id]) {
+      delete cart[id];
+      updateCartBar();
+    }
+  }
+
   // Hook into socket for this table's order updates
   (function hookOrdersSocket() {
     function attachSocket() {
@@ -1634,6 +1668,7 @@
         s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
+        s.on('item_availability', ({ id, available }) => applyItemAvailability(id, available));
         return;
       }
       const sc = document.createElement('script');
@@ -1643,6 +1678,7 @@
         s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
+        s.on('item_availability', ({ id, available }) => applyItemAvailability(id, available));
       };
       document.body.appendChild(sc);
     }
