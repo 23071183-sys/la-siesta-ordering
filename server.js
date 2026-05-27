@@ -751,8 +751,15 @@ app.get('/api/tables', (req, res) => {
 app.post('/api/tables', (req, res) => {
   const { area = 'indoor' } = req.body;
   const a = area.toLowerCase();
-  const last = db.prepare('SELECT MAX(number) as mx FROM tables WHERE area = ?').get(a);
-  const number = (last.mx || 0) + 1;
+  // Use MAX across both current rows AND the settings counter so deleting tables
+  // never causes the sequence to reset (T6 stays T6 even if T5 was removed).
+  const fromRows    = db.prepare('SELECT MAX(number) as mx FROM tables WHERE area = ?').get(a).mx || 0;
+  const counterKey  = `table_seq_${a}`;
+  const fromCounter = Number(db.prepare("SELECT value FROM settings WHERE key = ?").get(counterKey)?.value || 0);
+  const number = Math.max(fromRows, fromCounter) + 1;
+  // Persist the new high-water mark
+  db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .run(counterKey, String(number));
   const label = `T${number}`;
   db.prepare('INSERT INTO tables (area, number, label) VALUES (?, ?, ?)').run(a, number, label);
   const row = db.prepare('SELECT * FROM tables WHERE area = ? AND number = ?').get(a, number);
