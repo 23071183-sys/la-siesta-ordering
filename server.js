@@ -751,10 +751,9 @@ app.get('/api/tables', (req, res) => {
 app.post('/api/tables', (req, res) => {
   const { area = 'indoor' } = req.body;
   const a = area.toLowerCase();
-  // Use MAX across both current rows AND the settings counter so deleting tables
-  // never causes the sequence to reset (T6 stays T6 even if T5 was removed).
-  const fromRows    = db.prepare('SELECT MAX(number) as mx FROM tables WHERE area = ?').get(a).mx || 0;
-  const counterKey  = `table_seq_${a}`;
+  // Global sequence — T numbers are unique across ALL areas, never reset
+  const fromRows    = db.prepare('SELECT MAX(number) as mx FROM tables').get().mx || 0;
+  const counterKey  = 'table_seq_global';
   const fromCounter = Number(db.prepare("SELECT value FROM settings WHERE key = ?").get(counterKey)?.value || 0);
   const number = Math.max(fromRows, fromCounter) + 1;
   // Persist the new high-water mark
