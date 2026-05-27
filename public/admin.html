@@ -195,6 +195,44 @@
     .top-item-name { font-size:.8rem; min-width:140px; font-weight:500; }
     .top-item-qty { font-size:.75rem; color:var(--muted); min-width:35px; text-align:right; }
 
+    /* WELCOME */
+    .welcome-row { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.4rem; }
+    .welcome-msg h2 { font-size:1.2rem; font-weight:700; color:var(--dark); }
+    .welcome-msg p  { font-size:.75rem; color:var(--muted); margin-top:.25rem; }
+    .date-range-row { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+    .dr-pill { padding:.32rem .8rem; border-radius:2rem; border:1.5px solid var(--bdr); background:none; font-family:'DM Sans',sans-serif; font-size:.73rem; font-weight:600; cursor:pointer; color:var(--muted); transition:all .15s; white-space:nowrap; }
+    .dr-pill.on { background:var(--dark); border-color:var(--dark); color:var(--cream); }
+    .dr-sep { color:#ccc; font-size:.75rem; }
+
+    /* SALES CHART */
+    .chart-wrap { overflow-x:auto; padding-bottom:.5rem; }
+    .chart-svg { display:block; }
+    .chart-bar { fill:rgba(212,85,42,.75); transition:fill .15s; cursor:default; rx:4; }
+    .chart-bar:hover { fill:var(--or); }
+    .chart-zero { font-family:'DM Sans',sans-serif; font-size:10px; fill:#aaa; }
+
+    /* REPORTS */
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.4rem; }
+    .rep-tbl { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .rep-tbl th { text-align:left; font-size:.65rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:.4rem .6rem; border-bottom:1.5px solid var(--bdr); }
+    .rep-tbl td { padding:.55rem .6rem; border-bottom:1px solid var(--bdr); }
+    .rep-tbl tr:last-child td { border-bottom:none; }
+    .rep-tbl tr:hover td { background:#fdfaf7; }
+    .export-btn { padding:.35rem .85rem; border:1.5px solid var(--bdr); border-radius:7px; background:#fff; font-family:'DM Sans',sans-serif; font-size:.75rem; font-weight:600; cursor:pointer; color:var(--muted); transition:all .15s; }
+    .export-btn:hover { border-color:var(--grn); color:var(--grn); }
+
+    /* SETTINGS */
+    .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .setting-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 0; border-bottom:1px solid var(--bdr); }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-lbl { font-size:.87rem; font-weight:500; color:var(--dark); }
+    .setting-sub { font-size:.72rem; color:var(--muted); margin-top:.15rem; }
+
+    @media(max-width:700px) {
+      .rep-grid { grid-template-columns:1fr; }
+      .settings-grid { grid-template-columns:1fr; }
+      .welcome-row { flex-direction:column; }
+    }
     @media(max-width:600px) {
       .content { padding:.9rem; }
       .kitchen-grid { grid-template-columns:1fr; }
@@ -245,6 +283,8 @@
       <button class="nav-tab" onclick="showPanel('menu',this)">Menu</button>
       <button class="nav-tab" onclick="showPanel('orders',this)">Orders</button>
       <button class="nav-tab" onclick="showPanel('tables',this)">Tables</button>
+      <button class="nav-tab" onclick="showPanel('reports',this)">Reports</button>
+      <button class="nav-tab" onclick="showPanel('settings',this)">Settings</button>
     </div>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </nav>
@@ -253,13 +293,43 @@
 
     <!-- DASHBOARD -->
     <div class="panel active" id="panel-dash">
+      <!-- Welcome + date range -->
+      <div class="welcome-row">
+        <div class="welcome-msg">
+          <h2 id="welcomeMsg">Welcome 👋</h2>
+          <p id="welcomeSub">Loading…</p>
+        </div>
+        <div class="date-range-row">
+          <button class="dr-pill on" onclick="setDR('today',this)">Today</button>
+          <button class="dr-pill" onclick="setDR('week',this)">This Week</button>
+          <button class="dr-pill" onclick="setDR('month',this)">This Month</button>
+          <button class="dr-pill" onclick="setDR('last_month',this)">Last Month</button>
+          <span class="dr-sep">|</span>
+          <input type="date" id="drFrom" class="search-bar" style="width:135px" onchange="setDR('custom',null)">
+          <span class="dr-sep">→</span>
+          <input type="date" id="drTo" class="search-bar" style="width:135px" onchange="setDR('custom',null)">
+        </div>
+      </div>
+
+      <!-- Stats -->
       <div class="stat-grid" id="dashStats"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;flex-wrap:wrap" id="dashGrid">
-        <div class="card" id="topItemsCard">
-          <div class="card-hd"><div class="card-title">Top Selling Items</div><span class="card-sub" id="topItemsSub">Today</span></div>
+
+      <!-- Sales chart -->
+      <div class="card" style="margin-bottom:1.4rem">
+        <div class="card-hd">
+          <div class="card-title">Revenue Performance</div>
+          <span class="card-sub" id="chartPeriodLbl"></span>
+        </div>
+        <div class="chart-wrap" id="salesChartWrap"><div class="empty">Loading chart…</div></div>
+      </div>
+
+      <!-- Bottom row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Top Selling Items</div><span class="card-sub" id="topItemsSub"></span></div>
           <div id="topItemsList"></div>
         </div>
-        <div class="card" id="recentActivity">
+        <div class="card">
           <div class="card-hd"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="loadDash()">↻</button></div>
           <div id="recentList"></div>
         </div>
@@ -361,6 +431,90 @@
       </div>
     </div>
 
+    <!-- REPORTS -->
+    <div class="panel" id="panel-reports">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">Reports</div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <input type="date" id="repFrom" class="search-bar" style="width:140px">
+          <span style="color:#bbb;font-size:.8rem">→</span>
+          <input type="date" id="repTo" class="search-bar" style="width:140px">
+          <button class="btn btn-or btn-sm" onclick="loadReports()">Generate</button>
+          <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+
+      <div class="rep-grid" id="repSummary"></div>
+
+      <div class="card">
+        <div class="card-hd"><div class="card-title">Daily Breakdown</div></div>
+        <div id="repDailyWrap"><div class="empty">Select a date range and click Generate.</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Top Items</div></div>
+          <div id="repTopItems"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Orders by Type</div></div>
+          <div id="repByType"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="settings-grid">
+
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Restaurant Settings</div></div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Restaurant Name</div><div class="setting-sub">Shown on receipts & menu</div></div>
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <input class="inline-inp" id="setRestName" type="text" value="La Siesta" style="width:120px">
+              <button class="btn btn-or btn-sm" onclick="saveSetting('restaurant_name',document.getElementById('setRestName').value)">Save</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Online Ordering</div><div class="setting-sub">Allow customers to order via QR menu</div></div>
+            <label class="toggle" id="orderingToggleWrap">
+              <input type="checkbox" id="orderingToggle" onchange="saveSetting('ordering_enabled', this.checked?'1':'0')">
+              <div class="toggle-track"></div><div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">GST / Tax Rate</div><div class="setting-sub">Applied to all orders (%)</div></div>
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <input class="inline-inp" id="setTaxRate" type="number" value="5" min="0" max="30" style="width:70px">
+              <button class="btn btn-or btn-sm" onclick="saveSetting('tax_rate',document.getElementById('setTaxRate').value)">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Account</div></div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Admin Email</div><div class="setting-sub">Used to log in</div></div>
+            <span id="settingEmail" style="font-size:.82rem;color:var(--muted)">—</span>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Password</div><div class="setting-sub">Set via Render environment variables</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">ADMIN_PASSWORD</span>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">POS PIN</div><div class="setting-sub">Set via Render environment variables</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">POS_PIN</span>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div><div class="setting-lbl">Session Token TTL</div><div class="setting-sub">Tokens expire after 24 hours</div></div>
+            <span style="font-size:.82rem;color:var(--muted)">24h</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /app -->
 
@@ -394,7 +548,7 @@ async function doLogin(){
     errEl.style.display='none';
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').classList.add('visible');
-    loadDash(); loadMenu(); loadKitchen(); connectSocket();
+    loadDash(); loadMenu(); loadKitchen(); connectSocket(); initDateInputs();
     document.getElementById('orderDateF').value=new Date().toISOString().slice(0,10);
   } else {
     const data=await r.json().catch(()=>({}));
@@ -419,12 +573,18 @@ function toggleForgot(){
   box.style.display=box.style.display==='block'?'none':'block';
 }
 
+function initDateInputs(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('drFrom').value=today;
+  document.getElementById('drTo').value=today;
+}
+
 // Auto-restore session on page load
 window.addEventListener('DOMContentLoaded',()=>{
   if(_token){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').classList.add('visible');
-    loadDash(); loadMenu(); loadKitchen(); connectSocket();
+    loadDash(); loadMenu(); loadKitchen(); connectSocket(); initDateInputs();
     document.getElementById('orderDateF').value=new Date().toISOString().slice(0,10);
   }
 });
@@ -439,6 +599,8 @@ function showPanel(name,btn){
   if(name==='orders')loadOrders();
   if(name==='dash')loadDash();
   if(name==='tables')loadTables();
+  if(name==='reports')initReports();
+  if(name==='settings')loadSettings();
 }
 
 // ── TOAST ──
@@ -449,55 +611,145 @@ function toast(msg){
   clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
+// ── DATE RANGE HELPERS ──
+let _drMode='today';
+function drRange(){
+  const now=new Date(); const d=s=>s.toISOString().slice(0,10);
+  if(_drMode==='today'){
+    const t=d(now); return {from:t,to:t,label:'Today'};
+  } else if(_drMode==='week'){
+    const mon=new Date(now); mon.setDate(now.getDate()-now.getDay()+1);
+    return {from:d(mon),to:d(now),label:'This Week'};
+  } else if(_drMode==='month'){
+    return {from:d(new Date(now.getFullYear(),now.getMonth(),1)),to:d(now),label:'This Month'};
+  } else if(_drMode==='last_month'){
+    const f=new Date(now.getFullYear(),now.getMonth()-1,1);
+    const t=new Date(now.getFullYear(),now.getMonth(),0);
+    return {from:d(f),to:d(t),label:'Last Month'};
+  } else {
+    const from=document.getElementById('drFrom').value;
+    const to=document.getElementById('drTo').value;
+    return {from,to,label:`${from} → ${to}`};
+  }
+}
+function setDR(mode,btn){
+  _drMode=mode;
+  document.querySelectorAll('.dr-pill').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  loadDash();
+}
+
+// ── SALES SVG CHART ──
+function renderSalesChart(days){ // days: [{date,rev}]
+  if(!days.length){document.getElementById('salesChartWrap').innerHTML='<div class="empty">No data for this period</div>';return;}
+  const W=Math.max(days.length*52,400), H=160, pad={l:44,r:16,t:10,b:32};
+  const iW=W-pad.l-pad.r, iH=H-pad.t-pad.b;
+  const maxRev=Math.max(...days.map(d=>d.rev),1);
+  const bw=Math.min(36, iW/days.length-4);
+  const barX=(i)=>pad.l + i*(iW/days.length) + (iW/days.length-bw)/2;
+  const barH=(rev)=>Math.max(2,rev/maxRev*iH);
+  const fmt=(n)=>n>=1000?'₹'+(n/1000).toFixed(1)+'k':'₹'+n;
+
+  const bars=days.map((d,i)=>{
+    const h=barH(d.rev); const x=barX(i); const y=pad.t+iH-h;
+    const lbl=d.date.slice(5); // MM-DD
+    return `<rect class="chart-bar" x="${x}" y="${y}" width="${bw}" height="${h}" rx="3">
+      <title>${d.date}: ${fmt(d.rev)} (${d.cnt} orders)</title></rect>
+      <text class="chart-zero" x="${x+bw/2}" y="${H-pad.b+14}" text-anchor="middle">${lbl}</text>
+      ${d.rev>0?`<text class="chart-zero" x="${x+bw/2}" y="${y-4}" text-anchor="middle" style="font-size:9px;fill:var(--or)">${fmt(d.rev)}</text>`:''}`;
+  }).join('');
+
+  // Y-axis labels
+  const yLabels=[0,.25,.5,.75,1].map(p=>{
+    const y=pad.t+iH*(1-p); const v=maxRev*p;
+    return `<text class="chart-zero" x="${pad.l-6}" y="${y+4}" text-anchor="end">${fmt(Math.round(v))}</text>
+      <line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#f0ece8" stroke-width="1"/>`;
+  }).join('');
+
+  document.getElementById('salesChartWrap').innerHTML=`
+    <div class="chart-wrap">
+      <svg class="chart-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        ${yLabels}${bars}
+        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t+iH}" stroke="#ddd" stroke-width="1"/>
+      </svg>
+    </div>`;
+}
+
 // ── DASHBOARD ──
+let _dashOrders=[];
 async function loadDash(){
   const r=await fetch('/api/orders?status=all');
-  const orders=await r.json();
-  const today=new Date().toDateString();
-  const tod=orders.filter(o=>new Date(o.created_at).toDateString()===today);
-  const active=orders.filter(o=>!['settled','cancelled'].includes(o.status));
-  const rev=tod.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
-  const avgArr=tod.filter(o=>o.status!=='cancelled');
-  const avg=avgArr.length?avgArr.reduce((s,o)=>s+(o.total||0),0)/avgArr.length:0;
+  _dashOrders=await r.json();
+
+  const {from,to,label}=drRange();
+  document.getElementById('chartPeriodLbl').textContent=label;
+  document.getElementById('topItemsSub').textContent=label;
+
+  // Welcome
+  const now=new Date();
+  document.getElementById('welcomeMsg').textContent='Welcome, Admin 👋';
+  document.getElementById('welcomeSub').textContent=
+    `Last synced ${now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+
+  // Filter to range
+  const inRange=_dashOrders.filter(o=>{
+    const d=new Date(o.created_at).toISOString().slice(0,10);
+    return d>=from&&d<=to;
+  });
+  const active=_dashOrders.filter(o=>!['settled','cancelled'].includes(o.status));
+  const rev=inRange.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
+  const totalRev=inRange.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
+  const avgArr=inRange.filter(o=>o.status!=='cancelled');
+  const avg=avgArr.length?totalRev/avgArr.length:0;
 
   document.getElementById('dashStats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">${tod.length}</div><div class="stat-lbl">Orders Today</div></div>
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">₹${rev.toFixed(0)}</div><div class="stat-lbl">Revenue Today</div></div>
-    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-val">${active.length}</div><div class="stat-lbl">Active Orders</div></div>
-    <div class="stat-card"><div class="stat-icon">⏱</div><div class="stat-val">${orders.filter(o=>o.status==='pending').length}</div><div class="stat-lbl">Pending</div></div>
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">${inRange.length}</div><div class="stat-lbl">Orders</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">₹${rev.toFixed(0)}</div><div class="stat-lbl">Settled Revenue</div></div>
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-val">${active.length}</div><div class="stat-lbl">Active Now</div></div>
+    <div class="stat-card"><div class="stat-icon">⏱</div><div class="stat-val">${_dashOrders.filter(o=>o.status==='pending').length}</div><div class="stat-lbl">Pending Now</div></div>
     <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-val">₹${avg.toFixed(0)}</div><div class="stat-lbl">Avg Order</div></div>
-    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${tod.filter(o=>o.status==='settled').length}</div><div class="stat-lbl">Settled Today</div></div>`;
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">${inRange.filter(o=>o.status==='settled').length}</div><div class="stat-lbl">Settled</div></div>`;
+
+  // Build daily chart data
+  const dayMap={};
+  const dCur=new Date(from);
+  const dEnd=new Date(to);
+  while(dCur<=dEnd){
+    dayMap[dCur.toISOString().slice(0,10)]={rev:0,cnt:0};
+    dCur.setDate(dCur.getDate()+1);
+  }
+  inRange.forEach(o=>{
+    const d=new Date(o.created_at).toISOString().slice(0,10);
+    if(dayMap[d]&&o.status!=='cancelled'){dayMap[d].rev+=(o.total||0);dayMap[d].cnt++;}
+  });
+  renderSalesChart(Object.entries(dayMap).map(([date,v])=>({date,...v})));
 
   // Top items
   const itemCt={};
-  tod.forEach(o=>(o.items||[]).forEach(i=>{
-    itemCt[i.item_name]=(itemCt[i.item_name]||0)+i.quantity;
-  }));
+  inRange.forEach(o=>(o.items||[]).forEach(i=>{itemCt[i.item_name]=(itemCt[i.item_name]||0)+i.quantity;}));
   const sorted=Object.entries(itemCt).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const max=sorted[0]?.[1]||1;
+  const mx=sorted[0]?.[1]||1;
   document.getElementById('topItemsList').innerHTML=sorted.length?`
-    <div class="top-items-list">
-      ${sorted.map(([name,qty])=>`
-        <div class="top-item">
-          <div class="top-item-name">${name}</div>
-          <div class="top-item-bar"><div class="top-item-fill" style="width:${(qty/max*100).toFixed(0)}%"></div></div>
-          <div class="top-item-qty">${qty}</div>
-        </div>`).join('')}
-    </div>`:'<div class="empty">No sales data today</div>';
+    <div class="top-items-list">${sorted.map(([name,qty])=>`
+      <div class="top-item">
+        <div class="top-item-name">${name}</div>
+        <div class="top-item-bar"><div class="top-item-fill" style="width:${(qty/mx*100).toFixed(0)}%"></div></div>
+        <div class="top-item-qty">${qty}</div>
+      </div>`).join('')}
+    </div>`:'<div class="empty">No sales data</div>';
 
   // Recent orders
-  const recent=[...orders].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,8);
+  const recent=[..._dashOrders].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,8);
   document.getElementById('recentList').innerHTML=recent.length?`
-    <div class="order-rows">
-      ${recent.map(o=>`
-        <div class="order-row" style="cursor:default">
-          <div class="or-tbl">T${o.table_number}<span>${o.order_type||'indoor'}</span></div>
-          <div class="or-body">
-            <div class="or-items">${(o.items||[]).map(i=>i.quantity+'× '+i.item_name).join(' · ')}</div>
-            <div class="or-meta">${o.customer_name||'Guest'} · ${new Date(o.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
-          </div>
-          <div class="or-right"><div class="or-total">₹${Number(o.total||0).toFixed(0)}</div><span class="status-pill ${o.status}">${o.status}</span></div>
-        </div>`).join('')}
+    <div class="order-rows">${recent.map(o=>`
+      <div class="order-row" style="cursor:default">
+        <div class="or-tbl">T${o.table_number}<span>${o.order_type||'indoor'}</span></div>
+        <div class="or-body">
+          <div class="or-items">${(o.items||[]).map(i=>i.quantity+'× '+i.item_name).join(' · ')}</div>
+          <div class="or-meta">${o.customer_name||'Guest'} · ${new Date(o.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div class="or-right"><div class="or-total">₹${Number(o.total||0).toFixed(0)}</div><span class="status-pill ${o.status}">${o.status}</span></div>
+      </div>`).join('')}
     </div>`:'<div class="empty">No orders yet</div>';
 }
 
@@ -554,7 +806,7 @@ function kCard(o){
   </div>`;
 }
 async function setStatus(id,status){
-  await fetch(`/api/orders/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+  await adminFetch(`/api/orders/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
   const idx=allOrders.findIndex(o=>o.id===id);
   if(idx!==-1){allOrders[idx].status=status;renderKCounts();renderKitchen();}
   const labels={preparing:'Accepted — preparing',done:'Marked ready!',settled:'Order settled ✓'};
@@ -764,6 +1016,122 @@ async function delTable(id){
   if(!confirm(`Remove Table T${t?.number}?`))return;
   await fetch(`/api/tables/${id}`,{method:'DELETE'});
   toast('Table removed'); loadTables();
+}
+
+// ── REPORTS ──
+let _repOrders=[];
+function initReports(){
+  const now=new Date();
+  const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('repFrom').value=`${y}-${m}-01`;
+  document.getElementById('repTo').value=now.toISOString().slice(0,10);
+}
+async function loadReports(){
+  const from=document.getElementById('repFrom').value;
+  const to=document.getElementById('repTo').value;
+  if(!from||!to){toast('Select a date range');return;}
+  const r=await fetch('/api/orders?status=all');
+  const all=await r.json();
+  _repOrders=all.filter(o=>{
+    const d=new Date(o.created_at).toISOString().slice(0,10);
+    return d>=from&&d<=to&&o.status!=='cancelled';
+  });
+
+  const settled=_repOrders.filter(o=>o.status==='settled');
+  const rev=settled.reduce((s,o)=>s+(o.total||0),0);
+  const avg=_repOrders.length?_repOrders.reduce((s,o)=>s+(o.total||0),0)/_repOrders.length:0;
+  const tables=new Set(_repOrders.map(o=>o.table_number)).size;
+
+  document.getElementById('repSummary').innerHTML=`
+    <div class="card"><div class="card-hd"><div class="card-title">Total Orders</div></div><div style="font-size:2rem;font-weight:700;color:var(--dark)">${_repOrders.length}</div></div>
+    <div class="card"><div class="card-hd"><div class="card-title">Settled Revenue</div></div><div style="font-size:2rem;font-weight:700;color:var(--dark)">₹${rev.toFixed(0)}</div></div>
+    <div class="card"><div class="card-hd"><div class="card-title">Avg Order Value</div></div><div style="font-size:2rem;font-weight:700;color:var(--dark)">₹${avg.toFixed(0)}</div></div>
+    <div class="card"><div class="card-hd"><div class="card-title">Tables Served</div></div><div style="font-size:2rem;font-weight:700;color:var(--dark)">${tables}</div></div>`;
+
+  // Daily breakdown
+  const dayMap={};
+  const dCur=new Date(from), dEnd=new Date(to);
+  while(dCur<=dEnd){dayMap[dCur.toISOString().slice(0,10)]={cnt:0,rev:0};dCur.setDate(dCur.getDate()+1);}
+  _repOrders.forEach(o=>{
+    const d=new Date(o.created_at).toISOString().slice(0,10);
+    if(dayMap[d]){dayMap[d].cnt++;dayMap[d].rev+=(o.total||0);}
+  });
+  const days=Object.entries(dayMap).filter(([,v])=>v.cnt>0).sort((a,b)=>b[0].localeCompare(a[0]));
+  document.getElementById('repDailyWrap').innerHTML=days.length?`
+    <table class="rep-tbl"><thead><tr><th>Date</th><th>Orders</th><th>Revenue</th><th>Avg Order</th></tr></thead>
+    <tbody>${days.map(([date,v])=>`
+      <tr><td>${new Date(date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td>${v.cnt}</td><td style="font-weight:600">₹${v.rev.toFixed(0)}</td>
+      <td>₹${v.cnt?( v.rev/v.cnt).toFixed(0):0}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">No orders in this range.</div>';
+
+  // Top items
+  const iMap={};
+  _repOrders.forEach(o=>(o.items||[]).forEach(i=>{
+    if(!iMap[i.item_name]) iMap[i.item_name]={qty:0,rev:0};
+    iMap[i.item_name].qty+=i.quantity;
+    iMap[i.item_name].rev+=i.item_price*i.quantity;
+  }));
+  const topI=Object.entries(iMap).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+  document.getElementById('repTopItems').innerHTML=topI.length?`
+    <table class="rep-tbl"><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Revenue</th></tr></thead>
+    <tbody>${topI.map(([name,v],i)=>`
+      <tr><td style="color:var(--muted)">${i+1}</td><td style="font-weight:500">${name}</td>
+      <td>${v.qty}</td><td>₹${v.rev.toFixed(0)}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">No data</div>';
+
+  // By type
+  const typeMap={};
+  _repOrders.forEach(o=>{const t=o.order_type||'indoor';if(!typeMap[t]){typeMap[t]={cnt:0,rev:0};}typeMap[t].cnt++;typeMap[t].rev+=(o.total||0);});
+  document.getElementById('repByType').innerHTML=Object.entries(typeMap).length?`
+    <table class="rep-tbl"><thead><tr><th>Type</th><th>Orders</th><th>Revenue</th></tr></thead>
+    <tbody>${Object.entries(typeMap).map(([t,v])=>`
+      <tr><td style="text-transform:capitalize;font-weight:500">${t}</td>
+      <td>${v.cnt}</td><td>₹${v.rev.toFixed(0)}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">No data</div>';
+
+  toast('Report generated ✓');
+}
+function exportCSV(){
+  if(!_repOrders.length){toast('Generate a report first');return;}
+  const rows=[['Order ID','Date','Time','Table','Customer','Type','Items','Total','Status','Discount','Tip']];
+  _repOrders.forEach(o=>{
+    const d=new Date(o.created_at);
+    rows.push([
+      '#'+String(o.id).padStart(4,'0'),
+      d.toLocaleDateString('en-IN'),
+      d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+      'T'+o.table_number,
+      o.customer_name||'Guest',
+      o.order_type||'indoor',
+      (o.items||[]).map(i=>i.quantity+'x '+i.item_name).join('; '),
+      o.total?.toFixed(2)||0,
+      o.status,
+      o.discount?.toFixed(2)||0,
+      o.tip?.toFixed(2)||0,
+    ]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`lasiesta-orders-${document.getElementById('repFrom').value}-to-${document.getElementById('repTo').value}.csv`;
+  a.click();
+}
+
+// ── SETTINGS ──
+async function loadSettings(){
+  const r=await fetch('/api/settings');
+  const settings=await r.json();
+  const get=k=>settings.find(s=>s.key===k)?.value;
+  if(get('restaurant_name')) document.getElementById('setRestName').value=get('restaurant_name');
+  if(get('tax_rate')) document.getElementById('setTaxRate').value=get('tax_rate');
+  document.getElementById('orderingToggle').checked = get('ordering_enabled')!=='0';
+  // show email from token context (just display placeholder)
+  document.getElementById('settingEmail').textContent=document.getElementById('loginEmail')?.value||'admin@lasiesta.in';
+}
+async function saveSetting(key,value){
+  await adminFetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value:String(value)})});
+  toast(`${key.replace(/_/g,' ')} saved ✓`);
 }
 
 // ── SOCKET.IO ──
