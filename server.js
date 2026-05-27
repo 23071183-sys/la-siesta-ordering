@@ -574,7 +574,7 @@ app.post('/api/coupons/redeem', (req, res) => {
 
 // ── ORDER API ────────────────────────────────────────────────────────────────
 app.post('/api/orders', (req, res) => {
-  const { table_number, customer_name, customer_phone, notes, items, coupon_code } = req.body;
+  const { table_number, customer_name, customer_phone, notes, items, coupon_code, order_type } = req.body;
   if (!table_number || !items?.length) {
     return res.status(400).json({ error: 'table_number and items are required' });
   }
@@ -600,7 +600,7 @@ app.post('/api/orders', (req, res) => {
   const total = +(subtotal - discountAmt).toFixed(2);
 
   const insertOrder = db.prepare(
-    'INSERT INTO orders (table_number, customer_name, customer_phone, notes, total, discount, coupon_code) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO orders (table_number, customer_name, customer_phone, notes, total, discount, coupon_code, order_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   );
   const insertItem = db.prepare(
     'INSERT INTO order_items (order_id, item_id, item_name, item_price, quantity, notes) VALUES (?, ?, ?, ?, ?, ?)'
@@ -611,7 +611,8 @@ app.post('/api/orders', (req, res) => {
   try {
     const { lastInsertRowid } = insertOrder.run(
       table_number, customer_name || '', customer_phone || '', notes || '',
-      total, discountAmt, coupon_code ? coupon_code.trim().toUpperCase() : ''
+      total, discountAmt, coupon_code ? coupon_code.trim().toUpperCase() : '',
+      (order_type || 'indoor').toLowerCase()
     );
     for (const item of items) {
       insertItem.run(lastInsertRowid, item.id || item.item_id, item.name || item.item_name || '', item.price || item.item_price, item.quantity, item.notes || '');
