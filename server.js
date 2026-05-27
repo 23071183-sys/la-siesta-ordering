@@ -427,6 +427,15 @@ app.get('/api/menu', (req, res) => {
   if (!cols.includes('order_type'))   db.prepare("ALTER TABLE orders ADD COLUMN order_type   TEXT DEFAULT 'indoor'").run();
   if (!cols.includes('coupon_code'))  db.prepare("ALTER TABLE orders ADD COLUMN coupon_code  TEXT DEFAULT ''").run();
 
+  // Tables — physical table slots per area
+  db.prepare(`CREATE TABLE IF NOT EXISTS tables (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    area   TEXT    NOT NULL DEFAULT 'indoor',
+    number INTEGER NOT NULL,
+    label  TEXT    NOT NULL DEFAULT '',
+    UNIQUE(area, number)
+  )`).run();
+
   // Settings table — key/value store for site config
   db.prepare(`CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
@@ -728,6 +737,35 @@ app.patch('/api/orders/:id/tip', (req, res) => {
   updated.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(req.params.id);
   io.emit('order_updated', updated);
   res.json(updated);
+});
+
+// ── TABLES API ───────────────────────────────────────────────────────────────
+app.get('/api/tables', (req, res) => {
+  const { area } = req.query;
+  const rows = area
+    ? db.prepare('SELECT * FROM tables WHERE area = ? ORDER BY number ASC').all(area.toLowerCase())
+    : db.prepare('SELECT * FROM tables ORDER BY area, number ASC').all();
+  res.json(rows);
+});
+
+app.post('/api/tables', (req, res) => {
+  const { area = 'indoor' } = req.body;
+  const a = area.toLowerCase();
+  const last = db.prepare('SELECT MAX(number) as mx FROM tables WHERE area = ?').get(a);
+  const number = (last.mx || 0) + 1;
+  const label = `T${number}`;
+  db.prepare('INSERT INTO tables (area, number, label) VALUES (?, ?, ?)').run(a, number, label);
+  const row = db.prepare('SELECT * FROM tables WHERE area = ? AND number = ?').get(a, number);
+  io.emit('tables_updated', { area: a });
+  res.json(row);
+});
+
+app.delete('/api/tables/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM tables WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  db.prepare('DELETE FROM tables WHERE id = ?').run(req.params.id);
+  io.emit('tables_updated', { area: row.area });
+  res.json({ success: true });
 });
 
 // ── SETTINGS API ─────────────────────────────────────────────────────────────
