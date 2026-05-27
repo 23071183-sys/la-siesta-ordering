@@ -792,6 +792,7 @@ app.put('/api/admin/items/:id', (req, res) => {
   db.prepare(
     'UPDATE menu_items SET name = ?, description = ?, price = ?, available = ? WHERE id = ?'
   ).run(name, description, price, available ? 1 : 0, req.params.id);
+  io.emit('item_availability', { id: Number(req.params.id), available: available ? true : false });
   res.json({ success: true });
 });
 
@@ -804,6 +805,7 @@ app.patch('/api/admin/items/:id/toggle', (req, res) => {
   const item = db.prepare('SELECT available FROM menu_items WHERE id = ?').get(req.params.id);
   const next = item.available ? 0 : 1;
   db.prepare('UPDATE menu_items SET available = ? WHERE id = ?').run(next, req.params.id);
+  io.emit('item_availability', { id: Number(req.params.id), available: next === 1 });
   res.json({ available: next });
 });
 
