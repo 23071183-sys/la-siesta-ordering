@@ -1135,7 +1135,7 @@
     const ctrl = !orderingEnabled
       ? ''
       : unavailable
-        ? `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`
+        ? `<span style="font-size:11px;font-weight:700;color:#fff;background:#c0392b;padding:6px 12px;border-radius:6px;white-space:nowrap;letter-spacing:0.4px;text-transform:uppercase;">Unavailable</span>`
         : qty === 0
           ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
           : `<div class="qty-ctrl">
@@ -1639,7 +1639,7 @@
     if (!ctrl) return;
     if (!available) {
       // Mark unavailable
-      ctrl.innerHTML = `<span style="font-size:11px;font-weight:600;color:#b07070;background:rgba(180,60,60,0.12);padding:5px 10px;border-radius:20px;white-space:nowrap;">Not Available</span>`;
+      ctrl.innerHTML = `<span style="font-size:11px;font-weight:700;color:#fff;background:#c0392b;padding:6px 12px;border-radius:6px;white-space:nowrap;letter-spacing:0.4px;text-transform:uppercase;">Unavailable</span>`;
       if (card) card.style.opacity = '0.55';
     } else {
       // Mark available again — show ADD button (qty likely 0)
