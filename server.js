@@ -677,7 +677,7 @@ app.get('/api/orders/:id', (req, res) => {
   res.json(order);
 });
 
-app.patch('/api/orders/:id/status', (req, res) => {
+app.patch('/api/orders/:id/status', requireAuth, (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'preparing', 'done', 'settled', 'cancelled', 'on_hold'];
   if (!allowed.includes(status)) {
@@ -693,7 +693,7 @@ app.patch('/api/orders/:id/status', (req, res) => {
   res.json(order);
 });
 
-app.patch('/api/orders/:id', (req, res) => {
+app.patch('/api/orders/:id', requireAuth, (req, res) => {
   const { table_number, waiter_name, order_type, customer_name } = req.body;
   const fields = [], vals = [];
   if (table_number  !== undefined) { fields.push('table_number = ?');  vals.push(Number(table_number)); }
@@ -709,7 +709,7 @@ app.patch('/api/orders/:id', (req, res) => {
   res.json(order);
 });
 
-app.patch('/api/orders/:id/discount', (req, res) => {
+app.patch('/api/orders/:id/discount', requireAuth, (req, res) => {
   const { discount, type } = req.body;
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   if (!order) return res.status(404).json({ error: 'Not found' });
@@ -724,7 +724,7 @@ app.patch('/api/orders/:id/discount', (req, res) => {
   res.json(updated);
 });
 
-app.patch('/api/orders/:id/tip', (req, res) => {
+app.patch('/api/orders/:id/tip', requireAuth, (req, res) => {
   const { tip } = req.body;
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   if (!order) return res.status(404).json({ error: 'Not found' });
@@ -749,7 +749,7 @@ app.get('/api/tables', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/tables', (req, res) => {
+app.post('/api/tables', requireAuth, (req, res) => {
   const { area = 'indoor' } = req.body;
   const a = area.toLowerCase();
   // Global sequence — T numbers are unique across ALL areas, never reset
@@ -767,7 +767,7 @@ app.post('/api/tables', (req, res) => {
   res.json(row);
 });
 
-app.delete('/api/tables/:id', (req, res) => {
+app.delete('/api/tables/:id', requireAuth, (req, res) => {
   const row = db.prepare('SELECT * FROM tables WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });
   db.prepare('DELETE FROM tables WHERE id = ?').run(req.params.id);
@@ -806,37 +806,73 @@ if (!ADMIN_PASS || !ADMIN_EMAIL) {
 }
 const TOKEN_TTL   = 24 * 60 * 60 * 1000; // 24 hours
 
-// Session store: token -> expiry timestamp
+// Session store: token -> { expiry, role }
 const sessions = new Map();
 
-// Prune expired tokens every hour
+// Prune expired sessions every hour
 setInterval(() => {
   const now = Date.now();
-  for (const [token, exp] of sessions) if (exp < now) sessions.delete(token);
+  for (const [token, s] of sessions) if (s.expiry < now) sessions.delete(token);
 }, 60 * 60 * 1000);
 
-// Rate limiter: max 10 login attempts per IP per 15 min
+// Rate limiter: max 10 attempts per IP per 15 min
 const loginAttempts = new Map();
 function checkRateLimit(ip) {
   const now = Date.now();
-  const window = 15 * 60 * 1000;
-  const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + window };
-  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + window; }
+  const win = 15 * 60 * 1000;
+  const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + win };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + win; }
   entry.count++;
   loginAttempts.set(ip, entry);
   return entry.count <= 10;
 }
 
-// Auth middleware — applied to all /api/admin/* except login
-function requireAdmin(req, res, next) {
+function getSession(req) {
   const header = req.headers['authorization'] || '';
   const token  = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token || !sessions.has(token) || sessions.get(token) < Date.now()) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!token) return null;
+  const s = sessions.get(token);
+  return (s && s.expiry > Date.now()) ? s : null;
+}
+
+// requireAdmin — only admin-role tokens
+function requireAdmin(req, res, next) {
+  const s = getSession(req);
+  if (!s || s.role !== 'admin') return res.status(401).json({ error: 'Unauthorized' });
   next();
 }
 
+// requireAuth — any valid token (admin or pos)
+function requireAuth(req, res, next) {
+  const s = getSession(req);
+  if (!s) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
+// ── POS LOGIN ──────────────────────────────────────────────────────────────
+const POS_PIN = process.env.POS_PIN;
+if (!POS_PIN) { console.error('[FATAL] POS_PIN env var must be set'); process.exit(1); }
+
+app.post('/api/pos/login', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
+  }
+  if (req.body.pin === POS_PIN) {
+    const token = crypto.randomBytes(32).toString('hex');
+    sessions.set(token, { expiry: Date.now() + TOKEN_TTL, role: 'pos' });
+    return res.json({ token });
+  }
+  res.status(401).json({ error: 'Wrong PIN' });
+});
+
+app.post('/api/pos/logout', requireAuth, (req, res) => {
+  const token = req.headers['authorization'].slice(7);
+  sessions.delete(token);
+  res.json({ success: true });
+});
+
+// ── ADMIN LOGIN ────────────────────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
   const ip = req.ip || req.connection.remoteAddress;
   if (!checkRateLimit(ip)) {
@@ -847,7 +883,7 @@ app.post('/api/admin/login', (req, res) => {
   const passOk  = password === ADMIN_PASS;
   if (emailOk && passOk) {
     const token = crypto.randomBytes(32).toString('hex');
-    sessions.set(token, Date.now() + TOKEN_TTL);
+    sessions.set(token, { expiry: Date.now() + TOKEN_TTL, role: 'admin' });
     return res.json({ token });
   }
   res.status(401).json({ error: 'Invalid email or password' });
