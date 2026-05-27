@@ -9,12 +9,12 @@ services:
       - key: NODE_VERSION
         value: 22.5.0
       - key: ADMIN_PASSWORD
-        value: lasiesta2024
+        sync: false
       - key: ADMIN_EMAIL
-        value: admin@lasiesta.in
+        sync: false
       - key: FAST2SMS_API_KEY
         sync: false
       - key: ULTRAMSG_INSTANCE
-        value: instance177576
+        sync: false
       - key: ULTRAMSG_TOKEN
-        value: qb53ajv2e4amt2vl
+        sync: false

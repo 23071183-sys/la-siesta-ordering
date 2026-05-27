@@ -798,8 +798,12 @@ app.patch('/api/settings', (req, res) => {
 });
 
 // ── ADMIN AUTH ───────────────────────────────────────────────────────────────
-const ADMIN_PASS  = process.env.ADMIN_PASSWORD || 'lasiesta2024';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL    || 'admin@lasiesta.in';
+const ADMIN_PASS  = process.env.ADMIN_PASSWORD;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+if (!ADMIN_PASS || !ADMIN_EMAIL) {
+  console.error('[FATAL] ADMIN_PASSWORD and ADMIN_EMAIL env vars must be set');
+  process.exit(1);
+}
 const TOKEN_TTL   = 24 * 60 * 60 * 1000; // 24 hours
 
 // Session store: token -> expiry timestamp
