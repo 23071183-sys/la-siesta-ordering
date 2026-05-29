@@ -294,6 +294,35 @@
     .subs-item:last-child { border-bottom:none; }
     .subs-bar { width:3px; height:16px; background:var(--or); border-radius:2px; flex-shrink:0; }
 
+    /* ORDER-WISE BREAKUP */
+    .bkp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.85rem; margin-top:.75rem; }
+    .bkp-col { background:#f8fafc; border-radius:10px; padding:.9rem 1rem; border:1.5px solid #f1f5f9; }
+    .bkp-col-lbl { font-size:.6rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; margin-bottom:.45rem; }
+    .bkp-col-val { font-size:1.15rem; font-weight:700; color:#111827; line-height:1.2; }
+    .bkp-col-sub { font-size:.74rem; color:#6b7280; margin-top:.15rem; }
+    .bkp-col-pct { display:inline-block; font-size:.68rem; font-weight:600; background:#ede9fe; color:#7c3aed; border-radius:4px; padding:.1rem .42rem; margin-top:.35rem; }
+
+    /* REVENUE LEAKAGE */
+    .leak-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin-top:.75rem; }
+    .leak-item { border-radius:8px; padding:.75rem .9rem; background:#f9fafb; border-left:3px solid #d1d5db; }
+    .leak-item.red { border-left-color:#ef4444; }
+    .leak-item.orange { border-left-color:#f97316; }
+    .leak-item.blue { border-left-color:#3b82f6; }
+    .leak-item.green { border-left-color:#10b981; }
+    .leak-item.purple { border-left-color:#8b5cf6; }
+    .leak-item.teal { border-left-color:#2dd4bf; }
+    .leak-item-lbl { font-size:.7rem; color:#9ca3af; font-weight:500; letter-spacing:.03em; }
+    .leak-item-val { font-size:1rem; font-weight:700; color:#111827; margin-top:.2rem; }
+
+    /* SIDEBAR DATA CARDS */
+    .sb-data-card { background:#fff; border-radius:14px; padding:1.2rem 1.3rem; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+    .sb-data-title { font-size:.62rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; margin-bottom:.75rem; }
+    .sb-data-row { display:flex; align-items:center; justify-content:space-between; padding:.34rem 0; border-bottom:1px solid #f3f4f6; }
+    .sb-data-row:last-child { border-bottom:none; }
+    .sb-data-label { font-size:.81rem; color:#374151; display:flex; align-items:center; gap:.45rem; }
+    .sb-data-val { font-size:.81rem; font-weight:700; color:#111827; }
+    .sb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
     /* DATE BOX */
     .date-box { display:flex; align-items:center; gap:.35rem; background:#fff; border:1.5px solid #e5e7eb; border-radius:8px; padding:.38rem .85rem; box-shadow:0 1px 4px rgba(0,0,0,.05); }
     .date-box input[type=date] { border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:.82rem; color:#374151; background:transparent; cursor:pointer; width:108px; }
@@ -310,6 +339,8 @@
       .settings-grid { grid-template-columns:1fr; }
       .dash-right { flex-direction:column; }
       .stat-row { grid-template-columns:repeat(2,1fr); }
+      .bkp-grid { grid-template-columns:1fr 1fr; }
+      .leak-grid { grid-template-columns:1fr 1fr; }
     }
     @media(max-width:600px) {
       .content { padding:.9rem; }
@@ -471,6 +502,23 @@
               </div>
             </div>
 
+            <!-- Order-wise Breakup -->
+            <div class="card" style="margin-top:1rem">
+              <div class="card-hd">
+                <div class="card-title">Order-wise Breakup</div>
+                <span class="card-sub" id="bkpSub"></span>
+              </div>
+              <div class="bkp-grid" id="orderBkp"></div>
+            </div>
+
+            <!-- Revenue Leakage -->
+            <div class="card" style="margin-top:1rem">
+              <div class="card-hd">
+                <div class="card-title">Revenue Leakage</div>
+              </div>
+              <div class="leak-grid" id="revLeakage"></div>
+            </div>
+
           </div><!-- /dash-main -->
 
           <!-- RIGHT SIDEBAR -->
@@ -514,6 +562,18 @@
                 <div class="subs-item"><div class="subs-bar"></div>QR Ordering</div>
                 <div class="subs-item"><div class="subs-bar"></div>Reports &amp; Analytics</div>
               </div>
+            </div>
+
+            <!-- Sales Breakup -->
+            <div class="sb-data-card">
+              <div class="sb-data-title">Sales Breakup</div>
+              <div id="salesBkp"><div class="sb-data-row"><span class="sb-data-label">Loading…</span></div></div>
+            </div>
+
+            <!-- Order Type Mix -->
+            <div class="sb-data-card">
+              <div class="sb-data-title">Order Type Mix</div>
+              <div id="payBkp"><div class="sb-data-row"><span class="sb-data-label">Loading…</span></div></div>
             </div>
 
           </div><!-- /dash-right -->
@@ -1024,6 +1084,57 @@ async function loadDash(){
         <div class="or-right"><div class="or-total">₹${Number(o.total||0).toFixed(0)}</div><span class="status-pill ${o.status}">${o.status}</span></div>
       </div>`).join('')}
     </div>`:'<div class="empty">No orders yet</div>';
+
+  // Order-wise Breakup
+  const bkpTypes=[{key:'indoor',lbl:'INDOOR',clr:'#4f46e5'},{key:'outdoor',lbl:'OUTDOOR',clr:'#10b981'},{key:'cabin',lbl:'CABIN',clr:'#f97316'}];
+  const bkpData=bkpTypes.map(t=>{
+    const ords=inRange.filter(o=>o.status!=='cancelled'&&(o.order_type||'indoor')===t.key);
+    const bkpRev=ords.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
+    return {...t,count:ords.length,rev:bkpRev};
+  });
+  const bkpTotal=bkpData.reduce((s,t)=>s+t.rev,0)||1;
+  const bkpSubEl=document.getElementById('bkpSub');
+  if(bkpSubEl) bkpSubEl.textContent=label;
+  document.getElementById('orderBkp').innerHTML=bkpData.map(t=>`
+    <div class="bkp-col">
+      <div class="bkp-col-lbl" style="color:${t.clr}">${t.lbl}</div>
+      <div class="bkp-col-val">₹${t.rev.toFixed(0)}</div>
+      <div class="bkp-col-sub">${t.count} orders</div>
+      <div class="bkp-col-pct">${(t.rev/bkpTotal*100).toFixed(1)}%</div>
+    </div>`).join('');
+
+  // Revenue Leakage
+  const cancelledOrds=inRange.filter(o=>o.status==='cancelled');
+  const cancelledVal=cancelledOrds.reduce((s,o)=>s+(o.total||0),0);
+  const settledTotal=inRange.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
+  const activeUnpaid=inRange.filter(o=>!['settled','cancelled'].includes(o.status));
+  const activeUnpaidVal=activeUnpaid.reduce((s,o)=>s+(o.total||0),0);
+  const estGST=settledTotal*0.05;
+  document.getElementById('revLeakage').innerHTML=`
+    <div class="leak-item red">
+      <div class="leak-item-lbl">Cancelled Bills</div>
+      <div class="leak-item-val">${cancelledOrds.length}</div>
+    </div>
+    <div class="leak-item orange">
+      <div class="leak-item-lbl">Cancelled Value</div>
+      <div class="leak-item-val">₹${cancelledVal.toFixed(0)}</div>
+    </div>
+    <div class="leak-item blue">
+      <div class="leak-item-lbl">Active (Unpaid)</div>
+      <div class="leak-item-val">${activeUnpaid.length} bills · ₹${activeUnpaidVal.toFixed(0)}</div>
+    </div>
+    <div class="leak-item green">
+      <div class="leak-item-lbl">Settled Revenue</div>
+      <div class="leak-item-val">₹${settledTotal.toFixed(0)}</div>
+    </div>
+    <div class="leak-item teal">
+      <div class="leak-item-lbl">Est. GST (5%)</div>
+      <div class="leak-item-val">₹${estGST.toFixed(0)}</div>
+    </div>
+    <div class="leak-item purple">
+      <div class="leak-item-lbl">Net After Tax</div>
+      <div class="leak-item-val">₹${(settledTotal-estGST).toFixed(0)}</div>
+    </div>`;
 }
 
 function updateSidebar(allOrd, inRange, periodRev, periodLabel){
@@ -1053,6 +1164,40 @@ function updateSidebar(allOrd, inRange, periodRev, periodLabel){
       el('sbOrderingStatus').style.color=enabled?'#16a34a':'#dc2626';
     }
   }).catch(()=>{});
+
+  // Sales Breakup
+  const sbSettled=inRange.filter(o=>o.status==='settled');
+  const sbSettledVal=sbSettled.reduce((s,o)=>s+(o.total||0),0);
+  const sbActive=inRange.filter(o=>!['settled','cancelled'].includes(o.status));
+  const sbActiveVal=sbActive.reduce((s,o)=>s+(o.total||0),0);
+  const sbCancelled=inRange.filter(o=>o.status==='cancelled');
+  if(el('salesBkp')) el('salesBkp').innerHTML=`
+    <div class="sb-data-row">
+      <span class="sb-data-label"><span class="sb-dot" style="background:#4f46e5"></span>Settled</span>
+      <span class="sb-data-val">₹${sbSettledVal.toFixed(0)}</span>
+    </div>
+    <div class="sb-data-row">
+      <span class="sb-data-label"><span class="sb-dot" style="background:#f97316"></span>Active</span>
+      <span class="sb-data-val">₹${sbActiveVal.toFixed(0)}</span>
+    </div>
+    <div class="sb-data-row">
+      <span class="sb-data-label"><span class="sb-dot" style="background:#ef4444"></span>Cancelled</span>
+      <span class="sb-data-val">${sbCancelled.length} bills</span>
+    </div>`;
+
+  // Order Type Mix
+  const tmDefs=[{k:'indoor',l:'Indoor',c:'#4f46e5'},{k:'outdoor',l:'Outdoor',c:'#10b981'},{k:'cabin',l:'Cabin',c:'#f97316'}];
+  if(el('payBkp')){
+    const tmTotal=inRange.filter(o=>o.status!=='cancelled').length||1;
+    el('payBkp').innerHTML=tmDefs.map(t=>{
+      const cnt=inRange.filter(o=>o.status!=='cancelled'&&(o.order_type||'indoor')===t.k).length;
+      const pct=(cnt/tmTotal*100).toFixed(0);
+      return `<div class="sb-data-row">
+        <span class="sb-data-label"><span class="sb-dot" style="background:${t.c}"></span>${t.l}</span>
+        <span class="sb-data-val">${cnt} <span style="font-weight:400;color:#9ca3af;font-size:.74rem">(${pct}%)</span></span>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ── KITCHEN ──
