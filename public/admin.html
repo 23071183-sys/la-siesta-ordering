@@ -9,9 +9,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --or: #D4552A; --or-d: #B8421A; --cream: #FAF5EC;
-      --dark: #1A0D06; --text: #2C180A; --muted: #7A5C42;
+      --dark: #1A0D06; --text: #111827; --muted: #6b7280;
       --bdr: rgba(0,0,0,0.09); --red: #DC2626; --grn: #16A34A; --amb: #D97706;
-      --bg: #f2ede8;
+      --bg: #f4f6f8;
     }
     body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
@@ -207,9 +207,9 @@
     /* SALES CHART */
     .chart-wrap { overflow-x:auto; padding-bottom:.5rem; }
     .chart-svg { display:block; }
-    .chart-bar { fill:rgba(212,85,42,.75); transition:fill .15s; cursor:default; rx:4; }
-    .chart-bar:hover { fill:var(--or); }
-    .chart-zero { font-family:'DM Sans',sans-serif; font-size:10px; fill:#aaa; }
+    .chart-bar { fill:#2dd4bf; transition:fill .15s; cursor:default; }
+    .chart-bar:hover { fill:#0d9488; }
+    .chart-zero { font-family:'DM Sans',sans-serif; font-size:10px; fill:#9ca3af; }
 
     /* REPORTS */
     .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.4rem; }
@@ -228,61 +228,72 @@
     .setting-lbl { font-size:.87rem; font-weight:500; color:var(--dark); }
     .setting-sub { font-size:.72rem; color:var(--muted); margin-top:.15rem; }
 
-    /* DASHBOARD 2-COL LAYOUT */
-    .dash-layout { display:grid; grid-template-columns:1fr 270px; gap:1.25rem; align-items:start; }
+    /* ── CIFERON DASHBOARD LAYOUT ── */
+    .dash-layout { display:grid; grid-template-columns:1fr 290px; gap:1.3rem; align-items:start; }
     .dash-main { min-width:0; }
-    .dash-sidebar { display:flex; flex-direction:column; gap:.85rem; position:sticky; top:5rem; }
 
-    /* LIVE SIDEBAR CARDS */
-    .live-card { border-radius:14px; padding:1.2rem 1.3rem; color:#fff; overflow:hidden; position:relative; }
-    .live-card.navy { background:#1e2a4a; }
-    .live-card.teal { background:linear-gradient(135deg,#0f766e,#14b8a6); }
-    .live-card.or-grad { background:linear-gradient(135deg,#D4552A,#e07850); }
-    .live-card.slate { background:#1e293b; }
-    .live-card-row { display:flex; justify-content:space-between; align-items:flex-start; }
-    .live-card-title { font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-bottom:.5rem; }
-    .live-card-val { font-size:2.1rem; font-weight:700; line-height:1; margin-bottom:.35rem; }
-    .live-card-sub { font-size:.74rem; opacity:.6; line-height:1.6; }
-    .live-card-icon { width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; margin-top:.1rem; }
-    .live-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#4ade80; margin-right:5px; vertical-align:middle; animation:livepulse 1.8s ease-in-out infinite; }
-    .live-dot.amber { background:#fbbf24; }
-    @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.25} }
-    .live-sub-row { display:flex; gap:1rem; margin-top:.65rem; padding-top:.65rem; border-top:1px solid rgba(255,255,255,.1); }
-    .live-sub-item { font-size:.75rem; }
-    .live-sub-item span { font-size:1.1rem; font-weight:700; display:block; }
-    .subs-list { margin-top:.6rem; }
-    .sub-item { display:flex; align-items:center; gap:.5rem; font-size:.78rem; padding:.25rem 0; border-bottom:1px solid rgba(255,255,255,.08); }
-    .sub-item:last-child { border-bottom:none; }
-    .sub-dot { width:3px; height:14px; border-radius:2px; background:var(--or); flex-shrink:0; }
+    /* DASH TABS */
+    .dash-tabs { display:flex; gap:0; border-bottom:2px solid #e5e7eb; margin-bottom:1.4rem; }
+    .dash-tab { padding:.6rem 1.2rem; background:none; border:none; border-bottom:2.5px solid transparent; margin-bottom:-2px; font-family:'DM Sans',sans-serif; font-size:.86rem; font-weight:500; color:#6b7280; cursor:pointer; transition:all .15s; }
+    .dash-tab.active { color:var(--or); border-bottom-color:var(--or); font-weight:600; }
+    .dash-tab:hover:not(.active) { color:#374151; }
 
-    /* STAT CARDS v2 */
-    .stat-grid-v2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:.85rem; margin-bottom:1.2rem; }
-    .stat-card-v2 { background:#fff; border-radius:13px; padding:1rem 1.1rem; box-shadow:0 1px 5px rgba(0,0,0,.06); display:flex; align-items:center; gap:.85rem; }
-    .stat-ic { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.25rem; flex-shrink:0; }
-    .stat-ic.or  { background:rgba(212,85,42,.13); }
-    .stat-ic.grn { background:rgba(22,163,74,.13); }
-    .stat-ic.amb { background:rgba(217,119,6,.13); }
-    .stat-ic.blu { background:rgba(37,99,235,.13); }
-    .stat-ic.red { background:rgba(220,38,38,.13); }
-    .stat-ic.pur { background:rgba(124,58,237,.13); }
-    .sc-val { font-size:1.7rem; font-weight:700; color:var(--dark); line-height:1; }
-    .sc-lbl { font-size:.67rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:.2rem; }
-    .sc-sub { font-size:.72rem; color:var(--grn); margin-top:.2rem; font-weight:600; }
+    /* STAT CARDS CIFERON */
+    .stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.4rem; }
+    .stat-cf { background:#fff; border-radius:12px; padding:1.25rem 1.3rem 1rem; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+    .stat-cf-lbl { font-size:.66rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:.6rem; }
+    .stat-cf-row { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+    .stat-cf-val { font-size:2rem; font-weight:700; color:#111827; line-height:1; }
+    .stat-cf-icon { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.55rem; flex-shrink:0; }
+    .stat-cf-icon.red    { background:#ef4444; }
+    .stat-cf-icon.orange { background:#f97316; }
+    .stat-cf-icon.green  { background:#10b981; }
+    .stat-cf-icon.blue   { background:#3b82f6; }
+    .stat-cf-desc { font-size:.75rem; color:#9ca3af; margin-top:.85rem; display:flex; align-items:center; gap:.25rem; }
+    .stat-cf-arr { color:#9ca3af; font-size:.8rem; transition:color .15s; cursor:pointer; }
+    .stat-cf-arr:hover { color:var(--or); }
 
-    /* DATE PILLS COMPACT */
-    .dr-row { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; margin-bottom:1.1rem; }
-    .dr-range-inp { display:flex; align-items:center; gap:.4rem; margin-left:.2rem; }
+    /* PERFORMANCE CARD */
+    .perf-header { display:flex; justify-content:space-between; align-items:flex-start; gap:.75rem; margin-bottom:1rem; flex-wrap:wrap; }
+    .perf-lbl { font-size:.66rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9ca3af; margin-bottom:.25rem; }
+    .perf-title { font-size:1.05rem; font-weight:700; color:#111827; }
+    .perf-pills { display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; }
+    .perf-pill { padding:.38rem .88rem; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:.76rem; font-weight:600; cursor:pointer; transition:all .15s; background:#4f46e5; color:#fff; border:1.5px solid #4f46e5; }
+    .perf-pill.on { background:#fff; color:#111827; border-color:#d1d5db; box-shadow:0 1px 4px rgba(0,0,0,.08); }
 
-    @media(max-width:980px) {
+    /* RIGHT SIDEBAR */
+    .dash-right { display:flex; flex-direction:column; gap:.9rem; position:sticky; top:5rem; }
+    .rc { border-radius:14px; padding:1.3rem 1.4rem; }
+    .rc.navy { background:#1a2744; color:#fff; }
+    .rc-title { font-size:.64rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:.65rem; }
+    .rc-row { display:flex; justify-content:space-between; align-items:flex-start; }
+    .rc-val { font-size:2.2rem; font-weight:700; line-height:1.1; }
+    .rc-icon { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rc-sub { font-size:.76rem; color:rgba(255,255,255,.5); margin-top:.55rem; line-height:1.6; }
+    .subs-card { background:#fff; border-radius:14px; padding:1.2rem 1.3rem; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+    .subs-hdr { display:flex; align-items:center; gap:.4rem; margin-bottom:.15rem; }
+    .subs-hdr-title { font-size:.9rem; font-weight:700; color:#111827; }
+    .subs-valid { font-size:.73rem; color:#9ca3af; margin-bottom:.85rem; }
+    .subs-item { display:flex; align-items:center; gap:.6rem; padding:.3rem 0; font-size:.82rem; color:#374151; font-weight:500; border-bottom:1px solid #f3f4f6; }
+    .subs-item:last-child { border-bottom:none; }
+    .subs-bar { width:3px; height:16px; background:var(--or); border-radius:2px; flex-shrink:0; }
+
+    /* DATE BOX */
+    .date-box { display:flex; align-items:center; gap:.35rem; background:#fff; border:1.5px solid #e5e7eb; border-radius:8px; padding:.38rem .85rem; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+    .date-box input[type=date] { border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:.82rem; color:#374151; background:transparent; cursor:pointer; width:108px; }
+    .date-box-sep { color:#9ca3af; font-size:.82rem; margin:0 .1rem; }
+
+    @media(max-width:1050px) {
       .dash-layout { grid-template-columns:1fr; }
-      .dash-sidebar { position:static; flex-direction:row; flex-wrap:wrap; }
-      .dash-sidebar .live-card { flex:1; min-width:200px; }
+      .dash-right { position:static; flex-direction:row; flex-wrap:wrap; }
+      .dash-right .rc, .dash-right .subs-card { flex:1; min-width:220px; }
+      .stat-row { grid-template-columns:repeat(2,1fr); }
     }
     @media(max-width:700px) {
       .rep-grid { grid-template-columns:1fr; }
       .settings-grid { grid-template-columns:1fr; }
-      .dash-sidebar { flex-direction:column; }
-      .dash-sidebar .live-card { min-width:unset; }
+      .dash-right { flex-direction:column; }
+      .stat-row { grid-template-columns:repeat(2,1fr); }
     }
     @media(max-width:600px) {
       .content { padding:.9rem; }
@@ -344,130 +355,128 @@
 
     <!-- DASHBOARD -->
     <div class="panel active" id="panel-dash">
-      <!-- Welcome row -->
-      <div class="welcome-row">
-        <div class="welcome-msg">
-          <h2 id="welcomeMsg">Welcome 👋</h2>
-          <p id="welcomeSub">Loading…</p>
-        </div>
-        <div class="dr-range-inp">
-          <input type="date" id="drFrom" class="search-bar" style="width:130px" onchange="setDR('custom',null)">
-          <span class="dr-sep">→</span>
-          <input type="date" id="drTo" class="search-bar" style="width:130px" onchange="setDR('custom',null)">
-        </div>
+
+      <!-- Business Overview / Live Status tabs -->
+      <div class="dash-tabs">
+        <button class="dash-tab active" onclick="switchDashTab('overview',this)">Business Overview</button>
+        <button class="dash-tab" onclick="switchDashTab('live',this)">Live Status</button>
       </div>
 
-      <!-- Date range pills -->
-      <div class="dr-row">
-        <button class="dr-pill on" onclick="setDR('today',this)">Today</button>
-        <button class="dr-pill" onclick="setDR('week',this)">This Week</button>
-        <button class="dr-pill" onclick="setDR('last_week',this)">Last Week</button>
-        <button class="dr-pill" onclick="setDR('15days',this)">Last 15 Days</button>
-        <button class="dr-pill" onclick="setDR('month',this)">This Month</button>
-        <button class="dr-pill" onclick="setDR('last_month',this)">Last Month</button>
-      </div>
+      <!-- ── BUSINESS OVERVIEW ── -->
+      <div id="dashOverview">
 
-      <!-- 2-col layout: main + sidebar -->
-      <div class="dash-layout">
-
-        <!-- MAIN COLUMN -->
-        <div class="dash-main">
-          <!-- Stat cards -->
-          <div class="stat-grid-v2" id="dashStats"></div>
-
-          <!-- Sales chart -->
-          <div class="card" style="margin-bottom:1.1rem">
-            <div class="card-hd">
-              <div class="card-title">Sales Performance</div>
-              <span class="card-sub" id="chartPeriodLbl"></span>
-            </div>
-            <div class="chart-wrap" id="salesChartWrap"><div class="empty">Loading chart…</div></div>
+        <!-- Welcome row -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.4rem">
+          <div>
+            <h2 id="welcomeMsg" style="font-size:1.3rem;font-weight:700;color:#111827">Welcome, Admin 👋</h2>
+            <p id="welcomeSub" style="font-size:.78rem;color:#6b7280;margin-top:.2rem">Loading…</p>
           </div>
-
-          <!-- Bottom row -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div class="card">
-              <div class="card-hd"><div class="card-title">Top Selling Items</div><span class="card-sub" id="topItemsSub"></span></div>
-              <div id="topItemsList"></div>
-            </div>
-            <div class="card">
-              <div class="card-hd"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="loadDash()">↻</button></div>
-              <div id="recentList"></div>
-            </div>
+          <div class="date-box">
+            <input type="date" id="drFrom" onchange="setDR('custom',null)">
+            <span class="date-box-sep">-</span>
+            <input type="date" id="drTo" onchange="setDR('custom',null)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
         </div>
 
-        <!-- RIGHT SIDEBAR -->
-        <div class="dash-sidebar">
+        <!-- 2-col: main + right sidebar -->
+        <div class="dash-layout">
 
-          <!-- Active Orders -->
-          <div class="live-card navy">
-            <div class="live-card-title">LIVE ORDERS</div>
-            <div class="live-card-row">
+          <!-- MAIN -->
+          <div class="dash-main">
+
+            <!-- 4 stat cards -->
+            <div class="stat-row" id="dashStats"></div>
+
+            <!-- Performance + chart -->
+            <div class="card" style="margin-bottom:1.1rem">
+              <div class="perf-header">
+                <div>
+                  <div class="perf-lbl">PERFORMANCE</div>
+                  <div class="perf-title" id="perfTitle">This Month Sales</div>
+                </div>
+                <div class="perf-pills">
+                  <button class="perf-pill" onclick="setDR('week',this)">This Week</button>
+                  <button class="perf-pill" onclick="setDR('last_week',this)">Last Week</button>
+                  <button class="perf-pill" onclick="setDR('15days',this)">Last 15 Days</button>
+                  <button class="perf-pill on" onclick="setDR('month',this)">This Month</button>
+                  <button class="perf-pill" onclick="setDR('last_month',this)">Last Month</button>
+                </div>
+              </div>
+              <div id="salesChartWrap"><div class="empty">Loading chart…</div></div>
+            </div>
+
+            <!-- Top Items + Recent Orders -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div class="card">
+                <div class="card-hd"><div class="card-title">Top Selling Items</div><span class="card-sub" id="topItemsSub"></span></div>
+                <div id="topItemsList"></div>
+              </div>
+              <div class="card">
+                <div class="card-hd"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="loadDash()">↻</button></div>
+                <div id="recentList"></div>
+              </div>
+            </div>
+
+          </div><!-- /dash-main -->
+
+          <!-- RIGHT SIDEBAR -->
+          <div class="dash-right">
+
+            <!-- Active Orders (SMS-credit-card style) -->
+            <div class="rc navy">
+              <div class="rc-title">ACTIVE ORDERS</div>
+              <div class="rc-row">
+                <div class="rc-val" id="sbActiveOrders">—</div>
+                <div class="rc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+                </div>
+              </div>
+              <div class="rc-sub" id="sbOrdersBreakdown">Loading…</div>
+            </div>
+
+            <!-- Today's Revenue (WhatsApp-credit-card style) -->
+            <div class="rc navy">
+              <div class="rc-title">TODAY'S REVENUE</div>
+              <div class="rc-row">
+                <div class="rc-val" id="sbTodayRev">₹—</div>
+                <div class="rc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+                </div>
+              </div>
+              <div class="rc-sub" id="sbTodaySettled">Loading…</div>
+            </div>
+
+            <!-- Active Features (Your Subscriptions style) -->
+            <div class="subs-card">
+              <div class="subs-hdr">
+                <span style="font-size:1rem">📢</span>
+                <span class="subs-hdr-title">Active Features</span>
+              </div>
+              <div class="subs-valid" id="sbOrderingStatus">Online Ordering: checking…</div>
               <div>
-                <div class="live-card-val" id="sbActiveOrders">—</div>
-                <div class="live-card-sub">Active right now</div>
-              </div>
-              <div class="live-card-icon">🔥</div>
-            </div>
-            <div class="live-sub-row">
-              <div class="live-sub-item">
-                <span id="sbPending">—</span>
-                <span class="live-dot amber"></span>Pending
-              </div>
-              <div class="live-sub-item">
-                <span id="sbPreparing">—</span>
-                🍳 Preparing
-              </div>
-              <div class="live-sub-item">
-                <span id="sbReady">—</span>
-                ✅ Ready
+                <div class="subs-item"><div class="subs-bar"></div>POS System</div>
+                <div class="subs-item"><div class="subs-bar"></div>Kitchen Display</div>
+                <div class="subs-item"><div class="subs-bar"></div>Online Ordering</div>
+                <div class="subs-item"><div class="subs-bar"></div>QR Ordering</div>
+                <div class="subs-item"><div class="subs-bar"></div>Reports &amp; Analytics</div>
               </div>
             </div>
-          </div>
 
-          <!-- Today's Revenue -->
-          <div class="live-card teal">
-            <div class="live-card-title">TODAY'S REVENUE</div>
-            <div class="live-card-row">
-              <div>
-                <div class="live-card-val" id="sbTodayRev">₹—</div>
-                <div class="live-card-sub" id="sbTodaySettled">Loading…</div>
-              </div>
-              <div class="live-card-icon">💰</div>
-            </div>
-          </div>
+          </div><!-- /dash-right -->
+        </div><!-- /dash-layout -->
+      </div><!-- /dashOverview -->
 
-          <!-- Period Revenue -->
-          <div class="live-card or-grad">
-            <div class="live-card-title">PERIOD REVENUE</div>
-            <div class="live-card-row">
-              <div>
-                <div class="live-card-val" id="sbPeriodRev">₹—</div>
-                <div class="live-card-sub" id="sbPeriodOrders">Loading…</div>
-              </div>
-              <div class="live-card-icon">📊</div>
-            </div>
-          </div>
+      <!-- ── LIVE STATUS ── -->
+      <div id="dashLive" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem">
+          <div style="font-size:1rem;font-weight:700;color:#111827">Live Kitchen Status</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadLiveStatus()">↻ Refresh</button>
+        </div>
+        <div class="kitchen-grid" id="liveKitGrid"><div class="empty" style="grid-column:1/-1">Loading…</div></div>
+      </div>
 
-          <!-- Ordering Status -->
-          <div class="live-card slate">
-            <div class="live-card-title">SYSTEM STATUS</div>
-            <div class="subs-list">
-              <div class="sub-item"><div class="sub-dot"></div><span>Online Ordering: <strong id="sbOrderingStatus">—</strong></span></div>
-              <div class="sub-item"><div class="sub-dot"></div><span>POS: <strong>Active</strong></span></div>
-              <div class="sub-item"><div class="sub-dot"></div><span>Kitchen Display: <strong>Active</strong></span></div>
-            </div>
-            <button onclick="showPanel('settings',document.querySelectorAll('.nav-tab')[6])"
-              style="margin-top:.85rem;width:100%;padding:.45rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:7px;color:#fff;font-size:.76rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s"
-              onmouseenter="this.style.background='rgba(255,255,255,.18)'" onmouseleave="this.style.background='rgba(255,255,255,.1)'">
-              ⚙ Manage Settings
-            </button>
-          </div>
-
-        </div><!-- /dash-sidebar -->
-      </div><!-- /dash-layout -->
-    </div>
+    </div><!-- /panel-dash -->
 
     <!-- KITCHEN -->
     <div class="panel" id="panel-kitchen">
@@ -749,7 +758,7 @@ function toast(msg){
 }
 
 // ── DATE RANGE HELPERS ──
-let _drMode='today';
+let _drMode='month';
 function drRange(){
   const now=new Date(); const d=s=>s.toISOString().slice(0,10);
   if(_drMode==='today'){
@@ -779,43 +788,63 @@ function drRange(){
 }
 function setDR(mode,btn){
   _drMode=mode;
-  document.querySelectorAll('.dr-pill').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.perf-pill').forEach(b=>b.classList.remove('on'));
   if(btn) btn.classList.add('on');
   loadDash();
+}
+function switchDashTab(tab,btn){
+  document.querySelectorAll('.dash-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dashOverview').style.display=tab==='overview'?'':'none';
+  document.getElementById('dashLive').style.display=tab==='live'?'':'none';
+  if(tab==='live') loadLiveStatus();
+}
+function loadLiveStatus(){
+  const active=[...allOrders].filter(o=>!['settled','cancelled'].includes(o.status));
+  const rank={pending:0,preparing:1,done:2};
+  active.sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3)||new Date(b.created_at)-new Date(a.created_at));
+  const grid=document.getElementById('liveKitGrid');
+  if(!grid)return;
+  if(!active.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">No active orders right now.</div>';return;}
+  grid.innerHTML=active.map(kCard).join('');
 }
 
 // ── SALES SVG CHART ──
 function renderSalesChart(days){ // days: [{date,rev}]
   if(!days.length){document.getElementById('salesChartWrap').innerHTML='<div class="empty">No data for this period</div>';return;}
-  const W=Math.max(days.length*52,400), H=160, pad={l:44,r:16,t:10,b:32};
+  const W=Math.max(days.length*46,500), H=300, pad={l:60,r:20,t:16,b:36};
   const iW=W-pad.l-pad.r, iH=H-pad.t-pad.b;
   const maxRev=Math.max(...days.map(d=>d.rev),1);
-  const bw=Math.min(36, iW/days.length-4);
+  // Round maxRev up to a nice number for axis
+  const niceMax=(v)=>{const mag=Math.pow(10,Math.floor(Math.log10(v)));const r=Math.ceil(v/mag)*mag;return r||mag;}
+  const axMax=niceMax(maxRev*1.1);
+  const bw=Math.min(32, iW/days.length-3);
   const barX=(i)=>pad.l + i*(iW/days.length) + (iW/days.length-bw)/2;
-  const barH=(rev)=>Math.max(2,rev/maxRev*iH);
-  const fmt=(n)=>n>=1000?'₹'+(n/1000).toFixed(1)+'k':'₹'+n;
+  const barH=(rev)=>Math.max(2,rev/axMax*iH);
+  const fmt=(n)=>n>=100000?'₹'+(n/100000).toFixed(1)+'L':n>=1000?'₹'+(n/1000).toFixed(0)+'k':'₹'+n;
 
   const bars=days.map((d,i)=>{
     const h=barH(d.rev); const x=barX(i); const y=pad.t+iH-h;
-    const lbl=d.date.slice(5); // MM-DD
+    const lbl=d.date.slice(5).replace('-','/');
     return `<rect class="chart-bar" x="${x}" y="${y}" width="${bw}" height="${h}" rx="3">
       <title>${d.date}: ${fmt(d.rev)} (${d.cnt} orders)</title></rect>
-      <text class="chart-zero" x="${x+bw/2}" y="${H-pad.b+14}" text-anchor="middle">${lbl}</text>
-      ${d.rev>0?`<text class="chart-zero" x="${x+bw/2}" y="${y-4}" text-anchor="middle" style="font-size:9px;fill:var(--or)">${fmt(d.rev)}</text>`:''}`;
+      <text class="chart-zero" x="${x+bw/2}" y="${H-pad.b+16}" text-anchor="middle">${lbl}</text>`;
   }).join('');
 
-  // Y-axis labels
-  const yLabels=[0,.25,.5,.75,1].map(p=>{
-    const y=pad.t+iH*(1-p); const v=maxRev*p;
-    return `<text class="chart-zero" x="${pad.l-6}" y="${y+4}" text-anchor="end">${fmt(Math.round(v))}</text>
-      <line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#f0ece8" stroke-width="1"/>`;
+  // Y-axis: 6 gridlines
+  const steps=5;
+  const yLabels=Array.from({length:steps+1},(_,i)=>{
+    const p=i/steps; const y=pad.t+iH*(1-p); const v=Math.round(axMax*p);
+    return `<text class="chart-zero" x="${pad.l-8}" y="${y+4}" text-anchor="end">${fmt(v)}</text>
+      <line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#f0f0f0" stroke-width="1"/>`;
   }).join('');
 
   document.getElementById('salesChartWrap').innerHTML=`
-    <div class="chart-wrap">
-      <svg class="chart-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <div style="overflow-x:auto;padding-bottom:.5rem;background:#fff;border-radius:8px">
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
         ${yLabels}${bars}
-        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t+iH}" stroke="#ddd" stroke-width="1"/>
+        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t+iH}" stroke="#e5e7eb" stroke-width="1"/>
+        <line x1="${pad.l}" y1="${pad.t+iH}" x2="${W-pad.r}" y2="${pad.t+iH}" stroke="#e5e7eb" stroke-width="1"/>
       </svg>
     </div>`;
 }
@@ -827,52 +856,64 @@ async function loadDash(){
   _dashOrders=await r.json();
 
   const {from,to,label}=drRange();
-  document.getElementById('chartPeriodLbl').textContent=label;
-  document.getElementById('topItemsSub').textContent=label;
 
   // Welcome
   const now=new Date();
-  document.getElementById('welcomeMsg').textContent='Welcome, Admin 👋';
   document.getElementById('welcomeSub').textContent=
-    `Last synced ${now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+    `Last order synced on ${now.toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'})} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+
+  // Update performance title
+  const titleMap={today:"Today's Sales",week:'This Week Sales',last_week:'Last Week Sales',
+    '15days':'Last 15 Days Sales',month:'This Month Sales',last_month:'Last Month Sales'};
+  const perfTitleEl=document.getElementById('perfTitle');
+  if(perfTitleEl) perfTitleEl.textContent=titleMap[_drMode]||`${label} Sales`;
+  const topSubEl=document.getElementById('topItemsSub');
+  if(topSubEl) topSubEl.textContent=label;
 
   // Filter to range
   const inRange=_dashOrders.filter(o=>{
     const d=new Date(o.created_at).toISOString().slice(0,10);
     return d>=from&&d<=to;
   });
-  const active=_dashOrders.filter(o=>!['settled','cancelled'].includes(o.status));
   const rev=inRange.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
   const totalRev=inRange.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
   const avgArr=inRange.filter(o=>o.status!=='cancelled');
   const avg=avgArr.length?totalRev/avgArr.length:0;
+  const tables=new Set(inRange.filter(o=>o.status!=='cancelled').map(o=>o.table_number)).size;
 
-  const settled=inRange.filter(o=>o.status==='settled');
-  const cancelled=inRange.filter(o=>o.status==='cancelled');
+  // Ciferon-style 4 stat cards
   document.getElementById('dashStats').innerHTML=`
-    <div class="stat-card-v2">
-      <div class="stat-ic or">📋</div>
-      <div><div class="sc-val">${inRange.length}</div><div class="sc-lbl">Total Orders</div></div>
+    <div class="stat-cf">
+      <div class="stat-cf-lbl">TOTAL SALES</div>
+      <div class="stat-cf-row">
+        <div class="stat-cf-val">₹${totalRev.toFixed(0)}</div>
+        <div class="stat-cf-icon red">🤙</div>
+      </div>
+      <div class="stat-cf-desc">POS + Online &nbsp;<span class="stat-cf-arr">›</span></div>
     </div>
-    <div class="stat-card-v2">
-      <div class="stat-ic grn">💰</div>
-      <div><div class="sc-val">₹${rev.toFixed(0)}</div><div class="sc-lbl">Revenue</div></div>
+    <div class="stat-cf">
+      <div class="stat-cf-lbl">TOTAL ORDERS</div>
+      <div class="stat-cf-row">
+        <div class="stat-cf-val">${inRange.length}</div>
+        <div class="stat-cf-icon orange">🍽</div>
+      </div>
+      <div class="stat-cf-desc">Total orders created</div>
     </div>
-    <div class="stat-card-v2">
-      <div class="stat-ic blu">📊</div>
-      <div><div class="sc-val">₹${avg.toFixed(0)}</div><div class="sc-lbl">Avg Order</div></div>
+    <div class="stat-cf">
+      <div class="stat-cf-lbl">AVG ORDER VALUE</div>
+      <div class="stat-cf-row">
+        <div class="stat-cf-val">₹${avg.toFixed(0)}</div>
+        <div class="stat-cf-icon green">📊</div>
+      </div>
+      <div class="stat-cf-desc">Average per order</div>
     </div>
-    <div class="stat-card-v2">
-      <div class="stat-ic amb">✅</div>
-      <div><div class="sc-val">${settled.length}</div><div class="sc-lbl">Settled</div></div>
-    </div>
-    <div class="stat-card-v2">
-      <div class="stat-ic red">❌</div>
-      <div><div class="sc-val">${cancelled.length}</div><div class="sc-lbl">Cancelled</div></div>
-    </div>
-    <div class="stat-card-v2">
-      <div class="stat-ic pur">🍽</div>
-      <div><div class="sc-val">${new Set(inRange.map(o=>o.table_number)).size}</div><div class="sc-lbl">Tables Served</div></div>
+    <div class="stat-cf">
+      <div class="stat-cf-lbl">TABLES SERVED</div>
+      <div class="stat-cf-row">
+        <div class="stat-cf-val">${tables}</div>
+        <div class="stat-cf-icon blue">🪑</div>
+      </div>
+      <div class="stat-cf-desc">Unique tables</div>
     </div>`;
 
   // Update right sidebar
@@ -922,35 +963,30 @@ async function loadDash(){
 }
 
 function updateSidebar(allOrd, inRange, periodRev, periodLabel){
-  // Live orders (from ALL orders, not filtered by date)
+  const el=id=>document.getElementById(id);
+  // Live active orders
   const active=allOrd.filter(o=>!['settled','cancelled'].includes(o.status));
   const pending=active.filter(o=>o.status==='pending');
   const preparing=active.filter(o=>o.status==='preparing');
   const ready=active.filter(o=>o.status==='done');
-  const el=id=>document.getElementById(id);
   if(el('sbActiveOrders')) el('sbActiveOrders').textContent=active.length;
-  if(el('sbPending'))      el('sbPending').textContent=pending.length;
-  if(el('sbPreparing'))    el('sbPreparing').textContent=preparing.length;
-  if(el('sbReady'))        el('sbReady').textContent=ready.length;
+  if(el('sbOrdersBreakdown')) el('sbOrdersBreakdown').textContent=
+    `${pending.length} pending · ${preparing.length} preparing · ${ready.length} ready`;
 
   // Today's settled revenue
   const todayStr=new Date().toISOString().slice(0,10);
   const todayOrders=allOrd.filter(o=>new Date(o.created_at).toISOString().slice(0,10)===todayStr&&o.status==='settled');
   const todayRev=todayOrders.reduce((s,o)=>s+(o.total||0),0);
-  if(el('sbTodayRev'))    el('sbTodayRev').textContent='₹'+todayRev.toFixed(0);
-  if(el('sbTodaySettled')) el('sbTodaySettled').textContent=`${todayOrders.length} settled order${todayOrders.length!==1?'s':''} today`;
-
-  // Period revenue
-  if(el('sbPeriodRev'))    el('sbPeriodRev').textContent='₹'+periodRev.toFixed(0);
-  if(el('sbPeriodOrders')) el('sbPeriodOrders').textContent=`${periodLabel} · ${inRange.filter(o=>o.status==='settled').length} settled`;
+  if(el('sbTodayRev'))     el('sbTodayRev').textContent='₹'+todayRev.toFixed(0);
+  if(el('sbTodaySettled')) el('sbTodaySettled').textContent=`This credits are used to track revenue from settled orders`;
 
   // Ordering status
   fetch('/api/settings').then(r=>r.json()).then(rows=>{
     const get=k=>rows.find(s=>s.key===k)?.value;
     const enabled=get('ordering_enabled')!=='0';
     if(el('sbOrderingStatus')){
-      el('sbOrderingStatus').textContent=enabled?'Enabled':'Disabled';
-      el('sbOrderingStatus').style.color=enabled?'#4ade80':'#f87171';
+      el('sbOrderingStatus').textContent=`Online Ordering: ${enabled?'Enabled':'Disabled'}`;
+      el('sbOrderingStatus').style.color=enabled?'#16a34a':'#dc2626';
     }
   }).catch(()=>{});
 }
