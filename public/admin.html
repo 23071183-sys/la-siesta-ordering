@@ -393,21 +393,33 @@
     <button class="sb-item active" onclick="showPanel('dash',this)">
       <span class="sb-icon"></span>Dashboard
     </button>
-    <button class="sb-item" onclick="showPanel('kitchen',this)">
-      <span class="sb-icon"></span>Kitchen
-      <span class="badge" id="kitBadge" style="display:none">0</span>
-    </button>
     <button class="sb-item" onclick="showPanel('menu',this)">
       <span class="sb-icon"></span>Menu
     </button>
-    <button class="sb-item" onclick="showPanel('orders',this)">
-      <span class="sb-icon"></span>Orders
+    <button class="sb-item" onclick="showPanel('outlets',this)">
+      <span class="sb-icon"></span>Virtual Outlets
+      <span class="badge" id="kitBadge" style="display:none">0</span>
     </button>
-    <button class="sb-item" onclick="showPanel('tables',this)">
-      <span class="sb-icon"></span>Tables
+    <button class="sb-item" onclick="showPanel('inventory',this)">
+      <span class="sb-icon"></span>Inventory
+    </button>
+    <button class="sb-item" onclick="showPanel('accounting',this)">
+      <span class="sb-icon"></span>Accounting
+    </button>
+    <button class="sb-item" onclick="showPanel('scan',this)">
+      <span class="sb-icon"></span>Scan and Order
+    </button>
+    <button class="sb-item" onclick="showPanel('crm',this)">
+      <span class="sb-icon"></span>CRM
     </button>
     <button class="sb-item" onclick="showPanel('reports',this)">
       <span class="sb-icon"></span>Reports
+    </button>
+    <button class="sb-item" onclick="showPanel('locations',this)">
+      <span class="sb-icon"></span>Locations
+    </button>
+    <button class="sb-item" onclick="showPanel('users',this)">
+      <span class="sb-icon"></span>Users
     </button>
     <button class="sb-item" onclick="showPanel('settings',this)">
       <span class="sb-icon"></span>Settings
@@ -770,6 +782,67 @@
       </div>
     </div>
 
+    <!-- INVENTORY -->
+    <div class="panel" id="panel-inventory">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">Inventory — Menu Items</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadInventory()">↻ Refresh</button>
+      </div>
+      <div class="card">
+        <div id="inventoryList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- CRM -->
+    <div class="panel" id="panel-crm">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">CRM — Customer Records</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadCRM()">↻ Refresh</button>
+      </div>
+      <div class="card">
+        <div id="crmList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="panel" id="panel-users">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">Users &amp; Access</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="settings-grid">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Admin Account</div></div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Email</div><div class="setting-sub">Login credential</div></div>
+            <span id="usersAdminEmail" style="font-size:.82rem;color:var(--muted)">—</span>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Role</div><div class="setting-sub">Full access</div></div>
+            <span style="font-size:.78rem;font-weight:600;color:#4f46e5;background:#ede9fe;padding:.18rem .55rem;border-radius:5px">Admin</span>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div><div class="setting-lbl">Password</div><div class="setting-sub">Set via ADMIN_PASSWORD env var</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">••••••••</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">POS Terminal</div></div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">POS PIN</div><div class="setting-sub">Set via POS_PIN env var</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">••••</span>
+          </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Role</div><div class="setting-sub">Kitchen + billing access</div></div>
+            <span style="font-size:.78rem;font-weight:600;color:#059669;background:#d1fae5;padding:.18rem .55rem;border-radius:5px">POS Staff</span>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div><div class="setting-lbl">Session TTL</div><div class="setting-sub">Tokens expire after</div></div>
+            <span style="font-size:.82rem;color:var(--muted)">24 hours</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     </div><!-- /content -->
   </div><!-- /main-area -->
 </div><!-- /app -->
@@ -859,18 +932,31 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 // ── PANELS ──
 function showPanel(name,btn){
+  // Alias map: sidebar name → real panel ID
+  const alias={outlets:'orders', accounting:'reports', scan:'tables', locations:'tables'};
+  const panelId=alias[name]||name;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
+  const panelEl=document.getElementById('panel-'+panelId);
+  if(panelEl) panelEl.classList.add('active');
   if(btn) btn.classList.add('active');
-  const titles={dash:'Dashboard',kitchen:'Kitchen',menu:'Menu',orders:'Orders',tables:'Tables',reports:'Reports',settings:'Settings'};
+  const titles={
+    dash:'Dashboard', menu:'Menu', outlets:'Virtual Outlets',
+    inventory:'Inventory', accounting:'Accounting', scan:'Scan and Order',
+    crm:'CRM', reports:'Reports', locations:'Locations',
+    users:'Users', settings:'Settings',
+    kitchen:'Kitchen', orders:'Orders', tables:'Tables'
+  };
   const pt=document.getElementById('pageTitle'); if(pt) pt.textContent=titles[name]||name;
-  if(name==='kitchen'){loadKitchen();pendingCt=0;updateBadge();}
-  if(name==='orders')loadOrders();
+  if(panelId==='kitchen'){loadKitchen();pendingCt=0;updateBadge();}
+  if(panelId==='orders'||name==='outlets')loadOrders();
   if(name==='dash')loadDash();
-  if(name==='tables')loadTables();
-  if(name==='reports')initReports();
-  if(name==='settings')loadSettings();
+  if(panelId==='tables')loadTables();
+  if(panelId==='reports')initReports();
+  if(panelId==='settings')loadSettings();
+  if(name==='inventory')loadInventory();
+  if(name==='crm')loadCRM();
+  if(name==='users'){const ue=document.getElementById('usersAdminEmail');if(ue)ue.textContent=_adminEmail||'—';}
 }
 
 // ── TOAST ──
@@ -1198,6 +1284,91 @@ function updateSidebar(allOrd, inRange, periodRev, periodLabel){
       </div>`;
     }).join('');
   }
+}
+
+// ── INVENTORY ──
+async function loadInventory(){
+  const el=document.getElementById('inventoryList');
+  if(!el) return;
+  el.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const r=await fetch('/api/menu');
+    const items=await r.json();
+    if(!items.length){el.innerHTML='<div class="empty">No menu items found.</div>';return;}
+    const cats=[...new Set(items.map(i=>i.category||'Uncategorised'))].sort();
+    el.innerHTML=`
+      <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+        <thead>
+          <tr style="border-bottom:2px solid #f3f4f6">
+            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Item</th>
+            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Category</th>
+            <th style="text-align:right;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Price</th>
+            <th style="text-align:center;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Status</th>
+          </tr>
+        </thead>
+        <tbody>${items.map(i=>`
+          <tr style="border-bottom:1px solid #f9fafb">
+            <td style="padding:.45rem .6rem;color:#111827;font-weight:500">${i.name}</td>
+            <td style="padding:.45rem .6rem;color:#6b7280">${i.category||'—'}</td>
+            <td style="padding:.45rem .6rem;text-align:right;font-weight:600;color:#111827">₹${Number(i.price||0).toFixed(0)}</td>
+            <td style="padding:.45rem .6rem;text-align:center">
+              <span style="font-size:.72rem;font-weight:600;padding:.18rem .5rem;border-radius:4px;background:${i.available!==false?'#d1fae5':'#fee2e2'};color:${i.available!==false?'#059669':'#dc2626'}">${i.available!==false?'In Stock':'Unavailable'}</span>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="font-size:.76rem;color:#9ca3af;padding:.6rem .6rem 0">${items.length} items across ${cats.length} categories</div>`;
+  }catch(e){el.innerHTML='<div class="empty">Failed to load inventory.</div>';}
+}
+
+// ── CRM ──
+async function loadCRM(){
+  const el=document.getElementById('crmList');
+  if(!el) return;
+  el.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const r=await fetch('/api/orders?status=all');
+    const orders=await r.json();
+    // Build customer map
+    const cMap={};
+    orders.forEach(o=>{
+      const name=(o.customer_name||'').trim()||'Guest';
+      if(!cMap[name]) cMap[name]={name,count:0,spend:0,last:null,types:new Set()};
+      cMap[name].count++;
+      if(o.status==='settled') cMap[name].spend+=(o.total||0);
+      if(!cMap[name].last||new Date(o.created_at)>new Date(cMap[name].last)) cMap[name].last=o.created_at;
+      cMap[name].types.add(o.order_type||'indoor');
+    });
+    const customers=Object.values(cMap).sort((a,b)=>b.spend-a.spend);
+    if(!customers.length){el.innerHTML='<div class="empty">No customer data yet.</div>';return;}
+    el.innerHTML=`
+      <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+        <thead>
+          <tr style="border-bottom:2px solid #f3f4f6">
+            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Customer</th>
+            <th style="text-align:center;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Orders</th>
+            <th style="text-align:right;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Total Spend</th>
+            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Order Type</th>
+            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Last Visit</th>
+          </tr>
+        </thead>
+        <tbody>${customers.map(c=>`
+          <tr style="border-bottom:1px solid #f9fafb">
+            <td style="padding:.45rem .6rem;font-weight:600;color:#111827">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <div style="width:28px;height:28px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">${c.name.slice(0,2).toUpperCase()}</div>
+                ${c.name}
+              </div>
+            </td>
+            <td style="padding:.45rem .6rem;text-align:center;color:#374151">${c.count}</td>
+            <td style="padding:.45rem .6rem;text-align:right;font-weight:700;color:${c.spend>0?'#111827':'#9ca3af'}">₹${c.spend.toFixed(0)}</td>
+            <td style="padding:.45rem .6rem;color:#6b7280">${[...c.types].join(', ')}</td>
+            <td style="padding:.45rem .6rem;color:#6b7280;font-size:.78rem">${c.last?new Date(c.last).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="font-size:.76rem;color:#9ca3af;padding:.6rem .6rem 0">${customers.length} unique customers · ₹${customers.reduce((s,c)=>s+c.spend,0).toFixed(0)} total revenue</div>`;
+  }catch(e){el.innerHTML='<div class="empty">Failed to load CRM data.</div>';}
 }
 
 // ── KITCHEN ──
