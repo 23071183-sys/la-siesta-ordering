@@ -586,6 +586,86 @@
     .dessert-row { cursor: pointer; transition: background 0.2s; }
     .dessert-row.active-row { background: #fdf0e8; border-radius: 12px; }
 
+    /* ── COLD BREW HERO ── */
+    .cb-hero {
+      position: relative; width: 100%; height: 270px;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .cb-hero-bg {
+      position: absolute; inset: 0;
+      background: url('/yuzu.jpg') center 30% / cover no-repeat;
+    }
+    .cb-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.72) 100%);
+    }
+    .cb-hero-title {
+      position: absolute; top: 16px; left: 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.4rem; font-weight: 800; color: #fff;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .cb-hero-sub {
+      position: absolute; bottom: 14px; left: 0; right: 0;
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.58rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      pointer-events: none;
+    }
+
+    /* Drink selector strip */
+    .cb-strip {
+      display: flex; gap: 0.65rem;
+      padding: 0.85rem 0.85rem 0.7rem;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .cb-strip::-webkit-scrollbar { display: none; }
+    .cb-card {
+      flex-shrink: 0; width: 112px;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+      padding: 0.8rem 0.65rem 0.7rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.32rem;
+      cursor: pointer; border: 2px solid transparent;
+      transition: transform 0.12s, border-color 0.15s;
+      position: relative;
+    }
+    .cb-card:active { transform: scale(0.96); }
+    .cb-card.added { border-color: var(--orange); }
+    .cb-card-name {
+      font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
+      color: var(--dark); text-align: center; line-height: 1.35;
+    }
+    .cb-card-price {
+      font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 700;
+      color: var(--orange);
+    }
+    .cb-card-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--orange); color: #fff; border: none;
+      font-size: 1.15rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.1s, background 0.15s;
+      margin-top: 0.2rem;
+    }
+    .cb-card-btn:active { transform: scale(0.88); }
+    .cb-card.added .cb-card-btn { background: #16a34a; }
+    .cb-card-qty {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem; font-weight: 700;
+      color: var(--orange); min-height: 14px;
+    }
+    .cb-card-unavail {
+      font-size: 0.6rem; font-weight: 700; color: #fff;
+      background: #c0392b; padding: 4px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-top: 0.2rem;
+    }
+
     /* ── EMPTY SEARCH STATE ── */
     .empty-search {
       padding: 3rem 1rem;
@@ -1149,11 +1229,15 @@
       if (items.length === 0) continue;
       anyVisible = true;
       visibleCats.push(cat);
+      const isColdBrew = cat.name.toLowerCase().includes('cold brew');
       html += `
         <div class="cat-section" id="cat-${cat.id}" data-cat="${cat.id}">
-          <div class="cat-title">${cat.name}</div>
-          <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
-          <div class="items-wrap">${items.map(item => renderItemRow(item, cat.name, false)).join('')}</div>
+          ${isColdBrew
+            ? `${renderColdBrewHero(items, cat.id)}`
+            : `<div class="cat-title">${cat.name}</div>
+               <div class="cat-subtitle">${items.length} item${items.length!==1?'s':''}</div>
+               <div class="items-wrap">${items.map(item => renderItemRow(item, cat.name, false)).join('')}</div>`
+          }
         </div>`;
     }
 
@@ -1164,6 +1248,47 @@
   }
 
   const FOOD_CATS = ['Global Fusions', 'Toasties', 'Pasta', 'Sandwiches', 'Mains', 'Special Rice Bowls', 'Sides', 'Sweet', 'Desserts'];
+
+  function cbDrinkCardHtml(item) {
+    const qty = cart[item.id]?.qty || 0;
+    const unavail = item.is_available === false;
+    return `
+      <div class="cb-card${qty > 0 ? ' added' : ''}" id="cb-${item.id}"
+           onclick="${unavail || !orderingEnabled ? '' : `cbAddDrink(${item.id})`}">
+        <div class="cb-card-name">${item.name}</div>
+        <div class="cb-card-price">₹${item.price}</div>
+        ${unavail
+          ? `<div class="cb-card-unavail">Unavailable</div>`
+          : orderingEnabled
+            ? `<button class="cb-card-btn" onclick="event.stopPropagation();cbAddDrink(${item.id})">${qty > 0 ? '✓' : '+'}</button>
+               <div class="cb-card-qty">${qty > 0 ? qty + ' in cart' : ''}</div>`
+            : ''
+        }
+      </div>`;
+  }
+
+  function renderColdBrewHero(items, catId) {
+    return `
+      <div class="cb-hero">
+        <div class="cb-hero-bg"></div>
+        <div class="cb-hero-overlay"></div>
+        <div class="cb-hero-title">Cold Brews ☕</div>
+        <div class="cb-hero-sub">Tap a drink to add to cart</div>
+      </div>
+      <div class="cb-strip" id="cbStrip-${catId}">
+        ${items.map(item => cbDrinkCardHtml(item)).join('')}
+      </div>`;
+  }
+
+  function cbAddDrink(itemId) {
+    addItem(itemId);
+    // Refresh all cb-card elements to reflect new qty
+    const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
+    if (!cat) return;
+    const strip = document.getElementById('cbStrip-' + cat.id);
+    if (!strip) return;
+    strip.innerHTML = cat.items.map(item => cbDrinkCardHtml(item)).join('');
+  }
 
   function renderItemRow(item, catName = '', isDesserts = false) {
     const qty = cart[item.id]?.qty || 0;
@@ -1252,14 +1377,22 @@
   function refreshCtrl(id) {
     const qty = cart[id]?.qty || 0;
     const el = document.getElementById(`ctrl-${id}`);
-    if (!el) return;
-    el.innerHTML = qty === 0
-      ? `<button class="add-btn" onclick="addItem(${id})"><span>+</span> ADD</button>`
-      : `<div class="qty-ctrl">
-           <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
-           <span class="qty-num">${qty}</span>
-           <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
-         </div>`;
+    if (el) {
+      el.innerHTML = qty === 0
+        ? `<button class="add-btn" onclick="addItem(${id})"><span>+</span> ADD</button>`
+        : `<div class="qty-ctrl">
+             <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+             <span class="qty-num">${qty}</span>
+             <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+           </div>`;
+    }
+    // Also refresh cb-card if this item is in Cold Brews
+    const cbCard = document.getElementById(`cb-${id}`);
+    if (cbCard) {
+      const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
+      const item = cat && cat.items.find(i => i.id === id);
+      if (item) cbCard.outerHTML = cbDrinkCardHtml(item);
+    }
   }
 
   function updateCartBar() {
