@@ -634,79 +634,49 @@
       cursor: pointer; flex-shrink: 0;
     }
 
-    /* Bottom drink panel */
-    .cb-bottom {
-      background: rgba(15,15,20,0.96);
-      backdrop-filter: blur(12px);
-      flex-shrink: 0;
-      padding: 12px 0 calc(env(safe-area-inset-bottom,0px) + 14px);
-    }
-    .cb-bottom-row {
-      display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
-      padding: 0 12px;
-    }
-    .cb-bottom-row::-webkit-scrollbar { display: none; }
+    /* Overlay zones container */
+    .cb-zones { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 
-    /* Individual drink card in bottom panel */
-    .cb-btn {
-      flex-shrink: 0; min-width: 80px; max-width: 96px;
-      display: flex; flex-direction: column; align-items: center;
-      gap: 5px; padding: 4px 8px 2px;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      border-right: 1px solid rgba(255,255,255,0.06);
+    /* Individual + button overlaid on photo */
+    .cb-zone {
+      position: absolute; transform: translate(-50%, 0);
+      pointer-events: all; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: center; justify-content: center;
     }
-    .cb-btn:last-child { border-right: none; }
-    .cb-btn-name {
-      font-family: 'Inter', sans-serif; font-size: 0.62rem; font-weight: 600;
-      color: rgba(255,255,255,0.75); text-align: center; line-height: 1.3;
-    }
-    .cb-btn-price {
-      font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 700;
-      color: #fbbf24;
-    }
-    .cb-btn-add {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.28);
-      color: rgba(255,255,255,0.9); font-size: 1.15rem; font-weight: 600;
+    .cb-zone-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(0,0,0,0.45); border: 1.5px solid rgba(255,255,255,0.5);
+      color: #fff; font-size: 1.3rem; font-weight: 400;
       display: flex; align-items: center; justify-content: center;
       transition: transform 0.1s, background 0.15s, border-color 0.15s;
-      flex-shrink: 0;
     }
-    .cb-btn:active .cb-btn-add { transform: scale(0.88); }
-    .cb-btn.cb-added .cb-btn-add {
-      background: rgba(22,163,74,0.7); border-color: #4ade80; color: #fff;
-    }
-    .cb-btn.cb-unavail .cb-btn-add {
-      background: rgba(180,20,20,0.4); border-color: #f87171; color: #fca5a5;
-      font-size: 0.7rem;
-    }
-    .cb-btn-qty {
-      font-family: 'Montserrat', sans-serif; font-size: 0.6rem; font-weight: 700;
-      color: #4ade80; min-height: 12px;
+    .cb-zone:active .cb-zone-btn { transform: scale(0.88); }
+    .cb-zone.cb-added .cb-zone-btn {
+      background: rgba(22,163,74,0.75); border-color: #4ade80;
+      font-size: 1rem;
     }
 
-    /* View cart row */
-    .cb-view-cart-row {
-      display: flex; justify-content: center;
-      padding: 10px 16px 0;
-    }
+    /* Floating View Cart pill */
     .cb-view-cart {
+      position: absolute; bottom: calc(env(safe-area-inset-bottom,0px) + 18px);
+      left: 50%; transform: translateX(-50%);
       background: var(--orange-l); color: #fff; border: none;
-      padding: 0.6rem 1.8rem; border-radius: 9999px;
+      padding: 0.6rem 1.8rem; border-radius: 9999px; z-index: 10;
       font-family: 'Montserrat', sans-serif; font-size: 0.84rem; font-weight: 700;
-      cursor: pointer; letter-spacing: 0.03em;
-      box-shadow: 0 3px 14px rgba(255,87,34,0.45);
+      cursor: pointer; white-space: nowrap;
+      box-shadow: 0 4px 18px rgba(255,87,34,0.5);
       display: none;
     }
     .cb-view-cart.show { display: block; }
 
-    /* Flash on add */
+    /* Flash */
     @keyframes cbFlash {
-      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.8); }
-      70%  { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.9); }
+      70%  { box-shadow: 0 0 0 14px rgba(34,197,94,0); }
       100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
     }
-    .cb-btn.flash .cb-btn-add { animation: cbFlash 0.5s ease-out; }
+    .cb-zone.flash .cb-zone-btn { animation: cbFlash 0.5s ease-out; }
 
     /* ── EMPTY SEARCH STATE ── */
     .empty-search {
@@ -1046,20 +1016,16 @@
 
 <!-- COLD BREW FULLSCREEN -->
 <div class="cb-screen" id="cbScreen">
-  <!-- Photo fills remaining space -->
   <div class="cb-photo">
     <img class="cb-photo-img" src="/coldbrews.png" alt="Cold Brews" draggable="false">
     <div class="cb-topbar">
       <div class="cb-topbar-title">Cold Brews ☕</div>
       <button class="cb-close" onclick="closeColdBrewScreen()">✕</button>
     </div>
-  </div>
-  <!-- Bottom panel: drink buttons -->
-  <div class="cb-bottom">
-    <div class="cb-bottom-row" id="cbBottomRow"></div>
-    <div class="cb-view-cart-row">
-      <button class="cb-view-cart" id="cbViewCart" onclick="closeColdBrewScreen();switchTab('orders')">View Cart →</button>
-    </div>
+    <!-- + buttons overlaid on photo -->
+    <div class="cb-zones" id="cbZones"></div>
+    <!-- Floating view-cart pill -->
+    <button class="cb-view-cart" id="cbViewCart" onclick="closeColdBrewScreen();switchTab('orders')">View Cart →</button>
   </div>
 </div>
 
@@ -1327,20 +1293,28 @@
     document.body.style.overflow = '';
   }
 
+  // Horizontal positions of the 5 drink names printed in coldbrews.png
+  // top% = just below the printed label text at the bottom of the photo
+  const CB_POSITIONS = [
+    { left: '11%', top: '87%' },   // Yuzu cold brew
+    { left: '26%', top: '89%' },   // Lavender Coldbrew
+    { left: '44%', top: '87%' },   // straight up cold brew
+    { left: '63%', top: '87%' },   // Basil cold brew
+    { left: '80%', top: '85%' },   // Fridge cigarette cold brew
+  ];
+
   function buildCbBottom(items) {
-    const row = document.getElementById('cbBottomRow');
-    if (!row) return;
-    row.innerHTML = items.map(item => {
+    const zones = document.getElementById('cbZones');
+    if (!zones) return;
+    zones.innerHTML = items.map((item, i) => {
       const qty = cart[item.id]?.qty || 0;
       const unavail = item.is_available === false;
+      const pos = CB_POSITIONS[i] || { left: `${10 + i * 18}%`, top: '87%' };
       return `
-        <div class="cb-btn${qty > 0 ? ' cb-added' : ''}${unavail ? ' cb-unavail' : ''}"
-             id="cbz-${item.id}"
+        <div class="cb-zone${qty > 0 ? ' cb-added' : ''}" id="cbz-${item.id}"
+             style="left:${pos.left};top:${pos.top}"
              onclick="${unavail || !orderingEnabled ? '' : `cbZoneTap(${item.id})`}">
-          <div class="cb-btn-name">${item.name}</div>
-          <div class="cb-btn-price">₹${item.price}</div>
-          <div class="cb-btn-add">${qty > 0 ? '✓' : unavail ? '—' : '+'}</div>
-          <div class="cb-btn-qty">${qty > 0 ? qty + ' added' : ''}</div>
+          <div class="cb-zone-btn">${qty > 0 ? '✓' : unavail ? '—' : '+'}</div>
         </div>`;
     }).join('');
     const total = items.reduce((s, i) => s + (cart[i.id]?.qty || 0), 0);
