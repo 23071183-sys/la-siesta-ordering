@@ -1312,7 +1312,7 @@
       return `
         <div class="cb-zone${qty > 0 ? ' cb-added' : ''}" id="cbz-${item.id}"
              style="left:${pos.left};top:${pos.top}"
-             onclick="${unavail || !orderingEnabled ? '' : `cbZoneTap(${item.id})`}">
+             onclick="cbZoneTap(${item.id})">
           <div class="cb-zone-btn">${qty > 0 ? '✓' : unavail ? '—' : '+'}</div>
         </div>`;
     }).join('');
@@ -1322,6 +1322,9 @@
   }
 
   function cbZoneTap(itemId) {
+    if (!orderingEnabled) return;
+    const item = getItemById(itemId);
+    if (!item || item.is_available === false) return;
     addItem(itemId);
     const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
     if (!cat) return;
