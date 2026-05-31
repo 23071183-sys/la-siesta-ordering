@@ -647,26 +647,26 @@
     }
     /* Pulsing ring */
     .cb-zone-ring {
-      width: 52px; height: 52px; border-radius: 50%;
-      border: 2.5px solid rgba(255,255,255,0.85);
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(4px);
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.42);
+      background: rgba(0,0,0,0.32);
+      backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       transition: transform 0.12s, background 0.15s, border-color 0.15s;
       position: relative;
     }
     .cb-zone-ring::before {
       content: '';
-      position: absolute; inset: -8px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.35);
-      animation: cbPulse 2s ease-in-out infinite;
+      position: absolute; inset: -7px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.18);
+      animation: cbPulse 2.4s ease-in-out infinite;
     }
     @keyframes cbPulse {
       0%, 100% { transform: scale(1); opacity: 0.6; }
       50%       { transform: scale(1.3); opacity: 0; }
     }
     .cb-zone-ring-icon {
-      font-size: 1.3rem;
+      font-size: 1.1rem; color: rgba(255,255,255,0.82);
     }
     .cb-zone.tapped .cb-zone-ring {
       background: rgba(22,163,74,0.7); border-color: #4ade80;
@@ -1365,12 +1365,12 @@
         <div class="cb-zone${qty > 0 ? ' tapped added-zone' : ''}" id="cbz-${item.id}"
              style="left:${pos.left};top:${pos.top}"
              onclick="${unavail || !orderingEnabled ? '' : `cbZoneTap(${item.id})`}">
-          <div class="cb-zone-ring">
-            <div class="cb-zone-ring-icon">${qty > 0 ? '✓' : unavail ? '✕' : '+'}</div>
-          </div>
           <div class="cb-zone-label">
             <div class="cb-zone-name">${item.name}</div>
             <div class="cb-zone-price">₹${item.price}${qty > 0 ? ` · ${qty} added` : ''}</div>
+          </div>
+          <div class="cb-zone-ring">
+            <div class="cb-zone-ring-icon">${qty > 0 ? '✓' : unavail ? '✕' : '+'}</div>
           </div>
         </div>`;
     }).join('');
