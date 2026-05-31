@@ -1707,11 +1707,29 @@
   function updateOrderSummary() {
     const items    = Object.values(cart);
     const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
-    const html = items.map(i =>
-      `<div class="sum-row"><span>${i.qty}× ${i.name}</span><span>₹${i.price * i.qty}</span></div>`
+    const html = items.map(i => `
+      <div class="sum-row">
+        <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0">
+          <div style="display:flex;align-items:center;border:1.5px solid var(--border);border-radius:9999px;overflow:hidden;flex-shrink:0">
+            <button onclick="sumChangeQty(${i.id},-1)"
+              style="width:28px;height:28px;border:none;background:none;font-size:1rem;font-weight:600;color:var(--orange);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">−</button>
+            <span style="font-family:'Montserrat',sans-serif;font-size:0.82rem;font-weight:700;color:var(--dark);min-width:18px;text-align:center">${i.qty}</span>
+            <button onclick="sumChangeQty(${i.id},1)"
+              style="width:28px;height:28px;border:none;background:none;font-size:1rem;font-weight:600;color:var(--orange);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+          </div>
+          <span style="font-size:0.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.name}</span>
+        </div>
+        <span style="font-weight:600;flex-shrink:0;margin-left:0.5rem">₹${i.price * i.qty}</span>
+      </div>`
     ).join('') + `<div class="sum-row total-row"><span>Total</span><span>₹${subtotal}</span></div>`;
     const el = document.getElementById('orderSummary');
     if (el) el.innerHTML = html;
+    updatePlaceBtn();
+  }
+
+  function sumChangeQty(id, delta) {
+    changeQty(id, delta);
+    updateOrderSummary();
   }
 
   function resetCoupon() {
