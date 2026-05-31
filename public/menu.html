@@ -586,85 +586,142 @@
     .dessert-row { cursor: pointer; transition: background 0.2s; }
     .dessert-row.active-row { background: #fdf0e8; border-radius: 12px; }
 
-    /* ── COLD BREW HERO ── */
-    .cb-hero {
-      position: relative; width: 100%; height: 270px;
-      overflow: hidden; flex-shrink: 0;
+    /* ── COLD BREW FULLSCREEN ── */
+    .cb-screen {
+      position: fixed; inset: 0; z-index: 500;
+      background: #000;
+      display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.38s cubic-bezier(0.32,0.72,0,1);
     }
-    .cb-hero-bg {
-      position: absolute; inset: 0;
-      background: url('/yuzu.jpg') center 30% / cover no-repeat;
+    .cb-screen.open { transform: translateY(0); }
+
+    /* Photo fills screen */
+    .cb-photo {
+      position: relative; flex: 1; overflow: hidden;
     }
-    .cb-hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.72) 100%);
+    .cb-photo-img {
+      width: 100%; height: 100%; object-fit: cover;
+      object-position: center 20%;
+      display: block; pointer-events: none;
+      user-select: none;
     }
-    .cb-hero-title {
-      position: absolute; top: 16px; left: 16px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 1.4rem; font-weight: 800; color: #fff;
-      letter-spacing: -0.02em;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .cb-hero-sub {
-      position: absolute; bottom: 14px; left: 0; right: 0;
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.58rem; font-weight: 600;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: rgba(255,255,255,0.6);
+    /* Gradient at bottom for label readability */
+    .cb-photo::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.68) 100%);
       pointer-events: none;
     }
 
-    /* Drink selector strip */
-    .cb-strip {
-      display: flex; gap: 0.65rem;
-      padding: 0.85rem 0.85rem 0.7rem;
-      overflow-x: auto; scrollbar-width: none;
+    /* Header bar */
+    .cb-topbar {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: env(safe-area-inset-top, 14px) 16px 10px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
     }
-    .cb-strip::-webkit-scrollbar { display: none; }
-    .cb-card {
-      flex-shrink: 0; width: 112px;
-      background: var(--white);
-      border-radius: 16px;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
-      padding: 0.8rem 0.65rem 0.7rem;
-      display: flex; flex-direction: column; align-items: center; gap: 0.32rem;
-      cursor: pointer; border: 2px solid transparent;
-      transition: transform 0.12s, border-color 0.15s;
+    .cb-topbar-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.25rem; font-weight: 800; color: #fff;
+      letter-spacing: -0.02em; text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+    .cb-close {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); backdrop-filter: blur(8px);
+      border: none; color: #fff; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* Tap zones over the photo */
+    .cb-zones {
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    }
+    .cb-zone {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      pointer-events: all; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Pulsing ring */
+    .cb-zone-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.12s, background 0.15s, border-color 0.15s;
       position: relative;
     }
-    .cb-card:active { transform: scale(0.96); }
-    .cb-card.added { border-color: var(--orange); }
-    .cb-card-name {
-      font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
-      color: var(--dark); text-align: center; line-height: 1.35;
+    .cb-zone-ring::before {
+      content: '';
+      position: absolute; inset: -8px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35);
+      animation: cbPulse 2s ease-in-out infinite;
     }
-    .cb-card-price {
-      font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 700;
-      color: var(--orange);
+    @keyframes cbPulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50%       { transform: scale(1.3); opacity: 0; }
     }
-    .cb-card-btn {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--orange); color: #fff; border: none;
-      font-size: 1.15rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: transform 0.1s, background 0.15s;
-      margin-top: 0.2rem;
+    .cb-zone-ring-icon {
+      font-size: 1.3rem;
     }
-    .cb-card-btn:active { transform: scale(0.88); }
-    .cb-card.added .cb-card-btn { background: #16a34a; }
-    .cb-card-qty {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.65rem; font-weight: 700;
-      color: var(--orange); min-height: 14px;
+    .cb-zone.tapped .cb-zone-ring {
+      background: rgba(22,163,74,0.7); border-color: #4ade80;
+      transform: scale(1.15);
     }
-    .cb-card-unavail {
-      font-size: 0.6rem; font-weight: 700; color: #fff;
-      background: #c0392b; padding: 4px 8px; border-radius: 6px;
-      text-transform: uppercase; letter-spacing: 0.04em;
-      margin-top: 0.2rem;
+    .cb-zone.tapped .cb-zone-ring::before { display: none; }
+    .cb-zone:active .cb-zone-ring { transform: scale(0.92); }
+
+    /* Name + price label */
+    .cb-zone-label {
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+      border-radius: 8px; padding: 4px 9px;
+      display: flex; flex-direction: column; align-items: center;
+      pointer-events: none; white-space: nowrap;
     }
+    .cb-zone-name {
+      font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600;
+      color: #fff; text-align: center; line-height: 1.3;
+    }
+    .cb-zone-price {
+      font-family: 'Montserrat', sans-serif; font-size: 0.7rem; font-weight: 700;
+      color: #fbbf24;
+    }
+    .cb-zone.added-zone .cb-zone-label { background: rgba(22,163,74,0.65); }
+
+    /* Bottom cart strip inside fullscreen */
+    .cb-cart-strip {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px;
+    }
+    .cb-cart-info {
+      color: rgba(255,255,255,0.75);
+      font-family: 'Inter', sans-serif; font-size: 0.72rem;
+    }
+    .cb-cart-count { font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 800; color: #fff; }
+    .cb-view-cart {
+      background: var(--orange-l); color: #fff; border: none;
+      padding: 0.55rem 1.2rem; border-radius: 9999px;
+      font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.03em;
+      box-shadow: 0 3px 14px rgba(255,87,34,0.5);
+      display: none;
+    }
+    .cb-view-cart.show { display: block; }
+
+    /* Added flash ring animation */
+    @keyframes cbFlash {
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
+      70%  { box-shadow: 0 0 0 14px rgba(34,197,94,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+    .cb-zone.flash .cb-zone-ring { animation: cbFlash 0.55s ease-out; }
 
     /* ── EMPTY SEARCH STATE ── */
     .empty-search {
@@ -1002,6 +1059,28 @@
   </button>
 </nav>
 
+<!-- COLD BREW FULLSCREEN -->
+<div class="cb-screen" id="cbScreen">
+  <div class="cb-photo">
+    <img class="cb-photo-img" src="/yuzu.jpg" alt="Cold Brews" draggable="false">
+    <!-- Top bar -->
+    <div class="cb-topbar">
+      <div class="cb-topbar-title">Cold Brews ☕</div>
+      <button class="cb-close" onclick="closeColdBrewScreen()">✕</button>
+    </div>
+    <!-- Tap zones (positions tuned to yuzu.jpg) -->
+    <div class="cb-zones" id="cbZones"></div>
+    <!-- Bottom cart strip -->
+    <div class="cb-cart-strip">
+      <div>
+        <div class="cb-cart-count" id="cbCartCount"></div>
+        <div class="cb-cart-info">cold brews in cart</div>
+      </div>
+      <button class="cb-view-cart" id="cbViewCart" onclick="closeColdBrewScreen();switchTab('orders')">View Cart →</button>
+    </div>
+  </div>
+</div>
+
 <!-- SUCCESS -->
 <div class="success-screen" id="successScreen">
   <div class="success-icon">
@@ -1180,9 +1259,11 @@
     const list = cats || menu;
     document.getElementById('catSidebar').innerHTML =
       `<button class="sidebar-top-btn" onclick="scrollToBottom()" title="Jump to bottom" style="border-top:none;border-bottom:1px solid var(--border);">↓</button>` +
-      list.map((cat, i) =>
-        `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="scrollToCat(${cat.id},this)">${cat.name}</button>`
-      ).join('') +
+      list.map((cat, i) => {
+        const isCB = cat.name.toLowerCase().includes('cold brew');
+        const action = isCB ? `openColdBrewScreen()` : `scrollToCat(${cat.id},this)`;
+        return `<button class="sidebar-btn${i===0?' active':''}" id="side-${cat.id}" data-cat="${cat.id}" onclick="${action}">${cat.name}</button>`;
+      }).join('') +
       `<button class="sidebar-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>`;
   }
 
@@ -1249,45 +1330,100 @@
 
   const FOOD_CATS = ['Global Fusions', 'Toasties', 'Pasta', 'Sandwiches', 'Mains', 'Special Rice Bowls', 'Sides', 'Sweet', 'Desserts'];
 
-  function cbDrinkCardHtml(item) {
-    const qty = cart[item.id]?.qty || 0;
-    const unavail = item.is_available === false;
-    return `
-      <div class="cb-card${qty > 0 ? ' added' : ''}" id="cb-${item.id}"
-           onclick="${unavail || !orderingEnabled ? '' : `cbAddDrink(${item.id})`}">
-        <div class="cb-card-name">${item.name}</div>
-        <div class="cb-card-price">₹${item.price}</div>
-        ${unavail
-          ? `<div class="cb-card-unavail">Unavailable</div>`
-          : orderingEnabled
-            ? `<button class="cb-card-btn" onclick="event.stopPropagation();cbAddDrink(${item.id})">${qty > 0 ? '✓' : '+'}</button>
-               <div class="cb-card-qty">${qty > 0 ? qty + ' in cart' : ''}</div>`
-            : ''
-        }
-      </div>`;
+  // ── COLD BREW FULLSCREEN ──────────────────────────────────────────────────
+  // Approximate positions of each drink on yuzu.jpg (left%, top%)
+  // Order matches left-to-right: Yuzu, Lavender, Straight-up, Basil, Fridge
+  const CB_POSITIONS = [
+    { left: '12%', top: '62%' },
+    { left: '27%', top: '52%' },
+    { left: '45%', top: '65%' },
+    { left: '63%', top: '53%' },
+    { left: '80%', top: '60%' },
+  ];
+
+  function openColdBrewScreen() {
+    const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
+    if (!cat) return;
+    buildCbZones(cat.items);
+    updateCbCartStrip(cat.items);
+    document.getElementById('cbScreen').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeColdBrewScreen() {
+    document.getElementById('cbScreen').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function buildCbZones(items) {
+    const zones = document.getElementById('cbZones');
+    zones.innerHTML = items.map((item, i) => {
+      const pos = CB_POSITIONS[i] || { left: `${15 + i*18}%`, top: '60%' };
+      const qty = cart[item.id]?.qty || 0;
+      const unavail = item.is_available === false;
+      return `
+        <div class="cb-zone${qty > 0 ? ' tapped added-zone' : ''}" id="cbz-${item.id}"
+             style="left:${pos.left};top:${pos.top}"
+             onclick="${unavail || !orderingEnabled ? '' : `cbZoneTap(${item.id})`}">
+          <div class="cb-zone-ring">
+            <div class="cb-zone-ring-icon">${qty > 0 ? '✓' : unavail ? '✕' : '+'}</div>
+          </div>
+          <div class="cb-zone-label">
+            <div class="cb-zone-name">${item.name}</div>
+            <div class="cb-zone-price">₹${item.price}${qty > 0 ? ` · ${qty} added` : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function cbZoneTap(itemId) {
+    addItem(itemId);
+    const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
+    if (!cat) return;
+    // Flash animation
+    const zone = document.getElementById('cbz-' + itemId);
+    if (zone) {
+      zone.classList.remove('flash');
+      void zone.offsetWidth; // reflow
+      zone.classList.add('flash', 'tapped', 'added-zone');
+    }
+    buildCbZones(cat.items);
+    updateCbCartStrip(cat.items);
+    // Re-add flash after rebuild
+    const rebuilt = document.getElementById('cbz-' + itemId);
+    if (rebuilt) {
+      rebuilt.classList.remove('flash');
+      void rebuilt.offsetWidth;
+      rebuilt.classList.add('flash');
+    }
+  }
+
+  function updateCbCartStrip(items) {
+    const total = items.reduce((s, i) => s + (cart[i.id]?.qty || 0), 0);
+    const el = document.getElementById('cbCartCount');
+    if (el) el.textContent = total || '';
+    const btn = document.getElementById('cbViewCart');
+    if (btn) btn.classList.toggle('show', total > 0);
   }
 
   function renderColdBrewHero(items, catId) {
+    // The section in the menu just shows a tap-to-open banner; fullscreen does the real UI
     return `
-      <div class="cb-hero">
-        <div class="cb-hero-bg"></div>
-        <div class="cb-hero-overlay"></div>
-        <div class="cb-hero-title">Cold Brews ☕</div>
-        <div class="cb-hero-sub">Tap a drink to add to cart</div>
-      </div>
-      <div class="cb-strip" id="cbStrip-${catId}">
-        ${items.map(item => cbDrinkCardHtml(item)).join('')}
+      <div style="position:relative;width:100%;height:200px;overflow:hidden;cursor:pointer;border-radius:0;"
+           onclick="openColdBrewScreen()">
+        <img src="/yuzu.jpg" alt="Cold Brews"
+             style="width:100%;height:100%;object-fit:cover;object-position:center 25%;display:block;pointer-events:none;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 30%,rgba(0,0,0,0.65) 100%)"></div>
+        <div style="position:absolute;top:14px;left:16px;font-family:'Montserrat',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.4);letter-spacing:-0.02em">Cold Brews ☕</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'Inter',sans-serif;font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.12em;text-transform:uppercase">Tap to explore</div>
+          <div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);border-radius:9999px;padding:6px 16px;font-family:'Montserrat',sans-serif;font-size:0.76rem;font-weight:700;color:#fff">View All →</div>
+        </div>
       </div>`;
   }
 
   function cbAddDrink(itemId) {
-    addItem(itemId);
-    // Refresh all cb-card elements to reflect new qty
-    const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
-    if (!cat) return;
-    const strip = document.getElementById('cbStrip-' + cat.id);
-    if (!strip) return;
-    strip.innerHTML = cat.items.map(item => cbDrinkCardHtml(item)).join('');
+    cbZoneTap(itemId);
   }
 
   function renderItemRow(item, catName = '', isDesserts = false) {
@@ -1386,12 +1522,11 @@
              <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
            </div>`;
     }
-    // Also refresh cb-card if this item is in Cold Brews
-    const cbCard = document.getElementById(`cb-${id}`);
-    if (cbCard) {
+    // Also refresh fullscreen zone if open
+    const cbZone = document.getElementById(`cbz-${id}`);
+    if (cbZone) {
       const cat = menu.find(c => c.name.toLowerCase().includes('cold brew'));
-      const item = cat && cat.items.find(i => i.id === id);
-      if (item) cbCard.outerHTML = cbDrinkCardHtml(item);
+      if (cat) { buildCbZones(cat.items); updateCbCartStrip(cat.items); }
     }
   }
 
