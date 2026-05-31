@@ -601,10 +601,10 @@
       position: relative; flex: 1; overflow: hidden;
     }
     .cb-photo-img {
-      width: 100%; height: 100%; object-fit: cover;
-      object-position: center 60%;
+      width: 100%; height: 100%; object-fit: contain;
+      object-position: center top;
       display: block; pointer-events: none;
-      user-select: none;
+      user-select: none; background: #0a0a0a;
     }
     /* No darkening — image fully visible */
     .cb-photo::after { display: none; }
@@ -1284,6 +1284,27 @@
     buildCbBottom(cat.items);
     document.getElementById('cbScreen').classList.add('open');
     document.body.style.overflow = 'hidden';
+    const img = document.querySelector('.cb-photo-img');
+    if (img && img.complete && img.naturalWidth) positionCbZones();
+    else if (img) img.onload = positionCbZones;
+  }
+
+  function positionCbZones() {
+    const img = document.querySelector('.cb-photo-img');
+    const photo = document.querySelector('.cb-photo');
+    if (!img || !photo || !img.naturalWidth) return;
+    const pW = photo.clientWidth, pH = photo.clientHeight;
+    const scale = Math.min(pW / img.naturalWidth, pH / img.naturalHeight);
+    const rendW = img.naturalWidth * scale;
+    const rendH = img.naturalHeight * scale;
+    const offX = (pW - rendW) / 2;
+    const offY = (pH - rendH) / 2;
+    document.querySelectorAll('.cb-zone').forEach((zone, i) => {
+      const p = CB_POSITIONS[i]; if (!p) return;
+      zone.style.left = (offX + parseFloat(p.left) / 100 * rendW) + 'px';
+      zone.style.top  = (offY + parseFloat(p.top)  / 100 * rendH) + 'px';
+      zone.style.transform = 'translate(-50%, -50%)';
+    });
   }
 
   function closeColdBrewScreen() {
@@ -1311,7 +1332,6 @@
       const pos = CB_POSITIONS[i] || { left: `${10 + i * 18}%`, top: '87%' };
       return `
         <div class="cb-zone${qty > 0 ? ' cb-added' : ''}" id="cbz-${item.id}"
-             style="left:${pos.left};top:${pos.top}"
              onclick="cbZoneTap(${item.id})">
           <div class="cb-zone-btn">${qty > 0 ? '✓' : unavail ? '—' : '+'}</div>
         </div>`;
@@ -1319,6 +1339,7 @@
     const total = items.reduce((s, i) => s + (cart[i.id]?.qty || 0), 0);
     const btn = document.getElementById('cbViewCart');
     if (btn) btn.classList.toggle('show', total > 0);
+    requestAnimationFrame(positionCbZones);
   }
 
   function cbZoneTap(itemId) {
