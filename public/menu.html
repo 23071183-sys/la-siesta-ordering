@@ -602,16 +602,12 @@
     }
     .cb-photo-img {
       width: 100%; height: 100%; object-fit: cover;
-      object-position: center 20%;
+      object-position: center 60%;
       display: block; pointer-events: none;
       user-select: none;
     }
-    /* Gradient at bottom for label readability */
-    .cb-photo::after {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.68) 100%);
-      pointer-events: none;
-    }
+    /* No darkening — image fully visible */
+    .cb-photo::after { display: none; }
 
     /* Header bar */
     .cb-topbar {
@@ -645,16 +641,18 @@
       display: flex; align-items: center; justify-content: center;
     }
     .cb-zone-btn {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: rgba(0,0,0,0.45); border: 1.5px solid rgba(255,255,255,0.5);
-      color: #fff; font-size: 1.3rem; font-weight: 400;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.75);
+      color: #fff; font-size: 1.3rem; font-weight: 300;
       display: flex; align-items: center; justify-content: center;
-      transition: transform 0.1s, background 0.15s, border-color 0.15s;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
     }
-    .cb-zone:active .cb-zone-btn { transform: scale(0.88); }
+    .cb-zone:active .cb-zone-btn { transform: scale(0.85); }
     .cb-zone.cb-added .cb-zone-btn {
-      background: rgba(22,163,74,0.75); border-color: #4ade80;
-      font-size: 1rem;
+      background: rgba(22,163,74,0.6); border-color: #4ade80;
+      font-size: 0.95rem;
     }
 
     /* Floating View Cart pill */
@@ -1295,12 +1293,13 @@
 
   // Horizontal positions of the 5 drink names printed in coldbrews.png
   // top% = just below the printed label text at the bottom of the photo
+  // Positions tuned to red-dot markers on coldbrews.png
   const CB_POSITIONS = [
-    { left: '11%', top: '87%' },   // Yuzu cold brew
-    { left: '26%', top: '89%' },   // Lavender Coldbrew
-    { left: '44%', top: '87%' },   // straight up cold brew
-    { left: '63%', top: '87%' },   // Basil cold brew
-    { left: '80%', top: '85%' },   // Fridge cigarette cold brew
+    { left: '10%', top: '91%' },   // Yuzu cold brew
+    { left: '27%', top: '93%' },   // Lavender Coldbrew
+    { left: '45%', top: '91%' },   // straight up cold brew
+    { left: '63%', top: '91%' },   // Basil cold brew
+    { left: '80%', top: '89%' },   // Fridge cigarette cold brew
   ];
 
   function buildCbBottom(items) {
