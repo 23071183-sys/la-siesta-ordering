@@ -798,6 +798,12 @@
     /* Cart bar sits above the nav */
     .cart-bar { bottom: 56px; }
 
+    @media (prefers-color-scheme: dark) {
+      .cart-bar { background: #111113 !important; }
+      .cart-bar-left { color: #ffffff !important; }
+      .cart-amount { color: #ffffff !important; }
+    }
+
     /* ── ORDERS PANEL ── */
     .orders-panel {
       display: none;
