@@ -1245,9 +1245,12 @@
     document.body.style.paddingBottom = enabled ? '150px' : '70px';
   }
 
-  fetch('/api/settings').then(r => r.json()).then(s => {
-    applyOrderingMode(!!s.ordering_enabled);
-  }).catch(() => applyOrderingMode(false));
+  fetch('/api/settings').then(r => r.json()).then(rows => {
+    const val = Array.isArray(rows)
+      ? rows.find(r => r.key === 'ordering_enabled')?.value
+      : rows.ordering_enabled;
+    applyOrderingMode(val !== '0' && val !== 0 && val !== false);
+  }).catch(() => applyOrderingMode(true)); // default ON if fetch fails
 
   fetch('/api/menu').then(r => r.json()).then(data => {
     menu = data;
@@ -2001,7 +2004,7 @@
         const s = io();
         s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
-        s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
+        s.on('settings_updated', s => applyOrderingMode(s.ordering_enabled !== '0' && s.ordering_enabled !== 0 && s.ordering_enabled !== false));
         s.on('item_availability', ({ id, available }) => applyItemAvailability(id, available));
         return;
       }
@@ -2011,7 +2014,7 @@
         const s = io();
         s.on('new_order',        o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
         s.on('order_updated',    o => { if (Number(o.table_number) === tableNumber) updateOrderCard(o); });
-        s.on('settings_updated', s => applyOrderingMode(!!s.ordering_enabled));
+        s.on('settings_updated', s => applyOrderingMode(s.ordering_enabled !== '0' && s.ordering_enabled !== 0 && s.ordering_enabled !== false));
         s.on('item_availability', ({ id, available }) => applyItemAvailability(id, available));
       };
       document.body.appendChild(sc);
