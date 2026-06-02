@@ -795,13 +795,25 @@
 
     <!-- CRM -->
     <div class="panel" id="panel-crm">
-      <div class="card-hd" style="margin-bottom:1rem">
-        <div style="font-size:1rem;font-weight:600;color:var(--dark)">CRM — Customer Records</div>
-        <button class="btn btn-ghost btn-sm" onclick="loadCRM()">↻ Refresh</button>
+      <!-- Stats row -->
+      <div id="crmStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.1rem"></div>
+
+      <!-- Search + filter bar -->
+      <div style="display:flex;gap:.6rem;margin-bottom:1rem;align-items:center">
+        <input id="crmSearch" type="text" placeholder="Search by name or phone…"
+          class="search-bar" style="flex:1;max-width:320px"
+          oninput="filterCRM()">
+        <select id="crmSource" onchange="filterCRM()"
+          style="padding:.42rem .7rem;border:1.5px solid #e5e7eb;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:#374151;background:#fff">
+          <option value="">All Sources</option>
+          <option value="qr">QR / Table Scan</option>
+          <option value="pos">POS / Counter</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadCRM()">↻</button>
       </div>
-      <div class="card">
-        <div id="crmList"><div class="empty">Loading…</div></div>
-      </div>
+
+      <!-- Customer cards list -->
+      <div id="crmList"><div class="empty">Loading…</div></div>
     </div>
 
     <!-- USERS -->
@@ -1322,6 +1334,8 @@ async function loadInventory(){
 }
 
 // ── CRM ──
+let _crmData=[];
+
 async function loadCRM(){
   const el=document.getElementById('crmList');
   if(!el) return;
@@ -1329,46 +1343,129 @@ async function loadCRM(){
   try{
     const r=await fetch('/api/orders?status=all');
     const orders=await r.json();
-    // Build customer map
+
+    // ── Build customer map keyed by phone (fallback: name) ──────────────
     const cMap={};
     orders.forEach(o=>{
+      const phone=(o.customer_phone||'').trim();
       const name=(o.customer_name||'').trim()||'Guest';
-      if(!cMap[name]) cMap[name]={name,count:0,spend:0,last:null,types:new Set()};
-      cMap[name].count++;
-      if(o.status==='settled') cMap[name].spend+=(o.total||0);
-      if(!cMap[name].last||new Date(o.created_at)>new Date(cMap[name].last)) cMap[name].last=o.created_at;
-      cMap[name].types.add(o.order_type||'indoor');
+      const key=phone||('name:'+name);
+      if(!cMap[key]){
+        cMap[key]={
+          name, phone,
+          orders:[], spend:0, count:0,
+          last:null, types:new Set(), itemCt:{},
+          // source: qr=phone provided (customer self-ordered), pos=no phone
+          source: phone ? 'qr' : 'pos'
+        };
+      }
+      const c=cMap[key];
+      // update name if we now have a real one
+      if(name!=='Guest' && c.name==='Guest') c.name=name;
+      c.count++;
+      c.orders.push(o);
+      if(o.status==='settled') c.spend+=(o.total||0);
+      if(!c.last||new Date(o.created_at)>new Date(c.last)) c.last=o.created_at;
+      c.types.add(o.order_type||'indoor');
+      // tally items
+      (o.items||[]).forEach(i=>{c.itemCt[i.item_name]=(c.itemCt[i.item_name]||0)+i.quantity;});
     });
-    const customers=Object.values(cMap).sort((a,b)=>b.spend-a.spend);
-    if(!customers.length){el.innerHTML='<div class="empty">No customer data yet.</div>';return;}
-    el.innerHTML=`
-      <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-        <thead>
-          <tr style="border-bottom:2px solid #f3f4f6">
-            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Customer</th>
-            <th style="text-align:center;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Orders</th>
-            <th style="text-align:right;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Total Spend</th>
-            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Order Type</th>
-            <th style="text-align:left;padding:.45rem .6rem;color:#9ca3af;font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Last Visit</th>
-          </tr>
-        </thead>
-        <tbody>${customers.map(c=>`
-          <tr style="border-bottom:1px solid #f9fafb">
-            <td style="padding:.45rem .6rem;font-weight:600;color:#111827">
-              <div style="display:flex;align-items:center;gap:.5rem">
-                <div style="width:28px;height:28px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">${c.name.slice(0,2).toUpperCase()}</div>
-                ${c.name}
-              </div>
-            </td>
-            <td style="padding:.45rem .6rem;text-align:center;color:#374151">${c.count}</td>
-            <td style="padding:.45rem .6rem;text-align:right;font-weight:700;color:${c.spend>0?'#111827':'#9ca3af'}">₹${c.spend.toFixed(0)}</td>
-            <td style="padding:.45rem .6rem;color:#6b7280">${[...c.types].join(', ')}</td>
-            <td style="padding:.45rem .6rem;color:#6b7280;font-size:.78rem">${c.last?new Date(c.last).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-      <div style="font-size:.76rem;color:#9ca3af;padding:.6rem .6rem 0">${customers.length} unique customers · ₹${customers.reduce((s,c)=>s+c.spend,0).toFixed(0)} total revenue</div>`;
+
+    _crmData=Object.values(cMap).sort((a,b)=>b.spend-a.spend);
+
+    // ── Stats cards ──────────────────────────────────────────────────────
+    const totalRev=_crmData.reduce((s,c)=>s+c.spend,0);
+    const withPhone=_crmData.filter(c=>c.phone).length;
+    const avgSpend=_crmData.length?totalRev/_crmData.length:0;
+    const repeat=_crmData.filter(c=>c.count>1).length;
+    const statsEl=document.getElementById('crmStats');
+    if(statsEl) statsEl.innerHTML=`
+      <div class="stat-cf"><div class="stat-cf-lbl">TOTAL CUSTOMERS</div>
+        <div class="stat-cf-row"><div class="stat-cf-val">${_crmData.length}</div><div class="stat-cf-icon blue">👥</div></div>
+        <div class="stat-cf-desc">${withPhone} with phone number</div></div>
+      <div class="stat-cf"><div class="stat-cf-lbl">TOTAL REVENUE</div>
+        <div class="stat-cf-row"><div class="stat-cf-val">₹${totalRev.toFixed(0)}</div><div class="stat-cf-icon green">💰</div></div>
+        <div class="stat-cf-desc">From settled orders</div></div>
+      <div class="stat-cf"><div class="stat-cf-lbl">AVG SPEND / CUSTOMER</div>
+        <div class="stat-cf-row"><div class="stat-cf-val">₹${avgSpend.toFixed(0)}</div><div class="stat-cf-icon orange">📊</div></div>
+        <div class="stat-cf-desc">Lifetime average</div></div>
+      <div class="stat-cf"><div class="stat-cf-lbl">REPEAT CUSTOMERS</div>
+        <div class="stat-cf-row"><div class="stat-cf-val">${repeat}</div><div class="stat-cf-icon red">🔁</div></div>
+        <div class="stat-cf-desc">${_crmData.length?((repeat/_crmData.length)*100).toFixed(0):0}% return rate</div></div>`;
+
+    renderCRMList(_crmData);
   }catch(e){el.innerHTML='<div class="empty">Failed to load CRM data.</div>';}
+}
+
+function filterCRM(){
+  const q=(document.getElementById('crmSearch')?.value||'').trim().toLowerCase();
+  const src=document.getElementById('crmSource')?.value||'';
+  let list=_crmData;
+  if(q) list=list.filter(c=>c.name.toLowerCase().includes(q)||(c.phone&&c.phone.includes(q)));
+  if(src) list=list.filter(c=>c.source===src);
+  renderCRMList(list);
+}
+
+function renderCRMList(customers){
+  const el=document.getElementById('crmList');
+  if(!el) return;
+  if(!customers.length){el.innerHTML='<div class="empty">No customers match.</div>';return;}
+
+  el.innerHTML=customers.map(c=>{
+    const topItem=Object.entries(c.itemCt).sort((a,b)=>b[1]-a[1])[0];
+    const initials=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'??';
+    const srcColor=c.source==='qr'?'#0ea5e9':'#8b5cf6';
+    const srcLabel=c.source==='qr'?'QR Scan':'POS';
+    const lastDate=c.last?new Date(c.last).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    const typeStr=[...c.types].join(', ');
+    return `
+    <div class="card" style="margin-bottom:.7rem;cursor:default">
+      <div style="display:flex;align-items:center;gap:.9rem">
+        <!-- Avatar -->
+        <div style="width:40px;height:40px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">${initials}</div>
+        <!-- Info -->
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <span style="font-size:.92rem;font-weight:700;color:#111827">${c.name}</span>
+            <span style="font-size:.62rem;font-weight:700;padding:.12rem .45rem;border-radius:9999px;background:${srcColor}18;color:${srcColor};border:1px solid ${srcColor}40">${srcLabel}</span>
+          </div>
+          <div style="font-size:.75rem;color:#6b7280;margin-top:.12rem">
+            ${c.phone?`📞 ${c.phone} · `:''}${typeStr} · Last visit: ${lastDate}
+          </div>
+        </div>
+        <!-- Stats -->
+        <div style="display:flex;gap:1.2rem;flex-shrink:0;text-align:center">
+          <div><div style="font-size:1rem;font-weight:700;color:#111827">${c.count}</div><div style="font-size:.6rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em">Orders</div></div>
+          <div><div style="font-size:1rem;font-weight:700;color:#4f46e5">₹${c.spend.toFixed(0)}</div><div style="font-size:.6rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em">Spend</div></div>
+        </div>
+        <!-- Expand toggle -->
+        <button onclick="toggleCRMHistory(this)" style="background:none;border:none;font-size:1.1rem;color:#9ca3af;cursor:pointer;flex-shrink:0;padding:.2rem">▾</button>
+      </div>
+      ${topItem?`<div style="margin-top:.55rem;font-size:.74rem;color:#6b7280">⭐ Top item: <b style="color:#111827">${topItem[0]}</b> (${topItem[1]}×)</div>`:''}
+      <!-- Order history (collapsed) -->
+      <div class="crm-history" style="display:none;margin-top:.75rem;border-top:1px solid #f3f4f6;padding-top:.65rem">
+        ${c.orders.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(o=>`
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:.32rem 0;border-bottom:1px solid #f9fafb;font-size:.78rem;gap:.5rem">
+            <div>
+              <span class="status-pill ${o.status}" style="font-size:.6rem;margin-right:.3rem">${o.status}</span>
+              <span style="color:#374151">${(o.items||[]).map(i=>i.quantity+'× '+i.item_name).join(', ')||'—'}</span>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+              <div style="font-weight:700;color:#111827">₹${Number(o.total||0).toFixed(0)}</div>
+              <div style="color:#9ca3af;font-size:.68rem">${new Date(o.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · T${o.table_number}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCRMHistory(btn){
+  const hist=btn.closest('.card').querySelector('.crm-history');
+  if(!hist) return;
+  const open=hist.style.display==='none';
+  hist.style.display=open?'':'none';
+  btn.textContent=open?'▴':'▾';
 }
 
 // ── KITCHEN ──
