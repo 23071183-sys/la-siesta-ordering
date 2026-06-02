@@ -22,6 +22,63 @@
       --light:     #eeeeee;
       --border:    #e2e2e2;
       --white:     #ffffff;
+
+      /* theme tokens used explicitly for dark-mode flip */
+      --nav-bg:    #ffffff;
+      --nav-icon:  #9ca3af;
+      --header-bg: #ffffff;
+      --card-bg:   #ffffff;
+      --input-bg:  #f3f3f3;
+      --modal-bg:  #ffffff;
+    }
+
+    /* ── DARK MODE ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --orange:    #ff6b3d;
+        --orange-l:  #ff7043;
+        --dark:      #f0f0f0;
+        --gray:      #a0a0a8;
+        --cream:     #101010;
+        --cream2:    #1a1a1a;
+        --light:     #2a2a2e;
+        --border:    #333338;
+        --white:     #1e1e22;
+
+        --nav-bg:    #141416;
+        --nav-icon:  #6b6b75;
+        --header-bg: #141416;
+        --card-bg:   #1e1e22;
+        --input-bg:  #242428;
+        --modal-bg:  #1e1e22;
+      }
+
+      /* Explicit overrides for elements with hardcoded colours */
+      .rest-header        { background: var(--header-bg) !important; border-bottom-color: var(--border); }
+      .search-wrap        { background: var(--header-bg) !important; border-bottom-color: var(--border); }
+      .filter-bar         { background: var(--header-bg) !important; border-bottom-color: var(--border); }
+      .search-box         { background: var(--input-bg) !important; }
+      .search-box:focus-within { background: var(--white) !important; }
+      .cat-sidebar        { background: var(--cream2) !important; border-right-color: var(--border); }
+      .sidebar-btn.active { background: var(--white) !important; }
+      .bottom-nav         { background: var(--nav-bg) !important; border-top-color: var(--border); }
+      .nav-tab            { color: var(--nav-icon) !important; }
+      .nav-tab.active     { color: var(--orange) !important; }
+      .item-row           { background: var(--card-bg) !important; }
+      .modal              { background: var(--modal-bg) !important; }
+      .order-summary      { background: var(--light) !important; }
+      .form-input         { background: var(--input-bg) !important; border-color: var(--border); color: var(--dark); }
+      .form-input:focus   { border-color: var(--orange); }
+      .phone-prefix       { background: var(--light) !important; border-color: var(--border); color: var(--gray); }
+      .orders-header      { background: var(--header-bg) !important; border-bottom-color: var(--border); }
+      .order-card         { background: var(--card-bg) !important; }
+      .veg-toggle         { background: var(--input-bg) !important; border-color: var(--border); }
+      .qty-ctrl           { background: var(--orange) !important; }
+      .add-btn            { box-shadow: 0 3px 12px rgba(255,112,67,0.3); }
+      .success-screen     { background: var(--white) !important; }
+      .coupon-section     { background: var(--card-bg) !important; border-color: var(--border); }
+      .coupon-input       { background: var(--input-bg) !important; color: var(--dark); }
+      .modal-backdrop     { background: rgba(0,0,0,0.75); }
     }
     html { scroll-behavior: smooth; }
     body {
