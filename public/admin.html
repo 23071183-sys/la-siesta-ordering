@@ -1305,7 +1305,9 @@ async function loadInventory(){
   el.innerHTML='<div class="empty">Loading…</div>';
   try{
     const r=await fetch('/api/menu');
-    const items=await r.json();
+    const cats_raw=await r.json();
+    // /api/menu returns [{id,name,items:[...]}] — flatten to item list with category name
+    const items=cats_raw.flatMap(c=>(c.items||[]).map(i=>({...i,category:c.name})));
     if(!items.length){el.innerHTML='<div class="empty">No menu items found.</div>';return;}
     const cats=[...new Set(items.map(i=>i.category||'Uncategorised'))].sort();
     el.innerHTML=`

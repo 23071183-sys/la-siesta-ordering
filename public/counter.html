@@ -358,6 +358,19 @@
   </div>
 </div>
 
+<!-- PIN OVERLAY -->
+<div id="pinOverlay" style="display:none;position:fixed;inset:0;background:#0d0d0d;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem">
+  <div style="font-size:1.5rem;font-weight:800;color:#D4552A;letter-spacing:.1em">LA SIESTA</div>
+  <div style="font-size:.85rem;color:#888;letter-spacing:.08em;text-transform:uppercase">POS Terminal</div>
+  <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN"
+    style="background:#1e1e1e;border:1.5px solid #2c2c2c;border-radius:10px;color:#e8e8e8;font-size:1.4rem;letter-spacing:.35em;text-align:center;padding:.7rem 1.4rem;width:200px;outline:none;font-family:'DM Sans',sans-serif"
+    onkeydown="if(event.key==='Enter')posLoginInput()">
+  <button onclick="posLoginInput()"
+    style="background:#D4552A;color:#fff;border:none;border-radius:8px;padding:.65rem 2rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;width:200px">
+    Unlock POS →
+  </button>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">
   <div class="toast-icon" id="toastIcon">🔔</div>
@@ -367,11 +380,43 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
   // ── STATE ─────────────────────────────────────────────────
-  let menu         = [];       // full menu from /api/menu
-  let orders       = [];       // all active orders
-  let selectedId   = null;     // currently viewed order id
-  let activeCat    = null;     // selected menu category id
-  let pendingCart  = {};       // { itemId: {id,name,price,qty} } for new orders only
+  let menu         = [];
+  let orders       = [];
+  let selectedId   = null;
+  let activeCat    = null;
+  let pendingCart  = {};
+  let _posToken    = sessionStorage.getItem('pos_token') || null;
+
+  // ── POS AUTH ──────────────────────────────────────────────
+  function posHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _posToken };
+  }
+
+  async function posLogin() {
+    const pin = prompt('Enter POS PIN:');
+    if (!pin) return;
+    const r = await fetch('/api/pos/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      _posToken = d.token;
+      sessionStorage.setItem('pos_token', _posToken);
+      document.getElementById('pinOverlay').style.display = 'none';
+      loadMenu(); loadOrders();
+    } else {
+      alert('Wrong PIN. Try again.');
+    }
+  }
+
+  // Show PIN overlay if not logged in
+  if (!_posToken) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('pinOverlay').style.display = 'flex';
+    });
+  }
 
   // ── CLOCK ─────────────────────────────────────────────────
   const clockEl = document.getElementById('clock');
@@ -593,9 +638,10 @@
     if (!selectedId) return;
     const r = await fetch(`/api/orders/${selectedId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: posHeaders(),
       body: JSON.stringify({ status })
     });
+    if (r.status === 401) { sessionStorage.removeItem('pos_token'); location.reload(); return; }
     const updated = await r.json();
     const idx = orders.findIndex(o => o.id === selectedId);
     if (idx > -1) orders[idx] = updated;
@@ -606,12 +652,15 @@
 
   async function settleOrder() {
     if (!selectedId) return;
-    // Mark as done and remove from active list
+    const r = await fetch(`/api/orders/${selectedId}/status`, {
+      method: 'PATCH',
+      headers: posHeaders(),
+      body: JSON.stringify({ status: 'settled' })
+    });
+    if (r.status === 401) { sessionStorage.removeItem('pos_token'); location.reload(); return; }
     orders = orders.filter(o => o.id !== selectedId);
     selectedId = null;
     renderTables();
-
-    // Reset panel
     document.getElementById('opTable').textContent = '—';
     document.getElementById('opStatus').style.display = 'none';
     document.getElementById('opCustomer').style.display = 'none';
@@ -619,7 +668,6 @@
     document.getElementById('opItems').style.display = 'none';
     document.getElementById('opTotals').style.display = 'none';
     document.getElementById('opActions').style.display = 'none';
-
     toast('Order settled ✓', '💰');
   }
 
@@ -682,11 +730,10 @@
     const phone = document.getElementById('moPhone').value.trim();
 
     if (!table) { alert('Enter a table number'); return; }
-    if (!phone || !/^[6-9]\d{9}$/.test(phone)) { alert('Enter a valid 10-digit phone'); return; }
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) { alert('Phone must be a valid 10-digit number (or leave blank)'); return; }
 
-    // Create a minimal placeholder order (1 item needed by API — use a dummy item)
-    // In a real setup, staff would browse the menu first. For now, create via the API.
-    const firstItem = menu[0]?.items[0];
+    // Use first available item as placeholder; staff adds real items via the menu browser
+    const firstItem = menu.flatMap(c=>c.items).find(i=>i.available!==false);
     if (!firstItem) { alert('Menu not loaded yet'); return; }
 
     const r = await fetch('/api/orders', {
@@ -694,9 +741,10 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         table_number: table,
-        customer_name: name,
-        customer_phone: phone,
-        notes: 'Counter order',
+        customer_name: name || 'Counter',
+        customer_phone: phone || '',
+        notes: 'POS counter order',
+        order_type: 'indoor',
         items: [{ id: firstItem.id, name: firstItem.name, price: firstItem.price, quantity: 1 }]
       })
     });
@@ -732,9 +780,31 @@
   // Refresh time labels every 30s
   setInterval(loadOrders, 30000);
 
+  // ── POS LOGIN INPUT ───────────────────────────────────────
+  async function posLoginInput() {
+    const pin = document.getElementById('pinInput').value.trim();
+    if (!pin) return;
+    const r = await fetch('/api/pos/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      _posToken = d.token;
+      sessionStorage.setItem('pos_token', _posToken);
+      document.getElementById('pinOverlay').style.display = 'none';
+      loadMenu(); loadOrders();
+    } else {
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinInput').style.borderColor = '#ef4444';
+      setTimeout(() => document.getElementById('pinInput').style.borderColor = '#2c2c2c', 1200);
+    }
+  }
+
   // ── INIT ──────────────────────────────────────────────────
-  loadMenu();
-  loadOrders();
+  if (_posToken) { loadMenu(); loadOrders(); }
+  else { document.getElementById('pinOverlay').style.display = 'flex'; }
 </script>
 </body>
 </html>
