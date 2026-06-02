@@ -411,11 +411,12 @@
     }
   }
 
-  // Show PIN overlay if not logged in
-  if (!_posToken) {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('pinOverlay').style.display = 'flex';
-    });
+  function showPinOverlay() {
+    _posToken = null;
+    sessionStorage.removeItem('pos_token');
+    document.getElementById('pinOverlay').style.display = 'flex';
+    const inp = document.getElementById('pinInput');
+    if (inp) { inp.value = ''; inp.focus(); }
   }
 
   // ── CLOCK ─────────────────────────────────────────────────
@@ -641,7 +642,7 @@
       headers: posHeaders(),
       body: JSON.stringify({ status })
     });
-    if (r.status === 401) { sessionStorage.removeItem('pos_token'); location.reload(); return; }
+    if (r.status === 401) { showPinOverlay(); return; }
     const updated = await r.json();
     const idx = orders.findIndex(o => o.id === selectedId);
     if (idx > -1) orders[idx] = updated;
@@ -657,7 +658,7 @@
       headers: posHeaders(),
       body: JSON.stringify({ status: 'settled' })
     });
-    if (r.status === 401) { sessionStorage.removeItem('pos_token'); location.reload(); return; }
+    if (r.status === 401) { showPinOverlay(); return; }
     orders = orders.filter(o => o.id !== selectedId);
     selectedId = null;
     renderTables();
@@ -755,30 +756,31 @@
     toast(`New order for Table ${table} created`, '🧾');
   }
 
-  // ── SOCKET.IO ─────────────────────────────────────────────
-  const socket = io();
+  // ── SOCKET.IO (started after login) ──────────────────────
+  let _socket = null;
+  let _refreshInterval = null;
 
-  socket.on('new_order', order => {
-    orders.unshift(order);
-    renderTables();
-    updatePendingLabel();
-    beep();
-    const items = order.items.slice(0,2).map(i => `${i.quantity}× ${i.item_name}`).join(', ');
-    toast(`New order — Table ${order.table_number} · ${items}`, '🔔');
-    // Auto-select if nothing is selected
-    if (!selectedId) selectOrder(order.id);
-  });
-
-  socket.on('order_updated', updated => {
-    const idx = orders.findIndex(o => o.id === updated.id);
-    if (idx > -1) orders[idx] = updated;
-    renderTables();
-    updatePendingLabel();
-    if (updated.id === selectedId) renderOrderPanel(updated);
-  });
-
-  // Refresh time labels every 30s
-  setInterval(loadOrders, 30000);
+  function startRealtimeSync() {
+    if (_socket) return; // already running
+    _socket = io();
+    _socket.on('new_order', order => {
+      orders.unshift(order);
+      renderTables();
+      updatePendingLabel();
+      beep();
+      const items = order.items.slice(0,2).map(i => `${i.quantity}× ${i.item_name}`).join(', ');
+      toast(`New order — Table ${order.table_number} · ${items}`, '🔔');
+      if (!selectedId) selectOrder(order.id);
+    });
+    _socket.on('order_updated', updated => {
+      const idx = orders.findIndex(o => o.id === updated.id);
+      if (idx > -1) orders[idx] = updated;
+      renderTables();
+      updatePendingLabel();
+      if (updated.id === selectedId) renderOrderPanel(updated);
+    });
+    _refreshInterval = setInterval(loadOrders, 30000);
+  }
 
   // ── POS LOGIN INPUT ───────────────────────────────────────
   async function posLoginInput() {
@@ -795,6 +797,7 @@
       sessionStorage.setItem('pos_token', _posToken);
       document.getElementById('pinOverlay').style.display = 'none';
       loadMenu(); loadOrders();
+      startRealtimeSync();
     } else {
       document.getElementById('pinInput').value = '';
       document.getElementById('pinInput').style.borderColor = '#ef4444';
@@ -803,7 +806,7 @@
   }
 
   // ── INIT ──────────────────────────────────────────────────
-  if (_posToken) { loadMenu(); loadOrders(); }
+  if (_posToken) { loadMenu(); loadOrders(); startRealtimeSync(); }
   else { document.getElementById('pinOverlay').style.display = 'flex'; }
 </script>
 </body>
