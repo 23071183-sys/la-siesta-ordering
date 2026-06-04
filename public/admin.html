@@ -743,8 +743,24 @@
       </div>
     </div>
 
-    <!-- TABLES -->
+    <!-- TABLES / SCAN AND ORDER -->
     <div class="panel" id="panel-tables">
+
+      <!-- QR Ordering toggle (shown when accessed via "Scan and Order") -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-hd" style="margin-bottom:0">
+          <div>
+            <div class="card-title">QR Menu Ordering</div>
+            <div class="card-sub">Customers scan table QR codes to browse the menu and place orders</div>
+          </div>
+          <label class="toggle" id="orderingToggleWrap2">
+            <input type="checkbox" id="orderingToggle2"
+              onchange="saveSetting('ordering_enabled', this.checked?'1':'0'); document.getElementById('orderingToggle').checked=this.checked;">
+            <div class="toggle-track"></div><div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+
       <div class="area-tabs">
         <button class="area-tab on" onclick="setArea('indoor',this)">Indoor</button>
         <button class="area-tab" onclick="setArea('outdoor',this)">Outdoor</button>
@@ -813,7 +829,7 @@
           <div class="setting-row">
             <div><div class="setting-lbl">Online Ordering</div><div class="setting-sub">Allow QR menu ordering</div></div>
             <label class="toggle" id="orderingToggleWrap">
-              <input type="checkbox" id="orderingToggle" onchange="saveSetting('ordering_enabled', this.checked?'1':'0')">
+              <input type="checkbox" id="orderingToggle" onchange="saveSetting('ordering_enabled', this.checked?'1':'0'); const t2=document.getElementById('orderingToggle2');if(t2)t2.checked=this.checked;">
               <div class="toggle-track"></div><div class="toggle-thumb"></div>
             </label>
           </div>
@@ -2263,7 +2279,9 @@ async function loadSettings(){
   if(get('tax_rate')) document.getElementById('setTaxRate').value=get('tax_rate');
   if(get('service_charge')) document.getElementById('setServiceCharge').value=get('service_charge');
   if(get('opening_hours')) document.getElementById('setHours').value=get('opening_hours');
-  document.getElementById('orderingToggle').checked = get('ordering_enabled')!=='0';
+  const orderingOn = get('ordering_enabled')!=='0';
+  document.getElementById('orderingToggle').checked = orderingOn;
+  const t2 = document.getElementById('orderingToggle2'); if(t2) t2.checked = orderingOn;
   document.getElementById('settingEmail').textContent=_adminEmail||sessionStorage.getItem('admin_email')||'—';
   loadCoupons();
 }
