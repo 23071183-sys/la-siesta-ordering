@@ -362,9 +362,17 @@
 <div id="pinOverlay" style="display:none;position:fixed;inset:0;background:#0d0d0d;z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem">
   <div style="font-size:1.5rem;font-weight:800;color:#D4552A;letter-spacing:.1em">LA SIESTA</div>
   <div style="font-size:.85rem;color:#888;letter-spacing:.08em;text-transform:uppercase">POS Terminal</div>
-  <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN"
-    style="background:#1e1e1e;border:1.5px solid #2c2c2c;border-radius:10px;color:#e8e8e8;font-size:1.4rem;letter-spacing:.35em;text-align:center;padding:.7rem 1.4rem;width:200px;outline:none;font-family:'DM Sans',sans-serif"
-    onkeydown="if(event.key==='Enter')posLoginInput()">
+  <div style="position:relative;width:200px">
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN"
+      style="background:#1e1e1e;border:1.5px solid #2c2c2c;border-radius:10px;color:#e8e8e8;font-size:1.4rem;letter-spacing:.35em;text-align:center;padding:.7rem 2.8rem .7rem 1.4rem;width:200px;outline:none;font-family:'DM Sans',sans-serif"
+      onkeydown="if(event.key==='Enter')posLoginInput()">
+    <button type="button" onclick="const i=document.getElementById('pinInput'),s=i.type==='password';i.type=s?'text':'password';this.style.color=s?'#D4552A':'#555'"
+      style="position:absolute;right:.7rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#555;display:flex;align-items:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
   <button onclick="posLoginInput()"
     style="background:#D4552A;color:#fff;border:none;border-radius:8px;padding:.65rem 2rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;width:200px">
     Unlock POS →
