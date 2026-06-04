@@ -679,53 +679,124 @@
 
     <!-- MENU -->
     <div class="panel" id="panel-menu">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem" class="settings-grid">
 
-        <!-- Categories list -->
-        <div class="card" style="margin-bottom:0">
-          <div class="card-hd">
-            <div>
-              <div class="card-title">Categories</div>
-              <div class="card-sub" id="catCountSub" style="margin-top:.15rem"></div>
+      <!-- Menu Master hub (Ciferon style) -->
+      <div style="margin-bottom:1.5rem">
+        <div style="font-size:1.15rem;font-weight:700;color:var(--dark);letter-spacing:-.01em;margin-bottom:1rem">Menu Master</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.85rem">
+
+          <!-- Categories — functional -->
+          <div style="background:#fff;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-sm);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;transition:border-color .15s" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Categories</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Group your menu items into categories like Hot Coffee, Cold Brew, Snacks etc.</div>
+            <button onclick="menuShowSection('section-categories')" style="margin-top:.6rem;background:none;border:none;padding:0;font-size:.84rem;font-weight:600;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.3rem">
+              Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+
+          <!-- Items — functional -->
+          <div style="background:#fff;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-sm);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;transition:border-color .15s" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Items</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Add, edit, price and toggle availability of all menu items here.</div>
+            <button onclick="menuShowSection('section-items')" style="margin-top:.6rem;background:none;border:none;padding:0;font-size:.84rem;font-weight:600;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.3rem">
+              Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+
+          <!-- Addons — coming soon -->
+          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Addons</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Create combos / options e.g. extra toppings, add-ons for items.</div>
+            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          </div>
+
+          <!-- Variants — coming soon -->
+          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Variants</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Manage size variants like Small, Medium, Large for any item.</div>
+            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          </div>
+
+          <!-- Charges — coming soon -->
+          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Charges</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Set automatic or manual charges like packing, delivery to be applied on orders.</div>
+            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          </div>
+
+          <!-- Kitchens — coming soon -->
+          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
+            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Kitchens</div>
+            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Create kitchen stations to route KOT printing to different printers.</div>
+            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── CATEGORIES section ── -->
+      <div id="section-categories" style="display:none">
+        <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:1rem">
+          <button onclick="menuShowSection(null)" style="background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.3rem;font-size:.82rem;font-weight:500">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Menu Master
+          </button>
+          <span style="color:var(--muted-l)">/</span>
+          <span style="font-size:.88rem;font-weight:600;color:var(--dark)">Categories</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="settings-grid">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hd">
+              <div>
+                <div class="card-title">Categories</div>
+                <div class="card-sub" id="catCountSub" style="margin-top:.15rem"></div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="loadMenu()">↻</button>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="loadMenu()">↻</button>
+            <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.85rem;padding-bottom:.85rem;border-bottom:1px solid var(--border)">
+              <input id="newCatName" type="text" placeholder="New category name…" class="search-bar" style="flex:1"
+                onkeydown="if(event.key==='Enter')addCat()">
+              <button class="btn btn-or btn-sm" onclick="addCat()">+ Add</button>
+            </div>
+            <div id="catList" style="display:flex;flex-direction:column;gap:.4rem"></div>
           </div>
-          <!-- Add category at top -->
-          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.85rem;padding-bottom:.85rem;border-bottom:1px solid var(--border)">
-            <input id="newCatName" type="text" placeholder="New category name…" class="search-bar" style="flex:1"
-              onkeydown="if(event.key==='Enter')addCat()">
-            <button class="btn btn-or btn-sm" onclick="addCat()">+ Add</button>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-hd"><div class="card-title">Add Menu Item</div></div>
+            <div class="form-row">
+              <div class="ff" style="min-width:130px"><label>Category</label><select id="newItemCat"></select></div>
+              <div class="ff" style="flex:2"><label>Item Name</label><input id="newItemName" type="text" placeholder="e.g. Matcha Latte" onkeydown="if(event.key==='Enter')addItem()"></div>
+            </div>
+            <div class="form-row">
+              <div class="ff" style="min-width:100px"><label>Price (₹)</label><input id="newItemPrice" type="number" placeholder="200" min="0" onkeydown="if(event.key==='Enter')addItem()"></div>
+              <div class="ff"><label>Description (optional)</label><input id="newItemDesc" type="text" placeholder="Short description" onkeydown="if(event.key==='Enter')addItem()"></div>
+            </div>
+            <button class="btn btn-or" style="width:100%;margin-top:.25rem" onclick="addItem()">+ Add Item</button>
           </div>
-          <div id="catList" style="display:flex;flex-direction:column;gap:.4rem"></div>
         </div>
+      </div>
 
-        <!-- Add item form -->
-        <div class="card" style="margin-bottom:0">
-          <div class="card-hd"><div class="card-title">Add Menu Item</div></div>
-          <div class="form-row">
-            <div class="ff" style="min-width:130px"><label>Category</label><select id="newItemCat"></select></div>
-            <div class="ff" style="flex:2"><label>Item Name</label><input id="newItemName" type="text" placeholder="e.g. Matcha Latte"
-              onkeydown="if(event.key==='Enter')addItem()"></div>
+      <!-- ── ITEMS section ── -->
+      <div id="section-items" style="display:none">
+        <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:1rem">
+          <button onclick="menuShowSection(null)" style="background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.3rem;font-size:.82rem;font-weight:500">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Menu Master
+          </button>
+          <span style="color:var(--muted-l)">/</span>
+          <span style="font-size:.88rem;font-weight:600;color:var(--dark)">Items</span>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">All Items</div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <span id="itemCount" class="card-sub"></span>
+              <input class="search-bar" id="menuSearch" type="text" placeholder="Search items…" style="width:160px" oninput="renderItems()">
+            </div>
           </div>
-          <div class="form-row">
-            <div class="ff" style="min-width:100px"><label>Price (₹)</label><input id="newItemPrice" type="number" placeholder="200" min="0"
-              onkeydown="if(event.key==='Enter')addItem()"></div>
-            <div class="ff"><label>Description (optional)</label><input id="newItemDesc" type="text" placeholder="Short description"
-              onkeydown="if(event.key==='Enter')addItem()"></div>
-          </div>
-          <button class="btn btn-or" style="width:100%;margin-top:.25rem" onclick="addItem()">+ Add Item</button>
+          <div id="itemsWrap"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-hd">
-          <div class="card-title">All Items</div>
-          <div style="display:flex;gap:.5rem;align-items:center">
-            <span id="itemCount" class="card-sub"></span>
-            <input class="search-bar" id="menuSearch" type="text" placeholder="Search items…" style="width:160px" oninput="renderItems()">
-          </div>
-        </div>
-        <div id="itemsWrap"></div>
-      </div>
+
     </div>
 
     <!-- ORDERS -->
@@ -1760,6 +1831,17 @@ async function loadMenu(){
   menuData=await r.json();
   renderCats(); renderItems(); popCatSelect();
 }
+function menuShowSection(id) {
+  ['section-categories','section-items'].forEach(s=>{
+    const el=document.getElementById(s);
+    if(el) el.style.display=(s===id?'block':'none');
+  });
+  // Show/hide hub
+  const hub=document.querySelector('#panel-menu > div:first-child');
+  if(hub) hub.style.display=id?'none':'block';
+  if(id==='section-items') renderItems();
+}
+
 function renderCats(){
   const el=document.getElementById('catList');
   const sub=document.getElementById('catCountSub');
