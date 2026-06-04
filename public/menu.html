@@ -988,8 +988,8 @@
            placeholder="Enter code" oninput="onCouponInput()"
            autocomplete="off" spellcheck="false">
     <button class="coupon-btn" id="couponBtn" onclick="applyCoupon()" disabled>Verify</button>
-    <button class="coupon-btn" id="redeemBtn" onclick="redeemCoupon()"
-            style="display:none; background:#16a34a; border-color:#16a34a;">Redeem</button>
+    <!-- Redeem now happens automatically on Place Order -->
+    <button class="coupon-btn" id="redeemBtn" style="display:none"></button>
   </div>
   <div class="coupon-feedback" id="couponFeedback"></div>
 </div>
@@ -1698,10 +1698,17 @@ document.addEventListener('keydown', e => {
           `Ready in about ${wait}–${wait + 5} min. Sit back & relax ☕`;
         document.getElementById('trackOrderBtn').href = `/status?order=${orderId}`;
         document.getElementById('successScreen').classList.add('show');
+        // Redeem the coupon atomically after order success
+        if (_appliedCoupon?.code) {
+          fetch('/api/coupons/redeem', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: _appliedCoupon.code })
+          }).catch(() => {}); // fire and forget — order already placed
+        }
         cart = {};
         updateCartBar();
         resetCoupon();
-        ordersLoaded = false; // refresh orders tab next time it's opened
+        ordersLoaded = false;
       } else {
         const msg = data.error || 'Something went wrong. Please try again.';
         alert(msg);

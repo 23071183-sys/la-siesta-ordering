@@ -734,8 +734,13 @@
     if (phone && !/^[6-9]\d{9}$/.test(phone)) { alert('Phone must be a valid 10-digit number (or leave blank)'); return; }
 
     // Use first available item as placeholder; staff adds real items via the menu browser
-    const firstItem = menu.flatMap(c=>c.items).find(i=>i.available!==false);
-    if (!firstItem) { alert('Menu not loaded yet'); return; }
+    let firstItem = menu.flatMap(c=>c.items).find(i=>i.available!==false);
+    if (!firstItem) {
+      toast('Menu is loading, please wait…', '⏳');
+      await loadMenu();
+      firstItem = menu.flatMap(c=>c.items).find(i=>i.available!==false);
+      if (!firstItem) { toast('No menu items available', '⚠️'); return; }
+    }
 
     const r = await fetch('/api/orders', {
       method: 'POST',
