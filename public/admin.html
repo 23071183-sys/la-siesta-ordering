@@ -365,6 +365,15 @@
     .sb-data-val { font-size:.81rem; font-weight:700; color:#111827; }
     .sb-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 
+    /* MENU MASTER CARDS */
+    .mm-card { background:#fff; border-radius:var(--r-md); padding:1.4rem 1.5rem; border:1px solid #e8eaed; display:flex; flex-direction:column; gap:.4rem; transition:box-shadow .15s; }
+    .mm-card:hover { box-shadow:var(--sh-md); }
+    .mm-title { font-size:1rem; font-weight:700; color:#111827; }
+    .mm-desc { font-size:.82rem; color:#6b7280; flex:1; line-height:1.6; margin-top:.1rem; }
+    .mm-manage { margin-top:.85rem; background:none; border:none; padding:0; font-size:.84rem; font-weight:600; color:#2563eb; cursor:pointer; display:flex; align-items:center; gap:.28rem; width:fit-content; }
+    .mm-manage:hover { color:#1d4ed8; }
+    @media(max-width:900px){ #menu-master-hub .mm-grid { grid-template-columns:repeat(2,1fr) !important; } }
+
     /* DATE BOX */
     .date-box { display:flex; align-items:center; gap:.35rem; background:#fff; border:1.5px solid #e5e7eb; border-radius:8px; padding:.38rem .85rem; box-shadow:0 1px 4px rgba(0,0,0,.05); }
     .date-box input[type=date] { border:none; outline:none; font-family:'Inter',sans-serif; font-size:.82rem; color:#374151; background:transparent; cursor:pointer; width:108px; }
@@ -680,57 +689,65 @@
     <!-- MENU -->
     <div class="panel" id="panel-menu">
 
-      <!-- Menu Master hub (Ciferon style) -->
-      <div style="margin-bottom:1.5rem">
-        <div style="font-size:1.15rem;font-weight:700;color:var(--dark);letter-spacing:-.01em;margin-bottom:1rem">Menu Master</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.85rem">
-
-          <!-- Categories — functional -->
-          <div style="background:#fff;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-sm);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;transition:border-color .15s" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Categories</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Group your menu items into categories like Hot Coffee, Cold Brew, Snacks etc.</div>
-            <button onclick="menuShowSection('section-categories')" style="margin-top:.6rem;background:none;border:none;padding:0;font-size:.84rem;font-weight:600;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.3rem">
-              Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
+      <!-- Menu Master hub — exact Ciferon clone -->
+      <div id="menu-master-hub">
+        <div style="font-size:1.25rem;font-weight:700;color:var(--dark);letter-spacing:-.01em;margin-bottom:1.2rem">Menu Master</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
+          <!-- Exact Ciferon card template -->
+          <!-- Super Categories -->
+          <div class="mm-card">
+            <div class="mm-title">Super Categories</div>
+            <div class="mm-desc">First level grouping of items into categories to be done here.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-categories')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
-          <!-- Items — functional -->
-          <div style="background:#fff;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-sm);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;transition:border-color .15s" onmouseover="this.style.borderColor='#4f46e5'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Items</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Add, edit, price and toggle availability of all menu items here.</div>
-            <button onclick="menuShowSection('section-items')" style="margin-top:.6rem;background:none;border:none;padding:0;font-size:.84rem;font-weight:600;color:#4f46e5;cursor:pointer;display:flex;align-items:center;gap:.3rem">
-              Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
+          <!-- Categories -->
+          <div class="mm-card">
+            <div class="mm-title">Categories</div>
+            <div class="mm-desc">Second level grouping of items into categories to be done here.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-categories')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
-          <!-- Addons — coming soon -->
-          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Addons</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Create combos / options e.g. extra toppings, add-ons for items.</div>
-            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          <!-- Sub-Categories -->
+          <div class="mm-card">
+            <div class="mm-title">Sub-Categories</div>
+            <div class="mm-desc">Third level grouping of items under a single category here.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-categories')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
-          <!-- Variants — coming soon -->
-          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Variants</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Manage size variants like Small, Medium, Large for any item.</div>
-            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          <!-- Items -->
+          <div class="mm-card">
+            <div class="mm-title">Items</div>
+            <div class="mm-desc">All items to be managed here. Assigning of modifiers variants to...</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
-          <!-- Charges — coming soon -->
-          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Charges</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Set automatic or manual charges like packing, delivery to be applied on orders.</div>
-            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          <!-- Addons -->
+          <div class="mm-card">
+            <div class="mm-title">Addons</div>
+            <div class="mm-desc">Create combos/options here. Eg choose extra toppings.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
-          <!-- Kitchens — coming soon -->
-          <div style="background:#f8fafc;border-radius:var(--r-md);padding:1.3rem 1.4rem;box-shadow:var(--sh-xs);border:1.5px solid var(--border);display:flex;flex-direction:column;gap:.35rem;opacity:.7">
-            <div style="font-size:1rem;font-weight:700;color:var(--dark)">Kitchens</div>
-            <div style="font-size:.8rem;color:var(--muted);flex:1;line-height:1.55">Create kitchen stations to route KOT printing to different printers.</div>
-            <span style="margin-top:.6rem;font-size:.75rem;font-weight:600;color:#94a3b8;background:#f1f5f9;padding:.2rem .6rem;border-radius:99px;width:fit-content">Coming Soon</span>
+          <!-- Variants -->
+          <div class="mm-card">
+            <div class="mm-title">Variants</div>
+            <div class="mm-desc">Masters to manage small, medium , large etc variants here.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
           </div>
-
+          <!-- Submenu -->
+          <div class="mm-card">
+            <div class="mm-title">Submenu</div>
+            <div class="mm-desc">Lets you define a specific set of prices and make it exclusive for a...</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+          <!-- Charges -->
+          <div class="mm-card">
+            <div class="mm-title">Charges</div>
+            <div class="mm-desc">Set charges, automatic or manual to be used in orders here.</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
+          <!-- Kitchens -->
+          <div class="mm-card" style="grid-column:1">
+            <div class="mm-title">Kitchens</div>
+            <div class="mm-desc">Create kitchens to seperate item kot printing to different printers</div>
+            <button class="mm-manage" onclick="menuShowSection('section-items')">Manage <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+          </div>
         </div>
       </div>
 
@@ -1836,8 +1853,7 @@ function menuShowSection(id) {
     const el=document.getElementById(s);
     if(el) el.style.display=(s===id?'block':'none');
   });
-  // Show/hide hub
-  const hub=document.querySelector('#panel-menu > div:first-child');
+  const hub=document.getElementById('menu-master-hub');
   if(hub) hub.style.display=id?'none':'block';
   if(id==='section-items') renderItems();
 }
