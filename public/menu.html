@@ -1448,7 +1448,10 @@
     const ctrl = !orderingEnabled
       ? ''
       : unavailable
-        ? `<span style="font-size:11px;font-weight:700;color:#fff;background:#c0392b;padding:6px 12px;border-radius:6px;white-space:nowrap;letter-spacing:0.4px;text-transform:uppercase;">Unavailable</span>`
+        ? `<span style="display:inline-flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:600;color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:5px 10px;border-radius:999px;white-space:nowrap;letter-spacing:0.03em;">
+             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+             Temporarily Unavailable
+           </span>`
         : qty === 0
           ? `<button class="add-btn" onclick="addItem(${item.id})"><span>+</span> ADD</button>`
           : `<div class="qty-ctrl">
@@ -1469,7 +1472,7 @@
     // If item has an inline image, wrap row + image in a plain block — image is a sibling, NOT inside the flex row
     if (inlineImg) {
       return `
-        <div id="card-${item.id}" style="background:var(--white);border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.04);overflow:hidden;${unavailable?'opacity:0.55;':''}">
+        <div id="card-${item.id}" style="background:var(--white);border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.04);overflow:hidden;${unavailable?'opacity:0.72;':''}">
           <div class="item-row${isDesserts ? ' dessert-row' : ''}" style="border-radius:0;box-shadow:none;">
             <div class="item-left">
               ${vegHtml}
@@ -1485,7 +1488,7 @@
         </div>`;
     }
     return `
-      <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" style="${unavailable?'opacity:0.55;':''}">
+      <div class="item-row${isDesserts ? ' dessert-row' : ''}" id="card-${item.id}" style="${unavailable?'opacity:0.72;':''}">
         <div class="item-left">
           ${vegHtml}
           <div class="item-name" style="${unavailable?'color:#8a7070;':''}">${item.name}${item.is_house_special ? ' <span class="hs-star">✦</span>' : ''}</div>
@@ -2014,7 +2017,7 @@
     if (!ctrl) return;
     if (!available) {
       // Mark unavailable
-      ctrl.innerHTML = `<span style="font-size:11px;font-weight:700;color:#fff;background:#c0392b;padding:6px 12px;border-radius:6px;white-space:nowrap;letter-spacing:0.4px;text-transform:uppercase;">Unavailable</span>`;
+      ctrl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:0.68rem;font-weight:600;color:#92400e;background:#fef3c7;border:1px solid #fde68a;padding:5px 10px;border-radius:999px;white-space:nowrap;letter-spacing:0.03em;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Temporarily Unavailable</span>`;
       if (card) card.style.opacity = '0.55';
     } else {
       // Mark available again — show ADD button (qty likely 0)
