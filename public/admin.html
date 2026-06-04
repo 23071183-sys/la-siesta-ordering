@@ -670,24 +670,41 @@
 
     <!-- MENU -->
     <div class="panel" id="panel-menu">
-      <div class="card">
-        <div class="card-hd"><div class="card-title">Categories</div></div>
-        <div class="cat-list" id="catList"></div>
-        <div class="form-row" style="margin-top:1rem">
-          <div class="ff"><label>New Category</label><input id="newCatName" type="text" placeholder="e.g. Shakes"></div>
-          <div style="display:flex;align-items:flex-end"><button class="btn btn-or" onclick="addCat()">+ Add</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem" class="settings-grid">
+
+        <!-- Categories list -->
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hd">
+            <div>
+              <div class="card-title">Categories</div>
+              <div class="card-sub" id="catCountSub" style="margin-top:.15rem"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadMenu()">↻</button>
+          </div>
+          <div id="catList" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem"></div>
+          <!-- Add category inline -->
+          <div style="display:flex;gap:.5rem;align-items:center;border-top:1px solid var(--border);padding-top:.85rem">
+            <input id="newCatName" type="text" placeholder="New category name…" class="search-bar" style="flex:1"
+              onkeydown="if(event.key==='Enter')addCat()">
+            <button class="btn btn-or btn-sm" onclick="addCat()">+ Add</button>
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-title">Add Menu Item</div></div>
-        <div class="form-row">
-          <div class="ff" style="min-width:140px"><label>Category</label><select id="newItemCat"></select></div>
-          <div class="ff" style="flex:2"><label>Item Name</label><input id="newItemName" type="text" placeholder="e.g. Matcha Latte"></div>
-          <div class="ff" style="min-width:100px"><label>Price (₹)</label><input id="newItemPrice" type="number" placeholder="200" min="0"></div>
-        </div>
-        <div class="form-row">
-          <div class="ff"><label>Description (optional)</label><input id="newItemDesc" type="text" placeholder="Short description"></div>
-          <div style="display:flex;align-items:flex-end"><button class="btn btn-or" onclick="addItem()">+ Add Item</button></div>
+
+        <!-- Add item form -->
+        <div class="card" style="margin-bottom:0">
+          <div class="card-hd"><div class="card-title">Add Menu Item</div></div>
+          <div class="form-row">
+            <div class="ff" style="min-width:130px"><label>Category</label><select id="newItemCat"></select></div>
+            <div class="ff" style="flex:2"><label>Item Name</label><input id="newItemName" type="text" placeholder="e.g. Matcha Latte"
+              onkeydown="if(event.key==='Enter')addItem()"></div>
+          </div>
+          <div class="form-row">
+            <div class="ff" style="min-width:100px"><label>Price (₹)</label><input id="newItemPrice" type="number" placeholder="200" min="0"
+              onkeydown="if(event.key==='Enter')addItem()"></div>
+            <div class="ff"><label>Description (optional)</label><input id="newItemDesc" type="text" placeholder="Short description"
+              onkeydown="if(event.key==='Enter')addItem()"></div>
+          </div>
+          <button class="btn btn-or" style="width:100%;margin-top:.25rem" onclick="addItem()">+ Add Item</button>
         </div>
       </div>
       <div class="card">
@@ -1691,10 +1708,20 @@ async function loadMenu(){
 }
 function renderCats(){
   const el=document.getElementById('catList');
-  if(!menuData.length){el.innerHTML='<span style="color:var(--muted);font-size:.82rem">No categories yet</span>';return;}
-  el.innerHTML=menuData.map(c=>`
-    <div class="cat-tag">${c.name}
-      <button class="cat-del" onclick="delCat(${c.id})" title="Delete">×</button>
+  const sub=document.getElementById('catCountSub');
+  if(sub) sub.textContent=menuData.length+' categories · '+menuData.reduce((s,c)=>s+(c.items?.length||0),0)+' items total';
+  if(!menuData.length){el.innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">No categories yet.</div>';return;}
+  el.innerHTML=menuData.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r);transition:border-color .15s" id="cat-row-${c.id}">
+      <div style="width:20px;height:20px;border-radius:4px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">${i+1}</div>
+      <span style="flex:1;font-size:.86rem;font-weight:600;color:var(--dark)">${c.name}</span>
+      <span style="font-size:.72rem;font-weight:500;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:99px;padding:.1rem .55rem;flex-shrink:0">${c.items?.length||0} items</span>
+      <button onclick="delCat(${c.id})" title="Delete category"
+        style="background:none;border:none;padding:3px;cursor:pointer;color:var(--muted-l);border-radius:4px;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+        onmouseover="this.style.color='#ef4444';this.style.background='#fef2f2'"
+        onmouseout="this.style.color='';this.style.background=''">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
     </div>`).join('');
 }
 function renderItems(){
