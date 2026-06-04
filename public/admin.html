@@ -1023,6 +1023,20 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+// Always step by exactly 1 on arrow keys for all number inputs
+document.addEventListener('keydown', e => {
+  if (e.target.type !== 'number') return;
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  const v = parseFloat(e.target.value) || 0;
+  const min = parseFloat(e.target.min ?? '-Infinity');
+  const next = e.key === 'ArrowUp' ? v + 1 : Math.max(isNaN(min) ? -Infinity : min, v - 1);
+  e.target.value = +next.toFixed(2);
+  e.target.dispatchEvent(new Event('input', { bubbles: true }));
+  e.target.dispatchEvent(new Event('change', { bubbles: true }));
+}, true);
+</script>
+<script>
 let menuData=[], allOrders=[], tablesData=[], pendingCt=0, kfilt='active', curArea='indoor';
 let _token = sessionStorage.getItem('admin_token') || null;
 let _adminEmail = sessionStorage.getItem('admin_email') || '';
