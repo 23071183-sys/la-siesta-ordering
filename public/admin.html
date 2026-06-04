@@ -302,7 +302,7 @@
     .stat-cf-lbl { font-size:.66rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#9ca3af; margin-bottom:.6rem; }
     .stat-cf-row { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
     .stat-cf-val { font-size:2rem; font-weight:700; color:#111827; line-height:1; }
-    .stat-cf-icon { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.55rem; flex-shrink:0; }
+    .stat-cf-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .stat-cf-icon.red    { background:#ef4444; }
     .stat-cf-icon.orange { background:#f97316; }
     .stat-cf-icon.green  { background:#10b981; }
@@ -613,7 +613,7 @@
             <!-- Active Features (Your Subscriptions style) -->
             <div class="subs-card">
               <div class="subs-hdr">
-                <span style="font-size:1rem">📢</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 <span class="subs-hdr-title">Active Features</span>
               </div>
               <div class="subs-valid" id="sbOrderingStatus">Online Ordering: checking…</div>
@@ -1275,7 +1275,7 @@ async function loadDash(){
       <div class="stat-cf-lbl">TOTAL SALES</div>
       <div class="stat-cf-row">
         <div class="stat-cf-val">₹${totalRev.toFixed(0)}</div>
-        <div class="stat-cf-icon red">🤙</div>
+        <div class="stat-cf-icon red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
       </div>
       <div class="stat-cf-desc">POS + Online &nbsp;<span class="stat-cf-arr">›</span></div>
     </div>
@@ -1283,7 +1283,7 @@ async function loadDash(){
       <div class="stat-cf-lbl">TOTAL ORDERS</div>
       <div class="stat-cf-row">
         <div class="stat-cf-val">${inRange.length}</div>
-        <div class="stat-cf-icon orange">🍽</div>
+        <div class="stat-cf-icon orange"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>
       </div>
       <div class="stat-cf-desc">Total orders created</div>
     </div>
@@ -1291,7 +1291,7 @@ async function loadDash(){
       <div class="stat-cf-lbl">AVG ORDER VALUE</div>
       <div class="stat-cf-row">
         <div class="stat-cf-val">₹${avg.toFixed(0)}</div>
-        <div class="stat-cf-icon green">📊</div>
+        <div class="stat-cf-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
       </div>
       <div class="stat-cf-desc">Average per order</div>
     </div>
@@ -1299,7 +1299,7 @@ async function loadDash(){
       <div class="stat-cf-lbl">TABLES SERVED</div>
       <div class="stat-cf-row">
         <div class="stat-cf-val">${tables}</div>
-        <div class="stat-cf-icon blue">🪑</div>
+        <div class="stat-cf-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
       </div>
       <div class="stat-cf-desc">Unique tables</div>
     </div>`;
@@ -1549,16 +1549,16 @@ async function loadCRM(){
     const statsEl=document.getElementById('crmStats');
     if(statsEl) statsEl.innerHTML=`
       <div class="stat-cf"><div class="stat-cf-lbl">TOTAL CUSTOMERS</div>
-        <div class="stat-cf-row"><div class="stat-cf-val">${_crmData.length}</div><div class="stat-cf-icon blue">👥</div></div>
+        <div class="stat-cf-row"><div class="stat-cf-val">${_crmData.length}</div><div class="stat-cf-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
         <div class="stat-cf-desc">${withPhone} with phone number</div></div>
       <div class="stat-cf"><div class="stat-cf-lbl">TOTAL REVENUE</div>
-        <div class="stat-cf-row"><div class="stat-cf-val">₹${totalRev.toFixed(0)}</div><div class="stat-cf-icon green">💰</div></div>
+        <div class="stat-cf-row"><div class="stat-cf-val">₹${totalRev.toFixed(0)}</div><div class="stat-cf-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
         <div class="stat-cf-desc">From settled orders</div></div>
       <div class="stat-cf"><div class="stat-cf-lbl">AVG SPEND / CUSTOMER</div>
-        <div class="stat-cf-row"><div class="stat-cf-val">₹${avgSpend.toFixed(0)}</div><div class="stat-cf-icon orange">📊</div></div>
+        <div class="stat-cf-row"><div class="stat-cf-val">₹${avgSpend.toFixed(0)}</div><div class="stat-cf-icon orange"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div></div>
         <div class="stat-cf-desc">Lifetime average</div></div>
       <div class="stat-cf"><div class="stat-cf-lbl">REPEAT CUSTOMERS</div>
-        <div class="stat-cf-row"><div class="stat-cf-val">${repeat}</div><div class="stat-cf-icon red">🔁</div></div>
+        <div class="stat-cf-row"><div class="stat-cf-val">${repeat}</div><div class="stat-cf-icon red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div></div>
         <div class="stat-cf-desc">${_crmData.length?((repeat/_crmData.length)*100).toFixed(0):0}% return rate</div></div>`;
 
     renderCRMList(_crmData);
@@ -2007,16 +2007,16 @@ async function loadAccounting(){
   const stats=document.getElementById('acctStats');
   if(stats) stats.innerHTML=`
     <div class="stat-cf"><div class="stat-cf-lbl">GROSS REVENUE</div>
-      <div class="stat-cf-row"><div class="stat-cf-val">₹${grossRev.toFixed(0)}</div><div class="stat-cf-icon green">💰</div></div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${grossRev.toFixed(0)}</div><div class="stat-cf-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
       <div class="stat-cf-desc">${settled.length} settled bills</div></div>
     <div class="stat-cf"><div class="stat-cf-lbl">DISCOUNTS GIVEN</div>
-      <div class="stat-cf-row"><div class="stat-cf-val">₹${totalDiscount.toFixed(0)}</div><div class="stat-cf-icon orange">🏷</div></div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${totalDiscount.toFixed(0)}</div><div class="stat-cf-icon orange"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div></div>
       <div class="stat-cf-desc">${cancelled.length} cancelled bills</div></div>
     <div class="stat-cf"><div class="stat-cf-lbl">EST. GST (${taxRate}%)</div>
-      <div class="stat-cf-row"><div class="stat-cf-val">₹${taxAmt.toFixed(0)}</div><div class="stat-cf-icon blue">🧾</div></div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${taxAmt.toFixed(0)}</div><div class="stat-cf-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div></div>
       <div class="stat-cf-desc">On net revenue</div></div>
     <div class="stat-cf"><div class="stat-cf-lbl">NET REVENUE</div>
-      <div class="stat-cf-row"><div class="stat-cf-val">₹${netRev.toFixed(0)}</div><div class="stat-cf-icon red">📈</div></div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${netRev.toFixed(0)}</div><div class="stat-cf-icon red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div></div>
       <div class="stat-cf-desc">Tips collected: ₹${totalTips.toFixed(0)}</div></div>`;
 
   // Daily breakdown
