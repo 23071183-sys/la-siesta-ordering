@@ -1110,6 +1110,7 @@
 <script>
   let menu = [];
   let cart = {};
+  let _appliedCoupon = null; // { code, type, value, amount }
   let tableNumber = 1;
   let vegOnly = false;
   let nonVegOnly = false;
@@ -1541,10 +1542,19 @@
     }
   }
 
+  function calcDiscount(subtotal) {
+    if (!_appliedCoupon) return 0;
+    if (_appliedCoupon.type === 'percent')
+      return Math.min(subtotal * _appliedCoupon.value / 100, subtotal);
+    return Math.min(_appliedCoupon.value, subtotal);
+  }
+
   function updateCartBar() {
     const items = Object.values(cart);
     const count = items.reduce((s,i) => s + i.qty, 0);
-    const total = items.reduce((s,i) => s + i.price * i.qty, 0);
+    const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
+    const discount = calcDiscount(subtotal);
+    const total = subtotal - discount;
     document.getElementById('cartCountLbl').textContent = `${count} item${count!==1?'s':''}`;
     document.getElementById('cartTotalLbl').textContent = `₹${total}`;
     document.getElementById('cartBar').classList.toggle('visible', count > 0);
@@ -1655,6 +1665,8 @@
           customer_name: document.getElementById('custName').value.trim(),
           customer_phone: document.getElementById('custPhone').value.trim(),
           notes: document.getElementById('orderNotes').value.trim(),
+          coupon_code: _appliedCoupon?.code || '',
+          discount: _appliedCoupon ? calcDiscount(Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0)) : 0,
           items: Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.qty }))
         })
       });
@@ -1701,7 +1713,8 @@
     document.getElementById('couponFeedback').className = 'coupon-feedback';
     document.getElementById('couponFeedback').innerHTML = '';
     document.getElementById('couponBtn').textContent = 'Verify';
-    // Hide redeem button whenever input changes
+    // Clear applied coupon and refresh totals
+    if (_appliedCoupon) { _appliedCoupon = null; updateOrderSummary(); }
     const rb = document.getElementById('redeemBtn');
     if (rb) rb.style.display = 'none';
   }
@@ -1719,12 +1732,19 @@
       const res  = await fetch(`/api/coupons/verify?code=${encodeURIComponent(code)}`);
       const data = await res.json();
       if (data.valid) {
+        const code = document.getElementById('couponInput').value.trim().toUpperCase();
+        const subtotal = Object.values(cart).reduce((s,i) => s + i.price * i.qty, 0);
+        const discAmt = data.discount_type === 'percent'
+          ? Math.min(subtotal * data.discount_value / 100, subtotal)
+          : Math.min(data.discount_value, subtotal);
+        _appliedCoupon = { code, type: data.discount_type, value: data.discount_value, amount: discAmt };
         const remark = data.discount_type === 'percent'
-          ? `${data.discount_value}% flat off`
+          ? `${data.discount_value}% off — you save ₹${discAmt.toFixed(0)}`
           : `₹${data.discount_value} flat off`;
         fb.className = 'coupon-feedback valid';
         fb.innerHTML = `<span>✓</span> ${remark}`;
         btn.textContent = '✓ Valid';
+        updateOrderSummary(); // reflect discount immediately
         // Show Redeem button
         if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.textContent = 'Redeem'; }
       } else {
@@ -1773,7 +1793,10 @@
   function updateOrderSummary() {
     const items    = Object.values(cart);
     const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
-    const html = items.map(i => `
+    const discount = calcDiscount(subtotal);
+    const total    = subtotal - discount;
+
+    const itemRows = items.map(i => `
       <div class="sum-row">
         <div style="display:flex;align-items:center;gap:0.5rem;flex:1;min-width:0">
           <div style="display:flex;align-items:center;border:1.5px solid var(--border);border-radius:9999px;overflow:hidden;flex-shrink:0">
@@ -1786,11 +1809,25 @@
           <span style="font-size:0.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.name}</span>
         </div>
         <span style="font-weight:600;flex-shrink:0;margin-left:0.5rem">₹${i.price * i.qty}</span>
-      </div>`
-    ).join('') + `<div class="sum-row total-row"><span>Total</span><span>₹${subtotal}</span></div>`;
+      </div>`).join('');
+
+    const discountRow = discount > 0 ? `
+      <div class="sum-row" style="color:var(--green)">
+        <span>🏷 Coupon (${_appliedCoupon.code})</span>
+        <span>−₹${discount.toFixed(0)}</span>
+      </div>` : '';
+
+    const subtotalRow = discount > 0 ? `
+      <div class="sum-row" style="font-size:.82rem;color:var(--gray)">
+        <span>Subtotal</span><span>₹${subtotal.toFixed(0)}</span>
+      </div>` : '';
+
+    const totalRow = `<div class="sum-row total-row"><span>Total</span><span>₹${total.toFixed(0)}</span></div>`;
+
     const el = document.getElementById('orderSummary');
-    if (el) el.innerHTML = html;
+    if (el) el.innerHTML = itemRows + subtotalRow + discountRow + totalRow;
     updatePlaceBtn();
+    updateCartBar(); // keep cart bar in sync
   }
 
   function sumChangeQty(id, delta) {
@@ -1799,6 +1836,7 @@
   }
 
   function resetCoupon() {
+    _appliedCoupon = null;
     const inp = document.getElementById('couponInput');
     const fb  = document.getElementById('couponFeedback');
     const btn = document.getElementById('couponBtn');
