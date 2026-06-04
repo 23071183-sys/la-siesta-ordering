@@ -950,6 +950,45 @@ app.patch('/api/admin/items/:id/toggle-special', requireAdmin, (req, res) => {
   res.json({ is_house_special: next });
 });
 
+// ── COUPON ADMIN CRUD ─────────────────────────────────────────────────────────
+app.get('/api/admin/coupons', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT * FROM coupons ORDER BY created_at DESC').all();
+  res.json(rows);
+});
+
+app.post('/api/admin/coupons', requireAdmin, (req, res) => {
+  const { code, discount_type, discount_value, min_order, max_uses, description, expires_at } = req.body;
+  if (!code || !discount_type || discount_value == null)
+    return res.status(400).json({ error: 'code, discount_type and discount_value required' });
+  try {
+    const r = db.prepare(
+      `INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, description, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(code.trim().toUpperCase(), discount_type, +discount_value,
+          +(min_order||0), +(max_uses||0), description||'', expires_at||null);
+    res.json({ id: r.lastInsertRowid });
+  } catch(e) { res.status(400).json({ error: 'Coupon code already exists' }); }
+});
+
+app.patch('/api/admin/coupons/:id', requireAdmin, (req, res) => {
+  const { active, description, max_uses, expires_at } = req.body;
+  const fields = [];
+  const vals   = [];
+  if (active    !== undefined) { fields.push('active = ?');      vals.push(active ? 1 : 0); }
+  if (description !== undefined){ fields.push('description = ?'); vals.push(description); }
+  if (max_uses  !== undefined) { fields.push('max_uses = ?');    vals.push(+max_uses); }
+  if (expires_at !== undefined){ fields.push('expires_at = ?'); vals.push(expires_at||null); }
+  if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+  vals.push(req.params.id);
+  db.prepare(`UPDATE coupons SET ${fields.join(', ')} WHERE id = ?`).run(...vals);
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/coupons/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM coupons WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // ── SOCKET.IO ────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log(`[socket] connected: ${socket.id}`);

@@ -732,10 +732,10 @@
 
     <!-- SETTINGS -->
     <div class="panel" id="panel-settings">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem" class="settings-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem" class="settings-grid">
 
         <div class="card">
-          <div class="card-hd"><div class="card-title">Restaurant Settings</div></div>
+          <div class="card-hd"><div class="card-title">Cafe Settings</div></div>
           <div class="setting-row">
             <div><div class="setting-lbl">Restaurant Name</div><div class="setting-sub">Shown on receipts & menu</div></div>
             <div style="display:flex;gap:.4rem;align-items:center">
@@ -744,7 +744,7 @@
             </div>
           </div>
           <div class="setting-row">
-            <div><div class="setting-lbl">Online Ordering</div><div class="setting-sub">Allow customers to order via QR menu</div></div>
+            <div><div class="setting-lbl">Online Ordering</div><div class="setting-sub">Allow QR menu ordering</div></div>
             <label class="toggle" id="orderingToggleWrap">
               <input type="checkbox" id="orderingToggle" onchange="saveSetting('ordering_enabled', this.checked?'1':'0')">
               <div class="toggle-track"></div><div class="toggle-thumb"></div>
@@ -757,6 +757,20 @@
               <button class="btn btn-or btn-sm" onclick="saveSetting('tax_rate',document.getElementById('setTaxRate').value)">Save</button>
             </div>
           </div>
+          <div class="setting-row">
+            <div><div class="setting-lbl">Service Charge</div><div class="setting-sub">Added to bill (%)</div></div>
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <input class="inline-inp" id="setServiceCharge" type="number" value="0" min="0" max="20" style="width:70px">
+              <button class="btn btn-or btn-sm" onclick="saveSetting('service_charge',document.getElementById('setServiceCharge').value)">Save</button>
+            </div>
+          </div>
+          <div class="setting-row" style="border-bottom:none">
+            <div><div class="setting-lbl">Opening Hours</div><div class="setting-sub">Displayed on menu page</div></div>
+            <div style="display:flex;gap:.4rem;align-items:center">
+              <input class="inline-inp" id="setHours" type="text" placeholder="9am – 10pm" style="width:120px">
+              <button class="btn btn-or btn-sm" onclick="saveSetting('opening_hours',document.getElementById('setHours').value)">Save</button>
+            </div>
+          </div>
         </div>
 
         <div class="card">
@@ -766,19 +780,51 @@
             <span id="settingEmail" style="font-size:.82rem;color:var(--muted)">—</span>
           </div>
           <div class="setting-row">
-            <div><div class="setting-lbl">Password</div><div class="setting-sub">Set via Render environment variables</div></div>
-            <span style="font-size:.78rem;color:var(--muted)">ADMIN_PASSWORD</span>
+            <div><div class="setting-lbl">Password</div><div class="setting-sub">Set via ADMIN_PASSWORD env var</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">••••••••</span>
           </div>
           <div class="setting-row">
-            <div><div class="setting-lbl">POS PIN</div><div class="setting-sub">Set via Render environment variables</div></div>
-            <span style="font-size:.78rem;color:var(--muted)">POS_PIN</span>
+            <div><div class="setting-lbl">POS PIN</div><div class="setting-sub">Set via POS_PIN env var</div></div>
+            <span style="font-size:.78rem;color:var(--muted)">••••</span>
           </div>
           <div class="setting-row" style="border-bottom:none">
-            <div><div class="setting-lbl">Session Token TTL</div><div class="setting-sub">Tokens expire after 24 hours</div></div>
-            <span style="font-size:.82rem;color:var(--muted)">24h</span>
+            <div><div class="setting-lbl">Session TTL</div><div class="setting-sub">Tokens expire after</div></div>
+            <span style="font-size:.82rem;color:var(--muted)">24 hours</span>
           </div>
         </div>
 
+      </div>
+
+      <!-- Coupon Management -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">Coupon Management</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadCoupons()">↻</button>
+        </div>
+        <!-- Create coupon form -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:flex-end;padding:.6rem 0;border-bottom:1px solid #f3f4f6;margin-bottom:.6rem;flex-wrap:wrap">
+          <div>
+            <div class="setting-sub" style="margin-bottom:.2rem">Code</div>
+            <input class="inline-inp" id="cpnCode" placeholder="SAVE20" style="width:100%;text-transform:uppercase">
+          </div>
+          <div>
+            <div class="setting-sub" style="margin-bottom:.2rem">Type</div>
+            <select id="cpnType" class="inline-inp" style="width:100%">
+              <option value="percent">% Off</option>
+              <option value="flat">₹ Flat Off</option>
+            </select>
+          </div>
+          <div>
+            <div class="setting-sub" style="margin-bottom:.2rem">Value</div>
+            <input class="inline-inp" id="cpnValue" type="number" placeholder="20" min="1" style="width:100%">
+          </div>
+          <div>
+            <div class="setting-sub" style="margin-bottom:.2rem">Max Uses (0=∞)</div>
+            <input class="inline-inp" id="cpnMaxUses" type="number" placeholder="100" min="0" style="width:100%">
+          </div>
+          <button class="btn btn-or btn-sm" onclick="createCoupon()" style="height:32px;white-space:nowrap">+ Add</button>
+        </div>
+        <div id="couponsList"><div class="empty">Loading coupons…</div></div>
       </div>
     </div>
 
@@ -855,6 +901,52 @@
       </div>
     </div>
 
+    <!-- ACCOUNTING -->
+    <div class="panel" id="panel-accounting">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">Accounting</div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="date" id="acctFrom" class="search-bar" style="width:140px">
+          <span style="color:#bbb">→</span>
+          <input type="date" id="acctTo" class="search-bar" style="width:140px">
+          <button class="btn btn-or btn-sm" onclick="loadAccounting()">Generate</button>
+        </div>
+      </div>
+      <!-- Summary cards -->
+      <div id="acctStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.1rem"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <!-- Daily breakdown -->
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Daily Settlement</div></div>
+          <div id="acctDaily"><div class="empty">Select a date range and click Generate.</div></div>
+        </div>
+        <!-- P&L summary -->
+        <div class="card">
+          <div class="card-hd"><div class="card-title">P&amp;L Summary</div></div>
+          <div id="acctPL"><div class="empty">Select a date range and click Generate.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIRTUAL OUTLETS -->
+    <div class="panel" id="panel-outlets">
+      <div class="card-hd" style="margin-bottom:1rem">
+        <div style="font-size:1rem;font-weight:600;color:var(--dark)">Virtual Outlets</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadOutlets()">↻ Refresh</button>
+      </div>
+      <div id="outletsStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.1rem"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Outlet Performance</div></div>
+          <div id="outletsList"><div class="empty">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Recent Orders by Channel</div></div>
+          <div id="outletsOrders"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
     </div><!-- /content -->
   </div><!-- /main-area -->
 </div><!-- /app -->
@@ -921,8 +1013,12 @@ function toggleForgot(){
 
 function initDateInputs(){
   const today=new Date().toISOString().slice(0,10);
+  const monthStart=new Date(); monthStart.setDate(1);
+  const monthStr=monthStart.toISOString().slice(0,10);
   document.getElementById('drFrom').value=today;
   document.getElementById('drTo').value=today;
+  const af=document.getElementById('acctFrom'); if(af) af.value=monthStr;
+  const at=document.getElementById('acctTo');   if(at) at.value=today;
 }
 
 function setAvatar(email){
@@ -945,7 +1041,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 // ── PANELS ──
 function showPanel(name,btn){
   // Alias map: sidebar name → real panel ID
-  const alias={outlets:'orders', accounting:'reports', scan:'tables', locations:'tables'};
+  const alias={scan:'tables', locations:'tables'}; // outlets + accounting now have real panels
   const panelId=alias[name]||name;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
@@ -968,6 +1064,9 @@ function showPanel(name,btn){
   if(panelId==='settings')loadSettings();
   if(name==='inventory')loadInventory();
   if(name==='crm')loadCRM();
+  if(name==='accounting')loadAccounting();
+  if(name==='outlets')loadOutlets();
+  if(name==='settings')loadCoupons();
   if(name==='users'){const ue=document.getElementById('usersAdminEmail');if(ue)ue.textContent=_adminEmail||'—';}
 }
 
@@ -1736,6 +1835,229 @@ async function delTable(id){
   toast('Table removed'); loadTables();
 }
 
+// ── COUPON MANAGEMENT ──────────────────────────────────────────────────────
+async function loadCoupons(){
+  const el=document.getElementById('couponsList');
+  if(!el) return;
+  el.innerHTML='<div class="empty">Loading…</div>';
+  const r=await adminFetch('/api/admin/coupons');
+  if(!r.ok){el.innerHTML='<div class="empty">Failed to load.</div>';return;}
+  const coupons=await r.json();
+  if(!coupons.length){el.innerHTML='<div class="empty">No coupons yet. Create one above.</div>';return;}
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.82rem">
+    <thead><tr style="border-bottom:2px solid #f3f4f6">
+      <th style="text-align:left;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Code</th>
+      <th style="text-align:left;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Type</th>
+      <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Value</th>
+      <th style="text-align:center;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Uses</th>
+      <th style="text-align:center;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Status</th>
+      <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase">Actions</th>
+    </tr></thead>
+    <tbody>${coupons.map(c=>`
+      <tr style="border-bottom:1px solid #f9fafb" id="cpn-row-${c.id}">
+        <td style="padding:.4rem .5rem;font-weight:700;color:#111827;font-family:monospace;font-size:.85rem">${c.code}</td>
+        <td style="padding:.4rem .5rem;color:#6b7280">${c.discount_type==='percent'?'%':' ₹'} Off</td>
+        <td style="padding:.4rem .5rem;text-align:right;font-weight:700;color:#4f46e5">${c.discount_type==='percent'?c.discount_value+'%':'₹'+c.discount_value}</td>
+        <td style="padding:.4rem .5rem;text-align:center;color:#374151">${c.uses_count}/${c.max_uses||'∞'}</td>
+        <td style="padding:.4rem .5rem;text-align:center">
+          <span style="font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:9999px;background:${c.active?'#d1fae5':'#fee2e2'};color:${c.active?'#059669':'#dc2626'}">${c.active?'Active':'Paused'}</span>
+        </td>
+        <td style="padding:.4rem .5rem;text-align:right;display:flex;gap:.3rem;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="toggleCoupon(${c.id},${c.active})">${c.active?'Pause':'Activate'}</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:none" onclick="deleteCoupon(${c.id})">✕</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function createCoupon(){
+  const code=document.getElementById('cpnCode').value.trim().toUpperCase();
+  const type=document.getElementById('cpnType').value;
+  const value=parseFloat(document.getElementById('cpnValue').value);
+  const maxUses=parseInt(document.getElementById('cpnMaxUses').value)||0;
+  if(!code||!value){toast('Enter code and value');return;}
+  const r=await adminFetch('/api/admin/coupons',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({code,discount_type:type,discount_value:value,max_uses:maxUses})});
+  if(r.ok){
+    document.getElementById('cpnCode').value='';
+    document.getElementById('cpnValue').value='';
+    document.getElementById('cpnMaxUses').value='';
+    toast('Coupon created ✓');
+    loadCoupons();
+  } else {
+    const d=await r.json();
+    toast(d.error||'Failed to create coupon');
+  }
+}
+
+async function toggleCoupon(id,active){
+  await adminFetch(`/api/admin/coupons/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({active:!active})});
+  loadCoupons();
+}
+
+async function deleteCoupon(id){
+  if(!confirm('Delete this coupon permanently?')) return;
+  await adminFetch(`/api/admin/coupons/${id}`,{method:'DELETE'});
+  toast('Coupon deleted');
+  loadCoupons();
+}
+
+// ── ACCOUNTING ────────────────────────────────────────────────────────────────
+async function loadAccounting(){
+  const from=document.getElementById('acctFrom')?.value;
+  const to=document.getElementById('acctTo')?.value;
+  if(!from||!to){toast('Select a date range first');return;}
+
+  const r=await fetch('/api/orders?status=all');
+  const all=await r.json();
+  const inRange=all.filter(o=>{const d=new Date(o.created_at).toISOString().slice(0,10);return d>=from&&d<=to;});
+  const settled=inRange.filter(o=>o.status==='settled');
+  const cancelled=inRange.filter(o=>o.status==='cancelled');
+
+  const grossRev=settled.reduce((s,o)=>s+(o.total||0),0);
+  const totalDiscount=settled.reduce((s,o)=>s+(o.discount||0),0);
+  const totalTips=settled.reduce((s,o)=>s+(o.tip||0),0);
+  const taxRate=5; // default 5%
+  const taxAmt=(grossRev-totalDiscount)*taxRate/100;
+  const netRev=grossRev-totalDiscount-taxAmt;
+
+  const stats=document.getElementById('acctStats');
+  if(stats) stats.innerHTML=`
+    <div class="stat-cf"><div class="stat-cf-lbl">GROSS REVENUE</div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${grossRev.toFixed(0)}</div><div class="stat-cf-icon green">💰</div></div>
+      <div class="stat-cf-desc">${settled.length} settled bills</div></div>
+    <div class="stat-cf"><div class="stat-cf-lbl">DISCOUNTS GIVEN</div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${totalDiscount.toFixed(0)}</div><div class="stat-cf-icon orange">🏷</div></div>
+      <div class="stat-cf-desc">${cancelled.length} cancelled bills</div></div>
+    <div class="stat-cf"><div class="stat-cf-lbl">EST. GST (${taxRate}%)</div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${taxAmt.toFixed(0)}</div><div class="stat-cf-icon blue">🧾</div></div>
+      <div class="stat-cf-desc">On net revenue</div></div>
+    <div class="stat-cf"><div class="stat-cf-lbl">NET REVENUE</div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${netRev.toFixed(0)}</div><div class="stat-cf-icon red">📈</div></div>
+      <div class="stat-cf-desc">Tips collected: ₹${totalTips.toFixed(0)}</div></div>`;
+
+  // Daily breakdown
+  const dayMap={};
+  const cur=new Date(from); const end=new Date(to);
+  while(cur<=end){ dayMap[cur.toISOString().slice(0,10)]={rev:0,cnt:0,disc:0}; cur.setDate(cur.getDate()+1); }
+  settled.forEach(o=>{const d=new Date(o.created_at).toISOString().slice(0,10);if(dayMap[d]){dayMap[d].rev+=(o.total||0);dayMap[d].cnt++;dayMap[d].disc+=(o.discount||0);}});
+  const days=Object.entries(dayMap).filter(([,v])=>v.cnt>0);
+  document.getElementById('acctDaily').innerHTML=days.length?`
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead><tr style="border-bottom:2px solid #f3f4f6">
+        <th style="text-align:left;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Date</th>
+        <th style="text-align:center;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Bills</th>
+        <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Revenue</th>
+        <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Discounts</th>
+      </tr></thead>
+      <tbody>${days.map(([date,v])=>`
+        <tr style="border-bottom:1px solid #f9fafb">
+          <td style="padding:.38rem .5rem;color:#374151">${new Date(date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</td>
+          <td style="padding:.38rem .5rem;text-align:center">${v.cnt}</td>
+          <td style="padding:.38rem .5rem;text-align:right;font-weight:600;color:#111827">₹${v.rev.toFixed(0)}</td>
+          <td style="padding:.38rem .5rem;text-align:right;color:#f97316">₹${v.disc.toFixed(0)}</td>
+        </tr>`).join('')}
+      </tbody></table>`
+    :'<div class="empty">No settled orders in this range.</div>';
+
+  // P&L summary
+  document.getElementById('acctPL').innerHTML=`
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid #f3f4f6;font-size:.86rem">
+      <span>Gross Revenue</span><span style="font-weight:600">₹${grossRev.toFixed(0)}</span></div>
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid #f3f4f6;font-size:.86rem;color:#f97316">
+      <span>— Discounts</span><span>₹${totalDiscount.toFixed(0)}</span></div>
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid #f3f4f6;font-size:.86rem;color:#6b7280">
+      <span>— GST (${taxRate}%)</span><span>₹${taxAmt.toFixed(0)}</span></div>
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid #f3f4f6;font-size:.92rem;font-weight:700;color:#4f46e5">
+      <span>Net Revenue</span><span>₹${netRev.toFixed(0)}</span></div>
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid #f3f4f6;font-size:.86rem;color:#10b981">
+      <span>+ Tips Collected</span><span>₹${totalTips.toFixed(0)}</span></div>
+    <div class="sum-row" style="display:flex;justify-content:space-between;padding:.45rem 0;font-size:.86rem;color:#dc2626">
+      <span>Cancelled Bills Value</span><span>₹${cancelled.reduce((s,o)=>s+(o.total||0),0).toFixed(0)}</span></div>`;
+}
+
+// ── VIRTUAL OUTLETS ───────────────────────────────────────────────────────────
+async function loadOutlets(){
+  const el1=document.getElementById('outletsList');
+  const el2=document.getElementById('outletsOrders');
+  if(!el1) return;
+  el1.innerHTML='<div class="empty">Loading…</div>';
+
+  const r=await fetch('/api/orders?status=all');
+  const all=await r.json();
+  const todayStr=new Date().toISOString().slice(0,10);
+  const todayOrds=all.filter(o=>new Date(o.created_at).toISOString().slice(0,10)===todayStr);
+
+  const outlets=[
+    {key:'indoor', label:'Dine-in', icon:'🪑', color:'#4f46e5'},
+    {key:'outdoor', label:'Outdoor', icon:'🌿', color:'#10b981'},
+    {key:'cabin', label:'Cabin', icon:'🏕', color:'#f97316'},
+    {key:'takeaway', label:'Takeaway', icon:'🛍', color:'#0ea5e9'},
+  ];
+
+  const statsEl=document.getElementById('outletsStats');
+  statsEl.style.gridTemplateColumns='repeat(4,1fr)';
+
+  const data=outlets.map(out=>{
+    const ords=all.filter(o=>o.status!=='cancelled'&&(o.order_type||'indoor')===out.key);
+    const rev=ords.filter(o=>o.status==='settled').reduce((s,o)=>s+(o.total||0),0);
+    const todayCnt=todayOrds.filter(o=>(o.order_type||'indoor')===out.key).length;
+    return {...out,count:ords.length,rev,todayCnt};
+  });
+  const totalRev=data.reduce((s,d)=>s+d.rev,0)||1;
+
+  if(statsEl) statsEl.innerHTML=data.map(d=>`
+    <div class="stat-cf">
+      <div class="stat-cf-lbl">${d.icon} ${d.label.toUpperCase()}</div>
+      <div class="stat-cf-row"><div class="stat-cf-val">₹${d.rev.toFixed(0)}</div></div>
+      <div class="stat-cf-desc">${d.count} orders · ${(d.rev/totalRev*100).toFixed(0)}% share</div>
+    </div>`).join('');
+
+  el1.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.83rem">
+    <thead><tr style="border-bottom:2px solid #f3f4f6">
+      <th style="text-align:left;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Outlet</th>
+      <th style="text-align:center;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Total Orders</th>
+      <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Revenue</th>
+      <th style="text-align:center;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Today</th>
+      <th style="text-align:right;padding:.38rem .5rem;color:#9ca3af;font-size:.7rem;text-transform:uppercase">Share</th>
+    </tr></thead>
+    <tbody>${data.map(d=>`
+      <tr style="border-bottom:1px solid #f9fafb">
+        <td style="padding:.4rem .5rem;font-weight:600;color:#111827">
+          <span style="display:inline-flex;align-items:center;gap:.35rem">
+            <span style="width:8px;height:8px;border-radius:50%;background:${d.color};flex-shrink:0"></span>${d.icon} ${d.label}
+          </span>
+        </td>
+        <td style="padding:.4rem .5rem;text-align:center">${d.count}</td>
+        <td style="padding:.4rem .5rem;text-align:right;font-weight:700;color:#111827">₹${d.rev.toFixed(0)}</td>
+        <td style="padding:.4rem .5rem;text-align:center;color:#6b7280">${d.todayCnt}</td>
+        <td style="padding:.4rem .5rem;text-align:right">
+          <div style="display:flex;align-items:center;gap:.4rem;justify-content:flex-end">
+            <div style="width:60px;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden">
+              <div style="width:${(d.rev/totalRev*100).toFixed(0)}%;height:100%;background:${d.color};border-radius:3px"></div>
+            </div>
+            <span style="font-size:.75rem;font-weight:600;color:#374151">${(d.rev/totalRev*100).toFixed(0)}%</span>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+
+  const recent=[...all].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,12);
+  const colorMap={indoor:'#4f46e5',outdoor:'#10b981',cabin:'#f97316',takeaway:'#0ea5e9'};
+  el2.innerHTML=`<div class="order-rows">${recent.map(o=>`
+    <div class="order-row" style="cursor:default">
+      <div class="or-tbl">T${o.table_number}
+        <span style="background:${colorMap[o.order_type||'indoor']}18;color:${colorMap[o.order_type||'indoor']};font-size:.6rem;font-weight:700;padding:.1rem .4rem;border-radius:4px">${o.order_type||'indoor'}</span>
+      </div>
+      <div class="or-body">
+        <div class="or-items">${(o.items||[]).map(i=>i.quantity+'× '+i.item_name).join(' · ')}</div>
+        <div class="or-meta">${new Date(o.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div class="or-right"><div class="or-total">₹${Number(o.total||0).toFixed(0)}</div><span class="status-pill ${o.status}">${o.status}</span></div>
+    </div>`).join('')}</div>`;
+}
+
 // ── REPORTS ──
 let _repOrders=[];
 function initReports(){
@@ -1843,8 +2165,11 @@ async function loadSettings(){
   const get=k=>settings.find(s=>s.key===k)?.value;
   if(get('restaurant_name')) document.getElementById('setRestName').value=get('restaurant_name');
   if(get('tax_rate')) document.getElementById('setTaxRate').value=get('tax_rate');
+  if(get('service_charge')) document.getElementById('setServiceCharge').value=get('service_charge');
+  if(get('opening_hours')) document.getElementById('setHours').value=get('opening_hours');
   document.getElementById('orderingToggle').checked = get('ordering_enabled')!=='0';
   document.getElementById('settingEmail').textContent=_adminEmail||sessionStorage.getItem('admin_email')||'—';
+  loadCoupons();
 }
 async function saveSetting(key,value){
   const r=await adminFetch('/api/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({[key]:String(value)})});
