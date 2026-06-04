@@ -682,13 +682,13 @@
             </div>
             <button class="btn btn-ghost btn-sm" onclick="loadMenu()">↻</button>
           </div>
-          <div id="catList" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem"></div>
-          <!-- Add category inline -->
-          <div style="display:flex;gap:.5rem;align-items:center;border-top:1px solid var(--border);padding-top:.85rem">
+          <!-- Add category at top -->
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.85rem;padding-bottom:.85rem;border-bottom:1px solid var(--border)">
             <input id="newCatName" type="text" placeholder="New category name…" class="search-bar" style="flex:1"
               onkeydown="if(event.key==='Enter')addCat()">
             <button class="btn btn-or btn-sm" onclick="addCat()">+ Add</button>
           </div>
+          <div id="catList" style="display:flex;flex-direction:column;gap:.4rem"></div>
         </div>
 
         <!-- Add item form -->
